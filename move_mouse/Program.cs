@@ -264,7 +264,12 @@ namespace move_mouse
 
         static void UpdateCursorPosition()
         {
-            Cursor.Position = new Point(gaze_point.X + calibration_shift.X, gaze_point.Y + calibration_shift.Y);
+            double dpiX, dpiY;
+            Graphics graphics = Graphics.FromHwnd(IntPtr.Zero);
+            dpiX = graphics.DpiX / 100.0;
+            dpiY = graphics.DpiY / 100.0;
+
+            Cursor.Position = new Point((int)((gaze_point.X + calibration_shift.X) * dpiX), (int)((gaze_point.Y + calibration_shift.Y) * dpiY));
         }
 
         static void Main(string[] args)
