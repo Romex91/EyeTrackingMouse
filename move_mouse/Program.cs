@@ -9,255 +9,266 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Reflection;
 
 namespace move_mouse
 {
+    class KeyBindings
+    {
+        public Interceptor.Keys modifier = Interceptor.Keys.WindowsKey;
+        public Interceptor.Keys left_click = Interceptor.Keys.J;
+        public Interceptor.Keys right_click = Interceptor.Keys.K;
+        public Interceptor.Keys scroll_down = Interceptor.Keys.N;
+        public Interceptor.Keys scroll_up = Interceptor.Keys.H;
+        public Interceptor.Keys scroll_left = Interceptor.Keys.CommaLeftArrow;
+        public Interceptor.Keys scroll_right = Interceptor.Keys.PeriodRightArrow;
+        public Interceptor.Keys reset_calibration = Interceptor.Keys.M;
+        public Interceptor.Keys calibrate_left = Interceptor.Keys.A;
+        public Interceptor.Keys calibrate_right = Interceptor.Keys.D;
+        public Interceptor.Keys calibrate_up = Interceptor.Keys.W;
+        public Interceptor.Keys calibrate_down = Interceptor.Keys.S;
+    };
+
+    class Options
+    {
+        public readonly KeyBindings key_bindings = new KeyBindings();
+        public int calibration_step = 10;
+        public int horizontal_scroll_step = 6;
+        public int vertical_scroll_step = 6;
+        public int win_press_delay_ms = 1;
+        public int click_freeze_time_ms = 200;
+        public int double_click_duration_ms = 300;
+        public int short_click_duration_ms = 300;
+    }
+
+    enum ApplicationState
+    {
+        // Application does nothing. 
+        Idle,
+        // Application moves cursor to gaze point applying previous calibrations. To enable this state user should press modifier key.
+        Controlling,
+        // User can press W/A/S/D while holding modifier to calibrate cursor position to fit user's gaze more accurately. 
+        Calibrating
+    };
+
+    struct InteractionHistoryEntry
+    {
+        public Interceptor.Keys Key;
+        public Interceptor.KeyState State;
+        public DateTime Time;
+    };
+
     class Program
     {
+        // TODO: think accurately about thread safety.
         static readonly object _locker = new object();
 
-        private const int correction_step = 10;
-        private static Point correction = new Point(0, 0);
-        private static Boolean data_updated = false;
+        private static readonly Options options = new Options();
+
+        private static ApplicationState application_state = ApplicationState.Idle;
+
         private static Point gaze_point = new Point(0, 0);
 
-        private const int WH_KEYBOARD_LL = 13;
-        private const int WM_KEYDOWN = 0x0100;
-        private const int WM_KEYUP = 0x0101;
-        private static LowLevelKeyboardProc _proc = HookCallback;
-        private static IntPtr _hookID = IntPtr.Zero;
-        private static bool lwin_pressed = false;
-        private static bool correction_update_mode = false;
+        // |gaze_point| is not accurate. To enable precise cursor control the application supports calibration by W/A/S/D.
+        // |calibration_shift| is result of such calibration. Application sets cursor position to |gaze_point| + |calibration_shift| when in |Controlling| state.
+        private static Point calibration_shift = new Point(0, 0);
+        private static readonly ShiftsStorage shifts_storage = new ShiftsStorage();
 
-        private static ShiftsStorage corrections_storage = new ShiftsStorage();
+        // Updating |calibration_shift| may be expensive. These variables tracks whether update is required.
+        private static bool is_calibration_shift_outdated = false;
+        private static DateTime last_shift_update_time = DateTime.Now;
 
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
+        private static readonly InteractionHistoryEntry[] interaction_history = new InteractionHistoryEntry[3];
 
-        private const int KEYEVENTF_EXTENDEDKEY = 1;
-        private const int KEYEVENTF_KEYUP = 2;
+        private static readonly Interceptor.Input input = new Interceptor.Input();
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, int cButtons, uint dwExtraInfo);
-        //Mouse actions
-        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
-        private const int MOUSEEVENTF_LEFTUP = 0x04;
-        private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
-        private const int MOUSEEVENTF_RIGHTUP = 0x10;
-        private const int MOUSEEVENTF_WHEEL = 0x800;
-        private const int MOUSEEVENTF_HWHEEL = 0x1000;
-
-        private static bool ignore_next_lwin_up = false;
-
-        private static DateTime last_interaction = DateTime.Now;
-
-        private static void MaskedMouseEvent(uint dwFlags, int cButtons, uint dwExtraInfo)
+        // Interceptor.KeyState is a mess. Different Keys produce different KeyState when pressed and released.
+        // TODO: Figure out full list of e0 keys;
+        private static SortedSet<Interceptor.Keys> e0_keys = new SortedSet<Interceptor.Keys> { Interceptor.Keys.WindowsKey };
+        private static Interceptor.KeyState GetDownKeyState(Interceptor.Keys key)
         {
-            ignore_next_lwin_up = true;
-
-            BreakLwin();
-
-            keybd_event((byte)Keys.LWin, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
-            uint X = (uint)Cursor.Position.X;
-            uint Y = (uint)Cursor.Position.Y;
-            mouse_event(dwFlags, X, Y, cButtons, dwExtraInfo);
-            keybd_event((byte)Keys.LWin, 0, KEYEVENTF_EXTENDEDKEY, 0);
+            if (e0_keys.Contains(key))
+                return Interceptor.KeyState.E0;
+            return Interceptor.KeyState.Down;
+        }
+        private static Interceptor.KeyState GetUpKeyState(Interceptor.Keys key)
+        {
+            if (e0_keys.Contains(key))
+                return Interceptor.KeyState.E0 | Interceptor.KeyState.Up;
+            return Interceptor.KeyState.Up;
         }
 
-        private static void LeftMouseClick()
+        private static void OnKeyPressed(object sender, Interceptor.KeyPressedEventArgs e)
         {
-            MaskedMouseEvent(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0);
-        }
+            e.Handled = true;
 
-        private static void RightMouseClick()
-        {
-            MaskedMouseEvent(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP, 0, 0);
-        }
-        private static void MouseWheelDown()
-        {
-            MaskedMouseEvent(MOUSEEVENTF_WHEEL, -600, 0);
-        }
-        private static void MouseWheelUp()
-        {
-            MaskedMouseEvent(MOUSEEVENTF_WHEEL, 600, 0);
-        }
-        private static void MouseWheelLeft()
-        {
-            MaskedMouseEvent(MOUSEEVENTF_HWHEEL, -600, 0);
-        }
-        private static void MouseWheelRight()
-        {
-            MaskedMouseEvent(MOUSEEVENTF_HWHEEL, 600, 0);
-        }
-
-        private static IntPtr SetHook(LowLevelKeyboardProc proc)
-        {
-            using (Process curProcess = Process.GetCurrentProcess())
-            using (ProcessModule curModule = curProcess.MainModule)
+            // If you hold a key pressed for a second it will start to produce a sequence of rrrrrrrrrrepeated |KeyState.Down| events.
+            // We don't want to handle such events and assume that a key stays pressed until |KeyState.Up| appears.
+            if (interaction_history[0].Key == e.Key && interaction_history[0].State == e.State && e.State == GetDownKeyState(e.Key))
             {
-                return SetWindowsHookEx(WH_KEYBOARD_LL, proc,
-                    GetModuleHandle(curModule.ModuleName), 0);
-            }
-        }
-
-        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
-
-        private static void BreakLwin()
-        {
-            if (!lwin_pressed)
-            {
+                if (application_state == ApplicationState.Idle)
+                    e.Handled = false;
                 return;
             }
 
-            keybd_event((byte)Keys.LControlKey, 0, KEYEVENTF_EXTENDEDKEY, 0);
-            keybd_event((byte)Keys.LControlKey, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
-        }
-        private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
-        {
-            if (nCode >= 0)
+            lock (_locker)
             {
-                int key_code = Marshal.ReadInt32(lParam);
-                if ((Keys)key_code == Keys.LWin && wParam == (IntPtr)WM_KEYDOWN)
+                interaction_history[2] = interaction_history[1];
+                interaction_history[1] = interaction_history[0];
+                interaction_history[0].Key = e.Key;
+                interaction_history[0].State = e.State;
+                interaction_history[0].Time = DateTime.Now;
+            }
+
+            bool is_double_press =
+                e.State == GetDownKeyState(e.Key) &&
+                interaction_history[1].Key == e.Key &&
+                interaction_history[2].Key == e.Key &&
+                (DateTime.Now - interaction_history[2].Time).TotalMilliseconds < options.double_click_duration_ms;
+
+            bool is_short_press =
+                e.State == GetUpKeyState(e.Key) &&
+                interaction_history[1].Key == e.Key &&
+                (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < options.short_click_duration_ms;
+
+
+
+            // The application grabs control over cursor when modifier is pressed.
+            if (e.Key == options.key_bindings.modifier)
+            {
+                if (e.State == GetDownKeyState(e.Key))
                 {
-                    lwin_pressed = true;
+                    application_state = ApplicationState.Controlling;
+                }
+                else if (e.State == GetUpKeyState(e.Key))
+                {
+                    if (application_state == ApplicationState.Idle)
+                    {
+                        e.Handled = false;
+                    }
+                    else if (is_short_press)
+                    {
+                        input.SendKey(e.Key, GetDownKeyState(e.Key));
+                        Thread.Sleep(options.win_press_delay_ms);
+                        input.SendKey(e.Key, GetUpKeyState(e.Key));
+                    }
+
+                    application_state = ApplicationState.Idle;
+                }
+                return;
+            }
+
+            if (application_state == ApplicationState.Idle)
+            {
+                e.Handled = false;
+                return;
+            }
+
+            bool is_key_bound = false;
+            foreach (var key_binding in typeof(KeyBindings).GetFields())
+            {
+                if (key_binding.FieldType == typeof(Interceptor.Keys) && key_binding.GetValue(options.key_bindings).Equals(e.Key))
+                {
+                    is_key_bound = true;
+                }
+            }
+            if (!is_key_bound)
+            {
+                // The application intercepts modifier key presses. We do not want to lose modifier when handling unbound keys.
+                // We stop controlling cursor when facing the first unbound key and send modifier keystroke to OS before handling pressed key.
+                application_state = ApplicationState.Idle;
+                input.SendKey(options.key_bindings.modifier, GetDownKeyState(options.key_bindings.modifier));
+                e.Handled = false;
+                return;
+            }
+
+            if (e.State == GetDownKeyState(e.Key))
+            {
+                // Calibration
+                if (e.Key == options.key_bindings.calibrate_left)
+                {
+                    application_state = ApplicationState.Calibrating;
+                    calibration_shift.X -= options.calibration_step;
+                }
+                if (e.Key == options.key_bindings.calibrate_right)
+                {
+                    application_state = ApplicationState.Calibrating;
+                    calibration_shift.X += options.calibration_step;
+                }
+                if (e.Key == options.key_bindings.calibrate_up)
+                {
+                    application_state = ApplicationState.Calibrating;
+                    calibration_shift.Y -= options.calibration_step;
+                }
+                if (e.Key == options.key_bindings.calibrate_down)
+                {
+                    application_state = ApplicationState.Calibrating;
+                    calibration_shift.Y += options.calibration_step;
                 }
 
-                if ((Keys)key_code == Keys.LWin && wParam == (IntPtr)WM_KEYUP)
+                // Scroll
+                if (e.Key == options.key_bindings.scroll_down)
                 {
-                    if (!ignore_next_lwin_up)
-                    {
-                        correction_update_mode = false;
-                        lwin_pressed = false;
-                    }
-                        
-                    ignore_next_lwin_up = false;
+                    Mouse.WheelDown(options.vertical_scroll_step * (is_double_press ? 2 : 1));
                 }
-
-                if (lwin_pressed && wParam == (IntPtr)WM_KEYDOWN)
+                if (e.Key == options.key_bindings.scroll_up)
                 {
-                    bool is_double_click = (DateTime.Now - last_interaction).TotalMilliseconds < 300;
-                    if ((Keys)key_code == Keys.J || (Keys)key_code == Keys.K || (Keys)key_code == Keys.H || (Keys)key_code == Keys.N || (Keys)key_code == Keys.Oemcomma || (Keys)key_code == Keys.OemPeriod)
-                    {
-                        last_interaction = DateTime.Now;
-                    }
-
-                    if ((Keys)key_code == Keys.A)
-                    {
-                        
-                        correction_update_mode = true;
-                        correction.X -= correction_step;
-                        return new IntPtr(1);
-                    }
-
-                    if ((Keys)key_code == Keys.D)
-                    {
-                        correction_update_mode = true;
-                        correction.X += correction_step;
-                        return new IntPtr(1);
-                    }
-
-                    if ((Keys)key_code == Keys.W)
-                    {
-                        correction_update_mode = true;
-                        correction.Y -= correction_step;
-                        return new IntPtr(1);
-                    }
-                    if ((Keys)key_code == Keys.S)
-                    {
-                        correction_update_mode = true;
-                        correction.Y += correction_step;
-                        return new IntPtr(1);
-                    }
-
-                    if ((Keys)key_code == Keys.J || (Keys)key_code == Keys.K)
-                    {
-                        if (correction_update_mode)
-                        {
-                            lock (_locker)
-                            {
-                                corrections_storage.AddShift(gaze_point, correction);
-                                last_interaction = DateTime.Now;
-                                correction_update_mode = false;
-                            }
-                        }
-                    }
-
-                    if ((Keys)key_code == Keys.J)
-                    {
-                        LeftMouseClick();
-                        return new IntPtr(1);
-                    }
-
-                    if ((Keys)key_code == Keys.K)
-                    {
-                        RightMouseClick();
-                        return new IntPtr(1);
-                    }
-
-                    if ((Keys)key_code == Keys.H)
-                    {
-                        MouseWheelUp();
-                        if (is_double_click)
-                            MouseWheelUp();
-                        return new IntPtr(1);
-                    }
-                    if ((Keys)key_code == Keys.N)
-                    {
-                        MouseWheelDown();
-                        if (is_double_click)
-                            MouseWheelDown();
-                        return new IntPtr(1);
-                    }
-                    if ((Keys)key_code == Keys.Oemcomma)
-                    {
-                        MouseWheelLeft();
-                        if (is_double_click)
-                            MouseWheelLeft();
-                        return new IntPtr(1);
-                    }
-
-                    if ((Keys)key_code == Keys.OemPeriod)
-                    {
-                        MouseWheelRight();
-                        if (is_double_click)
-                            MouseWheelRight();
-
-                        return new IntPtr(1);
-                    }
-                    if ((Keys)key_code == Keys.M)
-                    {
-                        lock (_locker)
-                        {
-                            corrections_storage.ResetClosest(gaze_point);
-                            if (is_double_click)
-                                corrections_storage.Reset();
-                        }
-                        return new IntPtr(1);
-                    }
+                    Mouse.WheelUp(options.vertical_scroll_step * (is_double_press ? 2 : 1));
+                }
+                if (e.Key == options.key_bindings.scroll_left)
+                {
+                    Mouse.WheelLeft(options.horizontal_scroll_step * (is_double_press ? 2 : 1));
+                }
+                if (e.Key == options.key_bindings.scroll_right)
+                {
+                    Mouse.WheelRight(options.horizontal_scroll_step * (is_double_press ? 2 : 1));
                 }
             }
 
-            return CallNextHookEx(_hookID, nCode, wParam, lParam);
+            // Mouse buttons
+            if (application_state == ApplicationState.Calibrating &&
+                e.State == GetDownKeyState(e.Key) &&
+                (e.Key == options.key_bindings.left_click || e.Key == options.key_bindings.right_click))
+            {
+                lock (_locker)
+                {
+                    shifts_storage.AddShift(gaze_point, calibration_shift);
+                    application_state = ApplicationState.Controlling;
+                }
+            }
+            if (e.Key == options.key_bindings.left_click)
+            {
+                if (e.State == GetDownKeyState(e.Key))
+                    Mouse.LeftDown();
+                else if (e.State == GetUpKeyState(e.Key))
+                    Mouse.LeftUp();
+            }
+            if (e.Key == options.key_bindings.right_click)
+            {
+                if (e.State == GetDownKeyState(e.Key))
+                    Mouse.RightDown();
+                else if (e.State == GetUpKeyState(e.Key))
+                    Mouse.RightUp();
+            }
+
+            if (e.Key == options.key_bindings.reset_calibration)
+            {
+                lock (_locker)
+                {
+                    shifts_storage.ResetClosest(gaze_point);
+                    if (is_double_press)
+                        shifts_storage.Reset();
+                }
+            }
         }
 
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr GetModuleHandle(string lpModuleName);
+        static void UpdateCursorPosition()
+        {
+            Cursor.Position = new Point(gaze_point.X + calibration_shift.X, gaze_point.Y + calibration_shift.Y);
+        }
 
         static void Main(string[] args)
         {
-            _hookID = SetHook(_proc);
-
             Host host = new Host();
             GazePointDataStream gazePointDataStream = host.Streams.CreateGazePointDataStream();
 
@@ -265,12 +276,23 @@ namespace move_mouse
             {
                 lock (_locker)
                 {
-                    if (lwin_pressed && (DateTime.Now - last_interaction).TotalMilliseconds > 600 || correction_update_mode)
+                    if (application_state == ApplicationState.Controlling || application_state == ApplicationState.Calibrating)
                     {
+                        // Freeze cursor for a short period of time after mouse clicks to make double clicks esier.
+                        foreach (var interaction in interaction_history)
+                        {
+                            if (interaction.State != GetDownKeyState(interaction.Key))
+                                continue;
+                            if (interaction.Key != options.key_bindings.left_click && interaction.Key != options.key_bindings.right_click)
+                                continue;
+                            if ((DateTime.Now - interaction.Time).TotalMilliseconds < options.click_freeze_time_ms)
+                                return;
+                        }
+                        
                         gaze_point.X = (int)(x / 1);
                         gaze_point.Y = (int)(y / 1);
-                        Cursor.Position = new Point(gaze_point.X + correction.X, gaze_point.Y + correction.Y);
-                        data_updated = true;
+                        UpdateCursorPosition();
+                        is_calibration_shift_outdated = true;
                     }
                 }
             });
@@ -279,18 +301,25 @@ namespace move_mouse
             {
                 lock (_locker)
                 {
-                    if (data_updated && !correction_update_mode)
+                    if (is_calibration_shift_outdated && application_state == ApplicationState.Controlling)
                     {
-                        correction = corrections_storage.GetShift(gaze_point);
-                        data_updated = false;
+                        calibration_shift = shifts_storage.GetShift(gaze_point);
+                        UpdateCursorPosition();
+                        is_calibration_shift_outdated = false;
                     }
                 }
             };
 
-            Console.WriteLine("Close me to stop handling tobii hotkeys");
+            Console.WriteLine("Close me to stop handling tobii hotкeys");
+
+            input.KeyboardFilterMode = Interceptor.KeyboardFilterMode.All;
+            if (input.Load())
+            {
+                input.OnKeyPressed += OnKeyPressed;
+            }
+
             Application.Run();
 
-            UnhookWindowsHookEx(_hookID);
             host.Dispose();
         }
     }
