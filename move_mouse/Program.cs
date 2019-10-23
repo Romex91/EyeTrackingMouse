@@ -82,9 +82,12 @@ namespace move_mouse
 
         private static readonly Interceptor.Input input = new Interceptor.Input();
 
+        // For hardcoded stop-word.
+        private static bool is_win_pressed = false;
+
         // Interceptor.KeyState is a mess. Different Keys produce different KeyState when pressed and released.
         // TODO: Figure out full list of e0 keys;
-        private static SortedSet<Interceptor.Keys> e0_keys = new SortedSet<Interceptor.Keys> { Interceptor.Keys.WindowsKey };
+        private static SortedSet<Interceptor.Keys> e0_keys = new SortedSet<Interceptor.Keys> { Interceptor.Keys.WindowsKey, Interceptor.Keys.Delete };
         private static Interceptor.KeyState GetDownKeyState(Interceptor.Keys key)
         {
             if (e0_keys.Contains(key))
@@ -100,11 +103,42 @@ namespace move_mouse
 
         private static void OnKeyPressed(object sender, Interceptor.KeyPressedEventArgs e)
         {
+            // Console.WriteLine(e.Key);
+            // Console.WriteLine(e.State);
+
             e.Handled = true;
 
+            // Hardcoded stop-word is Win+Del.
+            if (e.Key == Interceptor.Keys.WindowsKey)
+            {
+                if (e.State == GetDownKeyState(e.Key))
+                    is_win_pressed = true;
+                else if (e.State == GetUpKeyState(e.Key))
+                    is_win_pressed = false;
+            }
+            if (e.Key == Interceptor.Keys.Delete &&
+                e.State == GetDownKeyState(e.Key) && is_win_pressed)
+            {
+                Application.Exit();
+                return;
+            }
+
             // If you hold a key pressed for a second it will start to produce a sequence of rrrrrrrrrrepeated |KeyState.Down| events.
-            // We don't want to handle such events and assume that a key stays pressed until |KeyState.Up| appears.
-            if (interaction_history[0].Key == e.Key && interaction_history[0].State == e.State && e.State == GetDownKeyState(e.Key))
+            // For most keys we don't want to handle such events and assume that a key stays pressed until |KeyState.Up| appears.
+            var repeteation_white_list = new SortedSet<Interceptor.Keys> {
+                options.key_bindings.calibrate_down,
+                options.key_bindings.calibrate_up,
+                options.key_bindings.calibrate_left,
+                options.key_bindings.calibrate_right,
+                options.key_bindings.scroll_down,
+                options.key_bindings.scroll_up,
+                options.key_bindings.scroll_left,
+                options.key_bindings.scroll_right,
+            };
+            if (!repeteation_white_list.Contains(e.Key) && 
+                interaction_history[0].Key == e.Key &&
+                interaction_history[0].State == e.State && 
+                e.State == GetDownKeyState(e.Key))
             {
                 if (application_state == ApplicationState.Idle)
                     e.Handled = false;
@@ -130,8 +164,6 @@ namespace move_mouse
                 e.State == GetUpKeyState(e.Key) &&
                 interaction_history[1].Key == e.Key &&
                 (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < options.short_click_duration_ms;
-
-
 
             // The application grabs control over cursor when modifier is pressed.
             if (e.Key == options.key_bindings.modifier)
@@ -185,25 +217,26 @@ namespace move_mouse
             if (e.State == GetDownKeyState(e.Key))
             {
                 // Calibration
+                int calibration_step = options.calibration_step * (is_double_press ? 2 : 1);
                 if (e.Key == options.key_bindings.calibrate_left)
                 {
                     application_state = ApplicationState.Calibrating;
-                    calibration_shift.X -= options.calibration_step;
+                    calibration_shift.X -= calibration_step;
                 }
                 if (e.Key == options.key_bindings.calibrate_right)
                 {
                     application_state = ApplicationState.Calibrating;
-                    calibration_shift.X += options.calibration_step;
+                    calibration_shift.X += calibration_step;
                 }
                 if (e.Key == options.key_bindings.calibrate_up)
                 {
                     application_state = ApplicationState.Calibrating;
-                    calibration_shift.Y -= options.calibration_step;
+                    calibration_shift.Y -= calibration_step;
                 }
                 if (e.Key == options.key_bindings.calibrate_down)
                 {
                     application_state = ApplicationState.Calibrating;
-                    calibration_shift.Y += options.calibration_step;
+                    calibration_shift.Y += calibration_step;
                 }
 
                 // Scroll
