@@ -32,13 +32,18 @@ namespace move_mouse
     class Options
     {
         public readonly KeyBindings key_bindings = new KeyBindings();
-        public int calibration_step = 10;
+        public int calibration_step = 5;
         public int horizontal_scroll_step = 6;
         public int vertical_scroll_step = 6;
+
         public int win_press_delay_ms = 1;
         public int click_freeze_time_ms = 200;
         public int double_click_duration_ms = 300;
         public int short_click_duration_ms = 300;
+        public int calibration_shift_ttl_ms = 100;
+
+        public int smothening_zone_radius = 100;
+        public int smothening_points_count = 15;
     }
 
     enum ApplicationState
@@ -68,6 +73,7 @@ namespace move_mouse
         private static ApplicationState application_state = ApplicationState.Idle;
 
         private static Point gaze_point = new Point(0, 0);
+        private static readonly GazeSmoother gaze_smoother = new GazeSmoother(options);
 
         // |gaze_point| is not accurate. To enable precise cursor control the application supports calibration by W/A/S/D.
         // |calibration_shift| is result of such calibration. Application sets cursor position to |gaze_point| + |calibration_shift| when in |Controlling| state.
@@ -75,19 +81,29 @@ namespace move_mouse
         private static readonly ShiftsStorage shifts_storage = new ShiftsStorage();
 
         // Updating |calibration_shift| may be expensive. These variables tracks whether update is required.
-        private static bool is_calibration_shift_outdated = false;
         private static DateTime last_shift_update_time = DateTime.Now;
 
         private static readonly InteractionHistoryEntry[] interaction_history = new InteractionHistoryEntry[3];
 
         private static readonly Interceptor.Input input = new Interceptor.Input();
 
+        // For dpi.
+        private static Graphics graphics = Graphics.FromHwnd(IntPtr.Zero);
+
         // For hardcoded stop-word.
         private static bool is_win_pressed = false;
 
+        private static readonly SortedSet<Interceptor.Keys> modifiers = new SortedSet<Interceptor.Keys> { 
+            Interceptor.Keys.WindowsKey,
+            Interceptor.Keys.LeftShift,
+            Interceptor.Keys.RightShift,
+            Interceptor.Keys.Control,
+            Interceptor.Keys.RightAlt,
+        };
+
         // Interceptor.KeyState is a mess. Different Keys produce different KeyState when pressed and released.
         // TODO: Figure out full list of e0 keys;
-        private static SortedSet<Interceptor.Keys> e0_keys = new SortedSet<Interceptor.Keys> { Interceptor.Keys.WindowsKey, Interceptor.Keys.Delete };
+        private static readonly SortedSet<Interceptor.Keys> e0_keys = new SortedSet<Interceptor.Keys> { Interceptor.Keys.WindowsKey, Interceptor.Keys.Delete };
         private static Interceptor.KeyState GetDownKeyState(Interceptor.Keys key)
         {
             if (e0_keys.Contains(key))
@@ -135,9 +151,9 @@ namespace move_mouse
                 options.key_bindings.scroll_left,
                 options.key_bindings.scroll_right,
             };
-            if (!repeteation_white_list.Contains(e.Key) && 
+            if (!repeteation_white_list.Contains(e.Key) &&
                 interaction_history[0].Key == e.Key &&
-                interaction_history[0].State == e.State && 
+                interaction_history[0].State == e.State &&
                 e.State == GetDownKeyState(e.Key))
             {
                 if (application_state == ApplicationState.Idle)
@@ -208,8 +224,11 @@ namespace move_mouse
             {
                 // The application intercepts modifier key presses. We do not want to lose modifier when handling unbound keys.
                 // We stop controlling cursor when facing the first unbound key and send modifier keystroke to OS before handling pressed key.
-                application_state = ApplicationState.Idle;
-                input.SendKey(options.key_bindings.modifier, GetDownKeyState(options.key_bindings.modifier));
+                if (!modifiers.Contains(e.Key))
+                {
+                    application_state = ApplicationState.Idle;
+                    input.SendKey(options.key_bindings.modifier, GetDownKeyState(options.key_bindings.modifier));
+                }
                 e.Handled = false;
                 return;
             }
@@ -217,7 +236,7 @@ namespace move_mouse
             if (e.State == GetDownKeyState(e.Key))
             {
                 // Calibration
-                int calibration_step = options.calibration_step * (is_double_press ? 2 : 1);
+                int calibration_step = (int) (options.calibration_step * (is_double_press ? 2.5 : 1.0));
                 if (e.Key == options.key_bindings.calibrate_left)
                 {
                     application_state = ApplicationState.Calibrating;
@@ -298,7 +317,6 @@ namespace move_mouse
         static void UpdateCursorPosition()
         {
             double dpiX, dpiY;
-            Graphics graphics = Graphics.FromHwnd(IntPtr.Zero);
             dpiX = graphics.DpiX / 100.0;
             dpiY = graphics.DpiY / 100.0;
 
@@ -326,27 +344,21 @@ namespace move_mouse
                             if ((DateTime.Now - interaction.Time).TotalMilliseconds < options.click_freeze_time_ms)
                                 return;
                         }
-                        
-                        gaze_point.X = (int)(x / 1);
-                        gaze_point.Y = (int)(y / 1);
+
+                        gaze_smoother.AddGazePoint(new Point((int)x, (int)y));
+                        gaze_point = gaze_smoother.GetSmoothenedGazePoint();
+
+                        if (application_state == ApplicationState.Controlling &&
+                            (DateTime.Now - last_shift_update_time).TotalMilliseconds > options.calibration_shift_ttl_ms)
+                        {
+                            last_shift_update_time = DateTime.Now;
+                            calibration_shift = shifts_storage.GetShift(gaze_point);
+                        }
+
                         UpdateCursorPosition();
-                        is_calibration_shift_outdated = true;
                     }
                 }
             });
-
-            Application.Idle += (object sender, EventArgs e) =>
-            {
-                lock (_locker)
-                {
-                    if (is_calibration_shift_outdated && application_state == ApplicationState.Controlling)
-                    {
-                        calibration_shift = shifts_storage.GetShift(gaze_point);
-                        UpdateCursorPosition();
-                        is_calibration_shift_outdated = false;
-                    }
-                }
-            };
 
             Console.WriteLine("Close me to stop handling tobii hotкeys");
 
