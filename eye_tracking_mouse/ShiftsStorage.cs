@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Drawing;
 using System.Diagnostics;
 
-namespace move_mouse
+namespace eye_tracking_mouse
 {
     class ShiftsStorage
     {

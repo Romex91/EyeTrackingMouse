@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 
-namespace move_mouse
+namespace eye_tracking_mouse
 {
     // Tracks history of gaze points deleting those which are too far from the last point.
     // Longer the user stares at one area smoother resulting gaze point.

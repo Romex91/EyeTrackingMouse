@@ -11,7 +11,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Reflection;
 
-namespace move_mouse
+namespace eye_tracking_mouse
 {
     class KeyBindings
     {
