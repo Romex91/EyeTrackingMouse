@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace eye_tracking_mouse
 {
-    class Mouse
+    class MouseButtons
     {
         [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         public static extern void mouse_event(uint dwFlags, uint dx, uint dy, int cButtons, uint dwExtraInfo);
@@ -19,7 +19,6 @@ namespace eye_tracking_mouse
         private const int MOUSEEVENTF_RIGHTUP = 0x10;
         private const int MOUSEEVENTF_WHEEL = 0x800;
         private const int MOUSEEVENTF_HWHEEL = 0x1000;
-
 
         private static void MouseEvent(uint dwFlags, int cButtons)
         {
