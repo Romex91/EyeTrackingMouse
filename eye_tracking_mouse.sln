@@ -3,12 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29403.142
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eye_tracking_mouse", "eye_tracking_mouse\eye_tracking_mouse.csproj", "{5C9BA3AB-F54C-4494-9BDA-BAAC95049482}"
-	ProjectSection(ProjectDependencies) = postProject
-		{C451A00E-77F1-4F3F-B7EE-27DC712EA316} = {C451A00E-77F1-4F3F-B7EE-27DC712EA316}
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interceptor", "Interceptor.csproj", "{C451A00E-77F1-4F3F-B7EE-27DC712EA316}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eye_tracking_mouse", "eye_tracking_mouse\eye_tracking_mouse.csproj", "{24FC1943-EF73-4827-B471-5F43E3E2E1E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,14 +13,14 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5C9BA3AB-F54C-4494-9BDA-BAAC95049482}.Debug|x86.ActiveCfg = Debug|x86
-		{5C9BA3AB-F54C-4494-9BDA-BAAC95049482}.Debug|x86.Build.0 = Debug|x86
-		{5C9BA3AB-F54C-4494-9BDA-BAAC95049482}.Release|x86.ActiveCfg = Release|x86
-		{5C9BA3AB-F54C-4494-9BDA-BAAC95049482}.Release|x86.Build.0 = Release|x86
 		{C451A00E-77F1-4F3F-B7EE-27DC712EA316}.Debug|x86.ActiveCfg = Debug|x86
 		{C451A00E-77F1-4F3F-B7EE-27DC712EA316}.Debug|x86.Build.0 = Debug|x86
 		{C451A00E-77F1-4F3F-B7EE-27DC712EA316}.Release|x86.ActiveCfg = Release|x86
 		{C451A00E-77F1-4F3F-B7EE-27DC712EA316}.Release|x86.Build.0 = Release|x86
+		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Debug|x86.ActiveCfg = Debug|x86
+		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Debug|x86.Build.0 = Debug|x86
+		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Release|x86.ActiveCfg = Release|x86
+		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

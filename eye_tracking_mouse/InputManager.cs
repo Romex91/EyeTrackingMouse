@@ -67,7 +67,7 @@ namespace eye_tracking_mouse
                 if (e.Key == Interceptor.Keys.Delete &&
                     key_state == KeyState.Down && is_win_pressed)
                 {
-                    Application.Exit();
+                    Environment.Exit(0);
                     return;
                 }
 
