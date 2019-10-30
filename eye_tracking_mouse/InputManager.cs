@@ -123,14 +123,12 @@ namespace eye_tracking_mouse
                         if (eye_tracking_mouse.mouse_state == EyeTrackingMouse.MouseState.Idle)
                         {
                             e.Handled = false;
-                            return;
                         }
                         else if (is_short_press)
                         {
                             input.SendKey(e.Key, Helpers.GetDownKeyState(e.Key));
                             Thread.Sleep(options.win_press_delay_ms);
                             input.SendKey(e.Key, Helpers.GetUpKeyState(e.Key));
-                            return;
                         }
 
                         eye_tracking_mouse.StopControlling();

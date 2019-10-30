@@ -198,6 +198,7 @@ namespace eye_tracking_mouse
         public void Dispose()
         {
             host.Dispose();
+            graphics.Dispose();
         }
     }
 }

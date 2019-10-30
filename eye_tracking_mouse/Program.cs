@@ -1,5 +1,9 @@
 ﻿
 
+using Newtonsoft.Json;
+using System;
+using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace eye_tracking_mouse
@@ -35,19 +39,82 @@ namespace eye_tracking_mouse
 
         public int smothening_zone_radius = 100;
         public int smothening_points_count = 15;
+
+        private static readonly string filepath = Path.Combine(Helpers.GetLocalFolder(), "options.json");
+
+        public void SaveToFile()
+        {
+            File.WriteAllText(filepath, JsonConvert.SerializeObject(this, Formatting.Indented));
+        }
+
+        public static Options LoadFromFile()
+        {
+            Options options = Default();
+            if (File.Exists(filepath))
+            {
+                JsonConvert.DeserializeObject<Options>(File.ReadAllText(filepath));
+            }
+            return options;
+        }
+        public static Options Default()
+        {
+            return new Options();
+        }
     }
 
     class Program
     {
-        private static readonly Options options = new Options();
+        private static readonly Options options = Options.LoadFromFile();
+        private static EyeTrackingMouse eye_tracking_mouse;
+        private static InputManager input_manager;
+        // TODO: prevent multiple windows.
+        private static void OpenSettings(object sender, EventArgs e)
+        {
+            MessageBox.Show("Settings", Helpers.application_name);
+        }
+        private static void OpenAbout(object sender, EventArgs e)
+        {
+            MessageBox.Show("About", Helpers.application_name);
+        }
+        private static void Exit(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
 
         static void Main(string[] args)
         {
-            var eye_tracking_mouse = new EyeTrackingMouse(options);
-            var input_manager = new InputManager(eye_tracking_mouse, options);
+            if (!Directory.Exists(Helpers.GetLocalFolder()))
+            {
+                Directory.CreateDirectory(Helpers.GetLocalFolder());
+            }
+
+            // Tray icon initialization
+            {
+                ContextMenuStrip context_menu_strip = new ContextMenuStrip { Visible = true };
+
+                context_menu_strip.SuspendLayout();
+
+                ToolStripMenuItem settings = new ToolStripMenuItem { Text = "Settings", Visible = true };
+                settings.Click += OpenSettings;
+
+                ToolStripMenuItem about = new ToolStripMenuItem { Text = "About " + Helpers.application_name, Visible = true };
+                about.Click += OpenAbout;
+
+                ToolStripMenuItem exit = new ToolStripMenuItem { Text = "Exit", Visible = true };
+                exit.Click += Exit;
+
+                context_menu_strip.Items.AddRange(new ToolStripItem[] { settings, about, exit });
+
+                context_menu_strip.ResumeLayout(false);
+                Helpers.tray_icon.ContextMenuStrip = context_menu_strip;
+                Application.ApplicationExit += (object sender, EventArgs e) => { Helpers.tray_icon.Visible = false; };
+            }
+
+            eye_tracking_mouse = new EyeTrackingMouse(options);
+            input_manager = new InputManager(eye_tracking_mouse, options);
+
             Application.Run();
             eye_tracking_mouse.Dispose();
-
         }
     }
 }

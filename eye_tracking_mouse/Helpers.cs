@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace eye_tracking_mouse
 {
@@ -15,7 +17,14 @@ namespace eye_tracking_mouse
         // WPF also has to use |lock (Helpers.locker)| before accessing Options and KeyBindings.
         public static readonly object locker = new object();
 
-        public static readonly Icon icon = Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath);
+        public static readonly string application_name = "EyeTrackingMouse";
+
+        public static readonly NotifyIcon tray_icon = new NotifyIcon
+        {
+            Icon = Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath),
+            Visible = true,
+            BalloonTipTitle = application_name,
+        };
 
         public static readonly SortedSet<Interceptor.Keys> modifier_keys = new SortedSet<Interceptor.Keys> {
             Interceptor.Keys.WindowsKey,
@@ -44,13 +53,13 @@ namespace eye_tracking_mouse
 
         public static void ShowBaloonNotification(String text)
         {
-            var notify_icon = new System.Windows.Forms.NotifyIcon
-            {
-                Icon = icon,
-                BalloonTipText = text,
-                Visible = true
-            };
-            notify_icon.ShowBalloonTip(30000);
+            tray_icon.BalloonTipText = text;
+            tray_icon.ShowBalloonTip(30000);
+        }
+
+        public static string GetLocalFolder()
+        {
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), application_name);
         }
     }
 }
