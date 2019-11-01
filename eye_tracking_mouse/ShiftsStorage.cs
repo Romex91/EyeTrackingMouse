@@ -75,7 +75,7 @@ namespace eye_tracking_mouse
 
             for (int i = 0; i < shifts_.Count(); i++)
             {
-                double distance = Math.Pow(Math.Pow(shifts_[i].Item1.X - cursor_position.X, 2) + Math.Pow(shifts_[i].Item1.Y - cursor_position.Y, 2), 0.5);
+                double distance = Helpers.GetDistance(shifts_[i].Item1, cursor_position);
                 if (distance < 1)
                     distance = 1;
 

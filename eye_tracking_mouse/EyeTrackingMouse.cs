@@ -23,6 +23,10 @@ namespace eye_tracking_mouse
         private Point calibration_shift = new Point(0, 0);
         private readonly ShiftsStorage shifts_storage = new ShiftsStorage();
 
+        // A point uzer looked at when he started calibration. 
+        // If user's gaze leaves area around this point the calibration will be over.
+        private Point calibration_start_gaze_point = new Point(0, 0);
+
         // Updating |calibration_shift| may be expensive. These variables tracks whether update is required.
         private DateTime last_shift_update_time = DateTime.Now;
 
@@ -63,6 +67,12 @@ namespace eye_tracking_mouse
                         gaze_smoother.AddGazePoint(new Point((int)x, (int)y));
                         gaze_point = gaze_smoother.GetSmoothenedGazePoint();
 
+                        if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.calibration_zone_size)
+                        {
+                            mouse_state = MouseState.Controlling;
+                        }
+
+
                         if (mouse_state == MouseState.Controlling &&
                             (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration_shift_ttl_ms)
                         {
@@ -87,6 +97,15 @@ namespace eye_tracking_mouse
             mouse_state = MouseState.Idle;
         }
 
+        private void StartCalibration()
+        {
+            if (mouse_state != MouseState.Calibrating)
+            {
+                calibration_start_gaze_point = gaze_point;
+                mouse_state = MouseState.Calibrating;
+            }
+        }
+
         public void OnKeyPressed(Interceptor.Keys key, InputManager.KeyState state, bool is_double_press)
         {
             Debug.Assert(mouse_state != MouseState.Idle);
@@ -97,25 +116,25 @@ namespace eye_tracking_mouse
                 int calibration_step = (int)(Options.Instance.calibration_step * (is_double_press ? 2.5 : 1.0));
                 if (key == Options.Instance.key_bindings.calibrate_left)
                 {
-                    mouse_state = MouseState.Calibrating;
+                    StartCalibration();
                     calibration_shift.X -= calibration_step;
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
                 }
                 if (key == Options.Instance.key_bindings.calibrate_right)
                 {
-                    mouse_state = MouseState.Calibrating;
+                    StartCalibration();
                     calibration_shift.X += calibration_step;
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
                 }
                 if (key == Options.Instance.key_bindings.calibrate_up)
                 {
-                    mouse_state = MouseState.Calibrating;
+                    StartCalibration();
                     calibration_shift.Y -= calibration_step;
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
                 }
                 if (key == Options.Instance.key_bindings.calibrate_down)
                 {
-                    mouse_state = MouseState.Calibrating;
+                    StartCalibration();
                     calibration_shift.Y += calibration_step;
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
                 }

@@ -18,7 +18,7 @@ namespace eye_tracking_mouse
                 points.RemoveAt(points.Count - 1);
 
             points.RemoveAll(p => {
-                return Math.Pow(Math.Pow(p.X - point.X, 2) + Math.Pow(p.Y - point.Y, 2), 0.5) > Options.Instance.smothening_zone_radius;
+                return Helpers.GetDistance(p, point) > Options.Instance.smothening_zone_radius;
             });
         }
 
