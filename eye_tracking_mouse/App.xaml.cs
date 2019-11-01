@@ -15,22 +15,34 @@ namespace eye_tracking_mouse
     /// </summary>
     public partial class App : Application
     {
-
-        private static readonly Options options = Options.LoadFromFile();
         private static EyeTrackingMouse eye_tracking_mouse;
         private static InputManager input_manager;
+
+        private static readonly Settings settings_window = new Settings();
+
         // TODO: prevent multiple windows.
         private static void OpenSettings(object sender, EventArgs e)
         {
-            MessageBox.Show("Settings", Helpers.application_name);
+            if (settings_window.Visibility != Visibility.Visible)
+                settings_window.Show();
+            settings_window.TabControl.SelectedIndex = 0;
         }
         private static void OpenAbout(object sender, EventArgs e)
         {
-            MessageBox.Show("About", Helpers.application_name);
+            if (settings_window.Visibility != Visibility.Visible)
+                settings_window.Show();
+
+            settings_window.TabControl.SelectedIndex = 2;
         }
         private static void Shutdown(object sender, EventArgs e)
         {
-            System.Windows.Application.Current.Shutdown();
+            if (MessageBox.Show(
+                    "This will prevent you from controlling mouse with your eyes.\nSure you want to quit?",
+                    Helpers.application_name,
+                    MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                System.Windows.Application.Current.Shutdown();
+            }
         }
 
         [STAThread]
@@ -65,8 +77,8 @@ namespace eye_tracking_mouse
                 Helpers.tray_icon.ContextMenuStrip = context_menu_strip;
             }
 
-            eye_tracking_mouse = new EyeTrackingMouse(options);
-            input_manager = new InputManager(eye_tracking_mouse, options);
+            eye_tracking_mouse = new EyeTrackingMouse();
+            input_manager = new InputManager(eye_tracking_mouse);
 
 
             application.Run();

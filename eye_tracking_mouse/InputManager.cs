@@ -20,7 +20,6 @@ namespace eye_tracking_mouse
     {
         private readonly Interceptor.Input input = new Interceptor.Input();
         private readonly EyeTrackingMouse eye_tracking_mouse;
-        private readonly Options options;
 
         // For hardcoded stop-word.
         private bool is_win_pressed = false;
@@ -74,14 +73,14 @@ namespace eye_tracking_mouse
                 // If you hold a key pressed for a second it will start to produce a sequence of rrrrrrrrrrepeated |KeyState.Down| events.
                 // For most keys we don't want to handle such events and assume that a key stays pressed until |KeyState.Up| appears.
                 var repeteation_white_list = new SortedSet<Interceptor.Keys> {
-                    options.key_bindings.calibrate_down,
-                    options.key_bindings.calibrate_up,
-                    options.key_bindings.calibrate_left,
-                    options.key_bindings.calibrate_right,
-                    options.key_bindings.scroll_down,
-                    options.key_bindings.scroll_up,
-                    options.key_bindings.scroll_left,
-                    options.key_bindings.scroll_right,
+                    Options.Instance.key_bindings.calibrate_down,
+                    Options.Instance.key_bindings.calibrate_up,
+                    Options.Instance.key_bindings.calibrate_left,
+                    Options.Instance.key_bindings.calibrate_right,
+                    Options.Instance.key_bindings.scroll_down,
+                    Options.Instance.key_bindings.scroll_up,
+                    Options.Instance.key_bindings.scroll_left,
+                    Options.Instance.key_bindings.scroll_right,
                 };
 
                 if (!repeteation_white_list.Contains(e.Key) &&
@@ -104,15 +103,15 @@ namespace eye_tracking_mouse
                     key_state == KeyState.Down &&
                     interaction_history[1].Key == e.Key &&
                     interaction_history[2].Key == e.Key &&
-                    (DateTime.Now - interaction_history[2].Time).TotalMilliseconds < options.double_click_duration_ms;
+                    (DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.double_click_duration_ms;
 
                 bool is_short_press =
                     key_state == KeyState.Up &&
                     interaction_history[1].Key == e.Key &&
-                    (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < options.short_click_duration_ms;
+                    (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.short_click_duration_ms;
 
                 // The application grabs control over cursor when modifier is pressed.
-                if (e.Key == options.key_bindings.modifier)
+                if (e.Key == Options.Instance.key_bindings.modifier)
                 {
                     if (key_state == InputManager.KeyState.Down)
                     {
@@ -127,7 +126,7 @@ namespace eye_tracking_mouse
                         else if (is_short_press)
                         {
                             input.SendKey(e.Key, Helpers.GetDownKeyState(e.Key));
-                            Thread.Sleep(options.win_press_delay_ms);
+                            Thread.Sleep(Options.Instance.win_press_delay_ms);
                             input.SendKey(e.Key, Helpers.GetUpKeyState(e.Key));
                         }
 
@@ -146,7 +145,7 @@ namespace eye_tracking_mouse
                 bool is_key_bound = false;
                 foreach (var key_binding in typeof(KeyBindings).GetFields())
                 {
-                    if (key_binding.FieldType == typeof(Interceptor.Keys) && key_binding.GetValue(options.key_bindings).Equals(e.Key))
+                    if (key_binding.FieldType == typeof(Interceptor.Keys) && key_binding.GetValue(Options.Instance.key_bindings).Equals(e.Key))
                     {
                         is_key_bound = true;
                     }
@@ -159,7 +158,7 @@ namespace eye_tracking_mouse
                     if (eye_tracking_mouse.mouse_state != EyeTrackingMouse.MouseState.Idle  && !Helpers.modifier_keys.Contains(e.Key))
                     {
                         eye_tracking_mouse.StopControlling();
-                        input.SendKey(options.key_bindings.modifier, Helpers.GetDownKeyState(options.key_bindings.modifier));
+                        input.SendKey(Options.Instance.key_bindings.modifier, Helpers.GetDownKeyState(Options.Instance.key_bindings.modifier));
                     }
                     e.Handled = false;
                     return;
@@ -170,10 +169,9 @@ namespace eye_tracking_mouse
             }
         }
 
-        public InputManager(EyeTrackingMouse eye_tracking_mouse, Options options)
+        public InputManager(EyeTrackingMouse eye_tracking_mouse)
         {
             this.eye_tracking_mouse = eye_tracking_mouse;
-            this.options = options;
 
             input.KeyboardFilterMode = Interceptor.KeyboardFilterMode.All;
             if (!input.Load())

@@ -11,19 +11,14 @@ namespace eye_tracking_mouse
     // Longer the user stares at one area smoother resulting gaze point.
     class GazeSmoother
     {
-        public GazeSmoother(Options options)
-        {
-            this.options = options;
-        }
-
         public void AddGazePoint(Point point)
         {
             points.Insert(0, point);
-            while (points.Count > options.smothening_points_count)
+            while (points.Count > Options.Instance.smothening_points_count)
                 points.RemoveAt(points.Count - 1);
 
             points.RemoveAll(p => {
-                return Math.Pow(Math.Pow(p.X - point.X, 2) + Math.Pow(p.Y - point.Y, 2), 0.5) > options.smothening_zone_radius;
+                return Math.Pow(Math.Pow(p.X - point.X, 2) + Math.Pow(p.Y - point.Y, 2), 0.5) > Options.Instance.smothening_zone_radius;
             });
         }
 
@@ -39,8 +34,6 @@ namespace eye_tracking_mouse
 
             return new Point( (int) (X / points.Count), (int)(Y / points.Count));
         }
-
-        private readonly Options options;
 
         private readonly List<Point> points = new List<Point>();
     }

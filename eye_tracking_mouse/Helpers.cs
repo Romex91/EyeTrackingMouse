@@ -19,9 +19,11 @@ namespace eye_tracking_mouse
 
         public static readonly string application_name = "EyeTrackingMouse";
 
+        public static Icon AppIcon { get { return Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath); } }
+
         public static readonly NotifyIcon tray_icon = new NotifyIcon
         {
-            Icon = Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath),
+            Icon = AppIcon,
             Visible = true,
             BalloonTipTitle = application_name,
         };
