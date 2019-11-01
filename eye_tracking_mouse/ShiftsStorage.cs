@@ -5,12 +5,35 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using System.Diagnostics;
+using System.IO;
+using Newtonsoft.Json;
+using System.Threading;
 
 namespace eye_tracking_mouse
 {
     class ShiftsStorage
     {
-        public static ShiftsStorage Instance { get; set; } = new ShiftsStorage();
+        private static string Filepath { get { return Path.Combine(Helpers.GetLocalFolder(), "calibration.json"); } }
+        private List<Tuple<Point, Point>> shifts_ = new List<Tuple<Point, Point>>();
+
+        private DateTime last_save_time = DateTime.Now;
+
+        public Task save_to_file_task;
+
+        public static ShiftsStorage Instance { get; set; } = LoadFromFile();
+
+        public static ShiftsStorage LoadFromFile()
+        {
+            var storage = new ShiftsStorage();
+            if (File.Exists(Filepath))
+            {
+                try
+                {
+                    storage.shifts_ = JsonConvert.DeserializeObject<List<Tuple<Point, Point>>>(File.ReadAllText(Filepath));
+                } catch (Exception) {}
+            }
+            return storage;
+        }
 
         public Point GetShift(Point cursor_position)
         {
@@ -89,6 +112,20 @@ namespace eye_tracking_mouse
             {
                 shifts_[indices[0].Item1] = new Tuple<Point, Point>(cursor_position, shift);
             }
+
+            if ((DateTime.Now - last_save_time).TotalSeconds > 10 && (save_to_file_task == null || save_to_file_task.IsCompleted))
+            {
+                last_save_time = DateTime.Now;
+                var deep_copy = new List<Tuple<Point, Point>>();
+                foreach (var i in shifts_)
+                {
+                    deep_copy.Add(new Tuple<Point, Point>(i.Item1, i.Item2));
+                }
+
+                save_to_file_task = Task.Factory.StartNew(() => {
+                    File.WriteAllText(Filepath, JsonConvert.SerializeObject(deep_copy, Formatting.Indented));
+                });
+            }
         }
         private Tuple<int /*index*/, double /*distance*/>[] GetClosestShiftIndexes(Point cursor_position)
         {
@@ -129,7 +166,5 @@ namespace eye_tracking_mouse
             }
             return retval;
         }
-
-        private List<Tuple<Point, Point>> shifts_ = new List<Tuple<Point, Point>>();
     }
 }

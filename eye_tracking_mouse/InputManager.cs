@@ -31,6 +31,10 @@ namespace eye_tracking_mouse
             Down,
         };
 
+        public void Stop()
+        {
+            input.Unload();
+        }
         public void OnKeyPressed(object sender, Interceptor.KeyPressedEventArgs e)
         {
             lock (Helpers.locker)
