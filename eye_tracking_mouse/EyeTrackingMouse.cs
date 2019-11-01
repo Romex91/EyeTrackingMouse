@@ -72,7 +72,6 @@ namespace eye_tracking_mouse
                             mouse_state = MouseState.Controlling;
                         }
 
-
                         if (mouse_state == MouseState.Controlling &&
                             (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration_shift_ttl_ms)
                         {

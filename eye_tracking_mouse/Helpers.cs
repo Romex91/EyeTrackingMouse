@@ -41,22 +41,16 @@ namespace eye_tracking_mouse
             Interceptor.Keys.RightAlt,
         };
 
-        // Interceptor.KeyState is a mess. Different Keys produce different KeyState when pressed and released.
-        // TODO: Figure out full list of e0 keys;
-        private static readonly SortedSet<Interceptor.Keys> e0_keys = new SortedSet<Interceptor.Keys> { Interceptor.Keys.WindowsKey, Interceptor.Keys.Delete};
-
-        public static Interceptor.KeyState GetDownKeyState(Interceptor.Keys key)
-        {
-            if (e0_keys.Contains(key))
-                return Interceptor.KeyState.E0;
-            return Interceptor.KeyState.Down;
-        }
-        public static Interceptor.KeyState GetUpKeyState(Interceptor.Keys key)
-        {
-            if (e0_keys.Contains(key))
-                return Interceptor.KeyState.E0 | Interceptor.KeyState.Up;
-            return Interceptor.KeyState.Up;
-        }
+        private static readonly SortedSet<Interceptor.Keys> e0_keys = new SortedSet<Interceptor.Keys> { 
+            Interceptor.Keys.WindowsKey, 
+            Interceptor.Keys.Delete,
+            Interceptor.Keys.Left,
+            Interceptor.Keys.Right,
+            Interceptor.Keys.Up,
+            Interceptor.Keys.Down,
+            Interceptor.Keys.ForwardSlashQuestionMark,
+            Interceptor.Keys.PrintScreen,
+        };
 
         public static void ShowBaloonNotification(String text)
         {

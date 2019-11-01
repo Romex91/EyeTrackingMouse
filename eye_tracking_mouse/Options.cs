@@ -11,6 +11,9 @@ namespace eye_tracking_mouse
     class KeyBindings
     {
         public Interceptor.Keys modifier = Interceptor.Keys.WindowsKey;
+        // Some modifiers have different Up and Down states depending on whether it is right or left.
+        // Humanity has messy keyboard scancodes.
+        public bool is_modifier_e0 = true;
         public Interceptor.Keys left_click = Interceptor.Keys.J;
         public Interceptor.Keys right_click = Interceptor.Keys.K;
         public Interceptor.Keys scroll_down = Interceptor.Keys.N;

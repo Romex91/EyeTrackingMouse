@@ -50,7 +50,7 @@ namespace eye_tracking_mouse
         public void AddShift(Point cursor_position, Point shift)
         {
             var indices = GetClosestShiftIndexes(cursor_position);
-            if (shifts_.Count() < max_size_)
+            if (shifts_.Count() < Options.Instance.calibration_points_count)
             {
                 if (indices == null || indices[0].Item2 >  Options.Instance.calibration_zone_size)
                     shifts_.Add(new Tuple<Point, Point>(cursor_position, shift));
@@ -103,6 +103,5 @@ namespace eye_tracking_mouse
         }
 
         private List<Tuple<Point, Point>> shifts_ = new List<Tuple<Point, Point>>();
-        private readonly int max_size_ = Options.Instance.calibration_points_count;
     }
 }
