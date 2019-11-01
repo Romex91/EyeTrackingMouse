@@ -89,6 +89,22 @@ namespace eye_tracking_mouse
                 Helpers.application_name + " considers only gaze points fitting to zone with this radius when calculating cursor position." +
                 "Bigger the radius means less cursor shaking but slower movement when moving cursor to a huge distance." +
                 "If you move your gaze farther than this radius cursor will move instantly. Otherwise it will move smoothly.";
+
+            CalibrationZoneSizeTooltip.ToolTip =
+                "Size of calibration zone on screen. There can be only one calibration per zone." +
+                "Smaller the zone more precise calibration and higher CPU usage." +
+                "You may want to increase zones count if you make zone size small." +
+                "Press " + Options.Instance.key_bindings.modifier.ToString() + " + " +
+                Options.Instance.key_bindings.show_calibration + 
+                " to see your curent calibration profile.";
+
+            CalibrationPointsCountTooltip.ToolTip =
+                "Maximal number of calibration zones on screen. There can be only one calibration per zone. \n" +
+                "More zones means more precise calibration and higher CPU usage.\n" +
+                "You may want to decrease zone size if you set large zones count.\n" +
+                "Press " + Options.Instance.key_bindings.modifier.ToString() + " + " +
+                Options.Instance.key_bindings.show_calibration +
+                " to see your curent calibration profile.";
         }
 
         private void UpdateSliders()
@@ -102,6 +118,8 @@ namespace eye_tracking_mouse
             HorizontalScrollStep.Value = Options.Instance.horizontal_scroll_step;
             VerticalScrollStep.Value = Options.Instance.vertical_scroll_step;
             CalibrationStep.Value = Options.Instance.calibration_step;
+            CalibrationZoneSize.Value = Options.Instance.calibration_zone_size;
+            CalibrationPointsCount.Value = Options.Instance.calibration_max_zones_count;
         }
 
         private void SmotheningZoneRadius_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -212,8 +230,35 @@ namespace eye_tracking_mouse
             {
                 Options.Instance.calibration_step = (int)CalibrationStep.Value;
                 Options.Instance.SaveToFile();
+                ShiftsStorage.Instance.OnSettingsChanged();
             }
         }
+
+        private void CalibrationPointsCount_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!is_initialized)
+                return;
+
+            lock (Helpers.locker)
+            {
+                Options.Instance.calibration_max_zones_count = (int)CalibrationPointsCount.Value;
+                Options.Instance.SaveToFile();
+                ShiftsStorage.Instance.OnSettingsChanged();
+            }
+        }
+
+        private void CalibrationZoneSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!is_initialized)
+                return;
+
+            lock (Helpers.locker)
+            {
+                Options.Instance.calibration_zone_size = (int)CalibrationZoneSize.Value;
+                Options.Instance.SaveToFile();
+            }
+        }
+
 
         private void ResetDefaults_Click(object sender, RoutedEventArgs e)
         {
@@ -233,7 +278,6 @@ namespace eye_tracking_mouse
                 }
             }
         }
-
     }
     public class IconToImageSourceConverter : IValueConverter
     {

@@ -20,7 +20,7 @@ namespace eye_tracking_mouse
         public Interceptor.Keys scroll_up = Interceptor.Keys.H;
         public Interceptor.Keys scroll_left = Interceptor.Keys.CommaLeftArrow;
         public Interceptor.Keys scroll_right = Interceptor.Keys.PeriodRightArrow;
-        public Interceptor.Keys reset_calibration = Interceptor.Keys.M;
+        public Interceptor.Keys show_calibration = Interceptor.Keys.M;
         public Interceptor.Keys calibrate_left = Interceptor.Keys.A;
         public Interceptor.Keys calibrate_right = Interceptor.Keys.D;
         public Interceptor.Keys calibrate_up = Interceptor.Keys.W;
@@ -32,8 +32,9 @@ namespace eye_tracking_mouse
         public KeyBindings key_bindings = new KeyBindings();
         public int calibration_step = 5;
         public int calibration_zone_size = 150; // TODO: add options
-        public int calibration_points_count = 45; // TODO: add options
+        public int calibration_max_zones_count = 45; // TODO: add options
         public int calibration_shift_ttl_ms = 100; // Not configurable since it is hard to explain what it means.
+        public int calibration_reset_zone_size = 400; // Not configurable since it is hard to explain what it means.
 
         public int horizontal_scroll_step = 4;
         public int vertical_scroll_step = 4;

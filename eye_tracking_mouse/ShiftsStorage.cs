@@ -10,6 +10,8 @@ namespace eye_tracking_mouse
 {
     class ShiftsStorage
     {
+        public static ShiftsStorage Instance { get; set; } = new ShiftsStorage();
+
         public Point GetShift(Point cursor_position)
         {
             var closest_indices = GetClosestShiftIndexes(cursor_position);
@@ -47,10 +49,36 @@ namespace eye_tracking_mouse
                 shifts_.RemoveAt(closest_indices[0].Item1);
             }
         }
+
+        public void OnSettingsChanged()
+        {
+            // Adjust to new calibration zone size.
+            for(int i = 0; i < shifts_.Count; )
+            {
+                bool did_remove = false;
+                foreach(var shift in shifts_)
+                {
+                    if (Helpers.GetDistance(shift.Item1, shifts_[i].Item1) < Options.Instance.calibration_zone_size)
+                    {
+                        did_remove = true;
+                        shifts_.RemoveAt(i);
+                        break;
+                    }
+                }
+
+                if (!did_remove)
+                    i++;
+            }
+
+            // Adjust to new calibration zones count.
+            while (shifts_.Count > Options.Instance.calibration_max_zones_count)
+                shifts_.RemoveAt(0);
+        }
+
         public void AddShift(Point cursor_position, Point shift)
         {
             var indices = GetClosestShiftIndexes(cursor_position);
-            if (shifts_.Count() < Options.Instance.calibration_points_count)
+            if (shifts_.Count() < Options.Instance.calibration_max_zones_count)
             {
                 if (indices == null || indices[0].Item2 >  Options.Instance.calibration_zone_size)
                     shifts_.Add(new Tuple<Point, Point>(cursor_position, shift));

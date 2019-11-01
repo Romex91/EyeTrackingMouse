@@ -21,7 +21,6 @@ namespace eye_tracking_mouse
         // |gaze_point| is not accurate. To enable precise cursor control the application supports calibration by W/A/S/D.
         // |calibration_shift| is result of such calibration. Application sets cursor position to |gaze_point| + |calibration_shift| when in |Controlling| state.
         private Point calibration_shift = new Point(0, 0);
-        private readonly ShiftsStorage shifts_storage = new ShiftsStorage();
 
         // A point uzer looked at when he started calibration. 
         // If user's gaze leaves area around this point the calibration will be over.
@@ -67,7 +66,7 @@ namespace eye_tracking_mouse
                         gaze_smoother.AddGazePoint(new Point((int)x, (int)y));
                         gaze_point = gaze_smoother.GetSmoothenedGazePoint();
 
-                        if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.calibration_zone_size)
+                        if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.calibration_reset_zone_size)
                         {
                             mouse_state = MouseState.Controlling;
                         }
@@ -76,7 +75,7 @@ namespace eye_tracking_mouse
                             (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration_shift_ttl_ms)
                         {
                             last_shift_update_time = DateTime.Now;
-                            calibration_shift = shifts_storage.GetShift(gaze_point);
+                            calibration_shift =  ShiftsStorage.Instance.GetShift(gaze_point);
                         }
                     }
 
@@ -162,7 +161,7 @@ namespace eye_tracking_mouse
                 state == InputManager.KeyState.Down &&
                 (key == Options.Instance.key_bindings.left_click || key == Options.Instance.key_bindings.right_click))
             {
-                shifts_storage.AddShift(gaze_point, calibration_shift);
+                ShiftsStorage.Instance.AddShift(gaze_point, calibration_shift);
                 mouse_state = MouseState.Controlling;
             }
 
@@ -193,13 +192,13 @@ namespace eye_tracking_mouse
                 }
             }
 
-            if (key == Options.Instance.key_bindings.reset_calibration)
+            if (key == Options.Instance.key_bindings.show_calibration)
             {
-                shifts_storage.ResetClosest(gaze_point);
+                ShiftsStorage.Instance.ResetClosest(gaze_point);
                 if (is_double_press)
                 {
                     Helpers.ShowBaloonNotification("Calibration has been reset.");
-                    shifts_storage.Reset();
+                    ShiftsStorage.Instance.Reset();
                 }
             }
         }
