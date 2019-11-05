@@ -18,6 +18,9 @@ namespace eye_tracking_mouse
         private static EyeTrackingMouse eye_tracking_mouse;
         private static InputManager input_manager;
 
+        private static App application;
+        private static CalibrationWindow calibration_window = null;
+
         private static readonly Settings settings_window = new Settings();
 
         // TODO: prevent multiple windows.
@@ -45,20 +48,54 @@ namespace eye_tracking_mouse
                 input_manager.Stop();
                 eye_tracking_mouse.StopControlling();
                 Helpers.tray_icon.Visible = false;
+                ShiftsStorage.Instance.SaveToFileAsync();
                 ShiftsStorage.Instance.save_to_file_task.Wait();
             }
+        }
+
+        private static void ResetCalibration(object sender, EventArgs e)
+        {
+            if (MessageBox.Show(
+                    "This will reset your calibration.\nSure?",
+                    Helpers.application_name,
+                    MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                lock (Helpers.locker)
+                {
+                    ShiftsStorage.Instance.Reset();
+                }
+            }
+        }
+
+        public static void ToggleCalibrationWindow()
+        {
+            application.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (calibration_window == null)
+                {
+                    calibration_window = new CalibrationWindow();
+                    calibration_window.Show();
+                }
+                else
+                {
+                    calibration_window.Close();
+                    calibration_window = null;
+                }
+            }));
         }
 
         [STAThread]
         public static void Main()
         {
-            var application = new App();
+            application = new App();
             application.InitializeComponent();
 
             if (!Directory.Exists(Helpers.GetLocalFolder()))
             {
                 Directory.CreateDirectory(Helpers.GetLocalFolder());
             }
+
+            System.Diagnostics.Process.GetCurrentProcess().PriorityClass = System.Diagnostics.ProcessPriorityClass.RealTime;
 
             // Tray icon initialization
             {
@@ -69,13 +106,16 @@ namespace eye_tracking_mouse
                 System.Windows.Forms.ToolStripMenuItem settings = new System.Windows.Forms.ToolStripMenuItem { Text = "Settings", Visible = true };
                 settings.Click += OpenSettings;
 
+                System.Windows.Forms.ToolStripMenuItem reset_calibration = new System.Windows.Forms.ToolStripMenuItem { Text = "Reset calibration", Visible = true };
+                reset_calibration.Click += ResetCalibration;
+
                 System.Windows.Forms.ToolStripMenuItem about = new System.Windows.Forms.ToolStripMenuItem { Text = "About " + Helpers.application_name, Visible = true };
                 about.Click += OpenAbout;
 
                 System.Windows.Forms.ToolStripMenuItem exit = new System.Windows.Forms.ToolStripMenuItem { Text = "Exit", Visible = true };
                 exit.Click += Shutdown;
 
-                context_menu_strip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { settings, about, exit });
+                context_menu_strip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { settings, reset_calibration, about, exit });
 
                 context_menu_strip.ResumeLayout(false);
                 Helpers.tray_icon.ContextMenuStrip = context_menu_strip;

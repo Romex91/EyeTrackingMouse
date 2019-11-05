@@ -1,0 +1,28 @@
+﻿<Window x:Class="eye_tracking_mouse.CalibrationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:eye_tracking_mouse"
+        mc:Ignorable="d"
+        Title="CalibrationWindow"
+        WindowStyle="None" AllowsTransparency="True"
+        ResizeMode="NoResize"
+        WindowState="Maximized"
+        Deactivated="Window_Deactivated"
+        Topmost="True">
+    <Window.Background>
+        <SolidColorBrush Opacity="0.3" Color="Black"></SolidColorBrush>
+    </Window.Background>
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="LightGreen" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+    </Window.Resources>
+    <Canvas  x:Name="Canvas">
+        <TextBlock  Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType=Canvas}}" TextAlignment="Center" Canvas.Top="50"> CALIBRATION VIEW </TextBlock>
+        <TextBlock Canvas.Right="100" Canvas.Bottom="100" Name ="Description"></TextBlock>
+    </Canvas>
+</Window>

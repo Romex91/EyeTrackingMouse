@@ -48,11 +48,7 @@ namespace eye_tracking_mouse
 
         private void UpdateCursorPosition()
         {
-            double dpiX, dpiY;
-            dpiX = graphics.DpiX / 100.0;
-            dpiY = graphics.DpiY / 100.0;
-
-            Cursor.Position = new Point((int)((gaze_point.X + calibration_shift.X) * dpiX), (int)((gaze_point.Y + calibration_shift.Y) * dpiY));
+            Cursor.Position = new Point(gaze_point.X + calibration_shift.X, gaze_point.Y + calibration_shift.Y);
         }
 
         private void OnGazePoint(double x, double y, double ts)
@@ -63,7 +59,7 @@ namespace eye_tracking_mouse
                 {
                     if (DateTime.Now > freeze_until)
                     {
-                        gaze_smoother.AddGazePoint(new Point((int)x, (int)y));
+                        gaze_smoother.AddGazePoint(new Point((int)(x), (int)(y)));
                         gaze_point = gaze_smoother.GetSmoothenedGazePoint();
 
                         if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.calibration_reset_zone_size)
@@ -192,14 +188,9 @@ namespace eye_tracking_mouse
                 }
             }
 
-            if (key == Options.Instance.key_bindings.show_calibration)
+            if (key == Options.Instance.key_bindings.show_calibration && state == InputManager.KeyState.Down)
             {
-                ShiftsStorage.Instance.ResetClosest(gaze_point);
-                if (is_double_press)
-                {
-                    Helpers.ShowBaloonNotification("Calibration has been reset.");
-                    ShiftsStorage.Instance.Reset();
-                }
+                App.ToggleCalibrationWindow();
             }
         }
 
