@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace eye_tracking_mouse
 {
-    class EyeTrackingMouse : IDisposable
+    public class EyeTrackingMouse : IDisposable
     {
         private readonly Tobii.Interaction.Host host = new Tobii.Interaction.Host();
         private readonly Tobii.Interaction.GazePointDataStream gazePointDataStream;
@@ -80,11 +80,6 @@ namespace eye_tracking_mouse
             }
         }
 
-        public void StartControlling()
-        {
-            mouse_state = MouseState.Controlling;
-        }
-
         public void StopControlling()
         {
             freeze_until = DateTime.Now;
@@ -100,33 +95,98 @@ namespace eye_tracking_mouse
             }
         }
 
-        public void OnKeyPressed(Interceptor.Keys key, InputManager.KeyState state, bool is_double_press)
+        public bool OnKeyPressed(
+            Key key, 
+            InputManager.KeyState key_state, 
+            bool is_double_press, 
+            bool is_short_press, 
+            bool is_repetition, 
+            bool is_modifier,
+            Action SendModifierDown)
         {
-            Debug.Assert(mouse_state != MouseState.Idle);
+            // The application grabs control over cursor when modifier is pressed.
+            if (key == Key.Modifier)
+            {
+                if (key_state == InputManager.KeyState.Down)
+                {
+                    mouse_state = MouseState.Controlling;
+                    return true;
+                }
 
-            if (state == InputManager.KeyState.Down)
+                if (key_state == InputManager.KeyState.Up)
+                {
+                    if (mouse_state == EyeTrackingMouse.MouseState.Idle)
+                    {
+                        return false;
+                    }
+
+                    bool handled = true;
+                    if (is_short_press)
+                    {
+                        SendModifierDown();
+                        handled = false;
+                    }
+                    StopControlling();
+                    return handled;
+                }
+            }
+
+
+            if (mouse_state == EyeTrackingMouse.MouseState.Idle)
+            {
+                return false;
+            }
+
+            if (key == Key.Unbound)
+            {
+                // The application intercepts modifier key presses. We do not want to lose modifier when handling unbound keys.
+                // We stop controlling cursor when facing the first unbound key and send modifier keystroke to OS before handling pressed key.
+                if (!is_modifier)
+                {
+                    SendModifierDown();
+                    StopControlling();
+                }
+                return false;
+            }
+
+
+            var repetition_white_list = new SortedSet<Key> {
+                    Key.ScrollDown,
+                    Key.ScrollUp,
+                    Key.ScrollLeft,
+                    Key.ScrollRight,
+                    Key.CalibrateLeft,
+                    Key.CalibrateRight,
+                    Key.CalibrateUp,
+                    Key.CalibrateDown,
+                };
+
+            if (is_repetition && !repetition_white_list.Contains(key))
+                return true;
+
+            if (key_state == InputManager.KeyState.Down)
             {
                 // Calibration
                 int calibration_step = (int)(Options.Instance.calibration_step * (is_double_press ? 2.5 : 1.0));
-                if (key == Options.Instance.key_bindings.calibrate_left)
+                if (key == Key.CalibrateLeft)
                 {
                     StartCalibration();
                     calibration_shift.X -= calibration_step;
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
                 }
-                if (key == Options.Instance.key_bindings.calibrate_right)
+                if (key == Key.CalibrateRight)
                 {
                     StartCalibration();
                     calibration_shift.X += calibration_step;
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
                 }
-                if (key == Options.Instance.key_bindings.calibrate_up)
+                if (key == Key.CalibrateUp)
                 {
                     StartCalibration();
                     calibration_shift.Y -= calibration_step;
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
                 }
-                if (key == Options.Instance.key_bindings.calibrate_down)
+                if (key == Key.CalibrateDown)
                 {
                     StartCalibration();
                     calibration_shift.Y += calibration_step;
@@ -134,19 +194,19 @@ namespace eye_tracking_mouse
                 }
 
                 // Scroll
-                if (key == Options.Instance.key_bindings.scroll_down)
+                if (key == Key.ScrollDown)
                 {
                     MouseButtons.WheelDown(Options.Instance.vertical_scroll_step * (is_double_press ? 2 : 1));
                 }
-                if (key == Options.Instance.key_bindings.scroll_up)
+                if (key == Key.ScrollUp)
                 {
                     MouseButtons.WheelUp(Options.Instance.vertical_scroll_step * (is_double_press ? 2 : 1));
                 }
-                if (key == Options.Instance.key_bindings.scroll_left)
+                if (key == Key.ScrollLeft)
                 {
                     MouseButtons.WheelLeft(Options.Instance.horizontal_scroll_step * (is_double_press ? 2 : 1));
                 }
-                if (key == Options.Instance.key_bindings.scroll_right)
+                if (key == Key.ScrollRight)
                 {
                     MouseButtons.WheelRight(Options.Instance.horizontal_scroll_step * (is_double_press ? 2 : 1));
                 }
@@ -154,44 +214,46 @@ namespace eye_tracking_mouse
 
             // Mouse buttons
             if (mouse_state == MouseState.Calibrating &&
-                state == InputManager.KeyState.Down &&
-                (key == Options.Instance.key_bindings.left_click || key == Options.Instance.key_bindings.right_click))
+                key_state == InputManager.KeyState.Down &&
+                (key == Key.LeftMouseButton || key == Key.RightMouseButton))
             {
                 ShiftsStorage.Instance.AddShift(gaze_point, calibration_shift);
                 mouse_state = MouseState.Controlling;
             }
 
-            if (key == Options.Instance.key_bindings.left_click)
+            if (key == Key.LeftMouseButton)
             {
-                if (state == InputManager.KeyState.Down)
+                if (key_state == InputManager.KeyState.Down)
                 {
                     // Freeze cursor for a short period of time after mouse clicks to make double clicks esier.
                     MouseButtons.LeftDown();
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.click_freeze_time_ms);
-                } else if (state == InputManager.KeyState.Up)
+                } else if (key_state == InputManager.KeyState.Up)
                 {
                     MouseButtons.LeftUp();
                 }
             }
 
-            if (key == Options.Instance.key_bindings.right_click)
+            if (key == Key.RightMouseButton)
             {
-                if (state == InputManager.KeyState.Down)
+                if (key_state == InputManager.KeyState.Down)
                 {
                     // Freeze cursor for a short period of time after mouse clicks to make double clicks esier.
                     MouseButtons.RightDown();
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.click_freeze_time_ms);
                 }
-                else if (state == InputManager.KeyState.Up)
+                else if (key_state == InputManager.KeyState.Up)
                 {
                     MouseButtons.RightUp();
                 }
             }
 
-            if (key == Options.Instance.key_bindings.show_calibration && state == InputManager.KeyState.Down)
+            if (key == Key.ShowCalibrationView && key_state == InputManager.KeyState.Down)
             {
                 App.ToggleCalibrationWindow();
             }
+
+            return true;
         }
 
 

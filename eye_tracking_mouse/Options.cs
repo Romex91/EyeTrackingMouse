@@ -8,28 +8,66 @@ using System.Threading.Tasks;
 
 namespace eye_tracking_mouse
 {
+    public enum Key
+    {
+        Unbound,
+        Modifier,
+        LeftMouseButton,
+        RightMouseButton,
+        ScrollDown,
+        ScrollUp,
+        ScrollLeft,
+        ScrollRight,
+        ShowCalibrationView,
+        CalibrateLeft,
+        CalibrateRight,
+        CalibrateUp,
+        CalibrateDown,
+    }
+
     class KeyBindings
     {
-        public Interceptor.Keys modifier = Interceptor.Keys.WindowsKey;
         // Some modifiers have different Up and Down states depending on whether it is right or left.
         // Humanity has messy keyboard scancodes.
         public bool is_modifier_e0 = true;
-        public Interceptor.Keys left_click = Interceptor.Keys.J;
-        public Interceptor.Keys right_click = Interceptor.Keys.K;
-        public Interceptor.Keys scroll_down = Interceptor.Keys.N;
-        public Interceptor.Keys scroll_up = Interceptor.Keys.H;
-        public Interceptor.Keys scroll_left = Interceptor.Keys.CommaLeftArrow;
-        public Interceptor.Keys scroll_right = Interceptor.Keys.PeriodRightArrow;
-        public Interceptor.Keys show_calibration = Interceptor.Keys.M;
-        public Interceptor.Keys calibrate_left = Interceptor.Keys.A;
-        public Interceptor.Keys calibrate_right = Interceptor.Keys.D;
-        public Interceptor.Keys calibrate_up = Interceptor.Keys.W;
-        public Interceptor.Keys calibrate_down = Interceptor.Keys.S;
+
+        public enum InterceptionMethod
+        {
+            WinApi,
+            OblitaDriver
+        }
+        public InterceptionMethod interception_method = InterceptionMethod.OblitaDriver;
+
+        public Interceptor.Keys this[Key key]
+        {
+            get => interception_method == InterceptionMethod.OblitaDriver ? bindings [key] : default_bindings[key];
+            set => bindings[key] = value;
+        }
+
+        public static Dictionary<Key, Interceptor.Keys> default_bindings = new Dictionary<Key, Interceptor.Keys>
+        {
+            {Key.Modifier, Interceptor.Keys.WindowsKey},
+            {Key.LeftMouseButton, Interceptor.Keys.J },
+            {Key.RightMouseButton, Interceptor.Keys.K},
+            {Key.ScrollDown,Interceptor.Keys.N},
+            {Key.ScrollUp, Interceptor.Keys.H},
+            {Key.ScrollLeft, Interceptor.Keys.CommaLeftArrow},
+            {Key.ScrollRight, Interceptor.Keys.PeriodRightArrow},
+            {Key.ShowCalibrationView, Interceptor.Keys.M},
+            {Key.CalibrateLeft, Interceptor.Keys.A},
+            {Key.CalibrateRight, Interceptor.Keys.D},
+            {Key.CalibrateUp, Interceptor.Keys.W},
+            {Key.CalibrateDown, Interceptor.Keys.S},
+        };
+
+        [JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+        public Dictionary<Key, Interceptor.Keys> bindings = new Dictionary<Key, Interceptor.Keys>(default_bindings);
     };
 
     class Options
     {
         public KeyBindings key_bindings = new KeyBindings();
+
         public int calibration_step = 5;
         public int calibration_zone_size = 150; // TODO: add options
         public int calibration_max_zones_count = 45; // TODO: add options
@@ -43,7 +81,7 @@ namespace eye_tracking_mouse
         public int calibrate_freeze_time_ms = 800;
         public int click_freeze_time_ms = 400;
         public int double_click_duration_ms = 300;
-        public int short_click_duration_ms = 300;
+        public int short_click_duration_ms = 150;
 
         public int smothening_zone_radius = 250;
         public int smothening_points_count = 15;

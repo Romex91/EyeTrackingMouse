@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Drawing;
 using System.IO;
+using System.Windows.Controls;
 
 namespace eye_tracking_mouse
 {
@@ -21,19 +22,19 @@ namespace eye_tracking_mouse
         private static App application;
         private static CalibrationWindow calibration_window = null;
 
-        private static readonly Settings settings_window = new Settings();
+        private static Settings settings_window;
 
         // TODO: prevent multiple windows.
         private static void OpenSettings(object sender, EventArgs e)
         {
-            if (settings_window.Visibility != Visibility.Visible)
-                settings_window.Show();
+            settings_window = new Settings(input_manager);
+            settings_window.Show();
             settings_window.TabControl.SelectedIndex = 0;
         }
         private static void OpenAbout(object sender, EventArgs e)
         {
-            if (settings_window.Visibility != Visibility.Visible)
-                settings_window.Show();
+            settings_window = new Settings(input_manager);
+            settings_window.Show();
 
             settings_window.TabControl.SelectedIndex = 2;
         }
@@ -89,6 +90,8 @@ namespace eye_tracking_mouse
         {
             application = new App();
             application.InitializeComponent();
+            ToolTipService.ShowDurationProperty.OverrideMetadata(
+                typeof(DependencyObject), new FrameworkPropertyMetadata(Int32.MaxValue));
 
             if (!Directory.Exists(Helpers.GetLocalFolder()))
             {

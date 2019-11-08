@@ -12,7 +12,96 @@
     </Window.Resources>
     <Grid>
         <TabControl x:Name="TabControl">
-            <TabItem Header="Key bindings"></TabItem>
+            <TabItem Header="Key bindings">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"></ColumnDefinition>
+                        <ColumnDefinition Width="auto"></ColumnDefinition>
+                        <ColumnDefinition Width="auto"></ColumnDefinition>
+                        <ColumnDefinition Width="50"></ColumnDefinition>
+                        <ColumnDefinition Width="auto"></ColumnDefinition>
+                        <ColumnDefinition Width="auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0">Enable mouse control</TextBlock>
+                    <Button Grid.Row="0" Grid.Column="1" Click="KeyBindingButtonClick" Name="EnableMouseControll">error</Button>
+                    <Button Grid.Row="0" Grid.Column="2" Click="KeyBindingButtonClick" Name="EnableMouseControllDefault">Default</Button>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0">Left mouse button</TextBlock>
+                    <Button Grid.Row="1" Grid.Column="1" Click="KeyBindingButtonClick" Name="LeftMouseButton">error</Button>
+                    <Button Grid.Row="1" Grid.Column="2" Click="KeyBindingButtonClick" Name="LeftMouseButtonDefault">Default</Button>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0">Right mouse button</TextBlock>
+                    <Button Grid.Row="2" Grid.Column="1" Click="KeyBindingButtonClick" Name="RightMouseButton">error</Button>
+                    <Button Grid.Row="2" Grid.Column="2" Click="KeyBindingButtonClick" Name="RightMouseButtonDefault">Default</Button>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0">Scroll down</TextBlock>
+                    <Button Grid.Row="3" Grid.Column="1" Click="KeyBindingButtonClick" Name="ScrollDown">error</Button>
+                    <Button Grid.Row="3" Grid.Column="2" Click="KeyBindingButtonClick" Name="ScrollDownDefault">Default</Button>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0">Scroll up</TextBlock>
+                    <Button Grid.Row="4" Grid.Column="1" Click="KeyBindingButtonClick" Name="ScrollUp">error</Button>
+                    <Button Grid.Row="4" Grid.Column="2" Click="KeyBindingButtonClick" Name="ScrollUpDefault">Default</Button>
+
+                    <TextBlock Grid.Row="5" Grid.Column="0">Scroll left</TextBlock>
+                    <Button Grid.Row="5" Grid.Column="1" Click="KeyBindingButtonClick" Name="ScrollLeft">error</Button>
+                    <Button Grid.Row="5" Grid.Column="2" Click="KeyBindingButtonClick" Name="ScrollLeftDefault">Default</Button>
+
+                    <TextBlock Grid.Row="6" Grid.Column="0">Scroll right</TextBlock>
+                    <Button Grid.Row="6" Grid.Column="1" Click="KeyBindingButtonClick" Name="ScrollRight">error</Button>
+                    <Button Grid.Row="6" Grid.Column="2" Click="KeyBindingButtonClick" Name="ScrollRightDefault">Default</Button>
+
+                    <TextBlock Grid.Row="7" Grid.Column="0">Calibrate up</TextBlock>
+                    <Button Grid.Row="7" Grid.Column="1" Click="KeyBindingButtonClick" Name="CalibrateUp">error</Button>
+                    <Button Grid.Row="7" Grid.Column="2" Click="KeyBindingButtonClick" Name="CalibrateUpDefault">Default</Button>
+
+                    <TextBlock Grid.Row="8" Grid.Column="0">Calibrate down</TextBlock>
+                    <Button Grid.Row="8" Grid.Column="1" Click="KeyBindingButtonClick" Name="CalibrateDown">error</Button>
+                    <Button Grid.Row="8" Grid.Column="2" Click="KeyBindingButtonClick" Name="CalibrateDownDefault">Default</Button>
+
+                    <TextBlock Grid.Row="9" Grid.Column="0">Calibrate left</TextBlock>
+                    <Button Grid.Row="9" Grid.Column="1" Click="KeyBindingButtonClick" Name="CalibrateLeft">error</Button>
+                    <Button Grid.Row="9" Grid.Column="2" Click="KeyBindingButtonClick" Name="CalibrateLeftDefault">Default</Button>
+
+                    <TextBlock Grid.Row="10" Grid.Column="0">Calibrate right</TextBlock>
+                    <Button Grid.Row="10" Grid.Column="1" Click="KeyBindingButtonClick" Name="CalibrateRigth">error</Button>
+                    <Button Grid.Row="10" Grid.Column="2" Click="KeyBindingButtonClick" Name="CalibrateRigthDefault">Default</Button>
+
+                    <TextBlock Grid.Row="11" Grid.Column="0">Calibration view</TextBlock>
+                    <Button Grid.Row="11" Grid.Column="1" Click="KeyBindingButtonClick" Name="CalibrationView">error</Button>
+                    <Button Grid.Row="11" Grid.Column="2" Click="KeyBindingButtonClick" Name="CalibrationViewDefault">Default</Button>
+
+                    <Button Grid.Row="0" Grid.Column="4" Click="ResetEverything_Click" Name="ResetEverything" >Reset everything to default</Button>
+                    <TextBlock Grid.Row="2" Grid.Column="4">Interception method:</TextBlock>
+                    <ComboBox Grid.Row="3" Grid.Column="4" SelectionChanged="InterceptionMethod_Selected" SelectedIndex="0" Name ="InterceptionMethod">
+                        <ComboBoxItem>WinAPI</ComboBoxItem>
+                        <ComboBoxItem>Oblita Interception Driver</ComboBoxItem>
+                    </ComboBox>
+
+                    <TextBlock Name="WinApiWarning" Grid.Row="5" Grid.RowSpan="2" Grid.Column="4" Grid.ColumnSpan="2">
+                        Custom key bindings are not available under WinAPI. <LineBreak></LineBreak>
+                        Change interception method to Oblita Interception <LineBreak></LineBreak>
+                        Driver to enable key bindings.
+                    </TextBlock>
+
+                </Grid>
+            </TabItem>
 
             <TabItem Header="Advancced" >
                 <Grid>

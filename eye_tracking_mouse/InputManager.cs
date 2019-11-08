@@ -9,14 +9,7 @@ using System.Windows.Forms;
 
 namespace eye_tracking_mouse
 {
-    struct InteractionHistoryEntry
-    {
-        public Interceptor.Keys Key;
-        public Interceptor.KeyState State;
-        public DateTime Time;
-    };
-
-    class InputManager
+    public class InputManager
     {
         private readonly Interceptor.Input input = new Interceptor.Input();
         private readonly EyeTrackingMouse eye_tracking_mouse;
@@ -25,23 +18,84 @@ namespace eye_tracking_mouse
         private bool is_win_pressed = false;
         private readonly InteractionHistoryEntry[] interaction_history = new InteractionHistoryEntry[3];
 
+        private Action<ReadKeyResult> read_key_callback;
+
         public enum KeyState
         {
             Up,
             Down,
         };
 
+        private struct InteractionHistoryEntry
+        {
+            public Key Key;
+            public KeyState State;
+            public DateTime Time;
+        };
+
         public void Stop()
         {
             input.Unload();
         }
-        public void OnKeyPressed(object sender, Interceptor.KeyPressedEventArgs e)
+
+        private void SendModifierDown()
+        {
+            input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
+            Thread.Sleep(Options.Instance.win_press_delay_ms);
+        }
+
+        private bool OnKeyPressed(Key key, KeyState key_state, bool is_modifier)
+        {
+                // If you hold a key pressed for a second it will start to produce a sequence of rrrrrrrrrrepeated |KeyState.Down| events.
+                // For most keys we don't want to handle such events and assume that a key stays pressed until |KeyState.Up| appears.
+                bool is_repetition = interaction_history[0].Key == key &&
+                    interaction_history[0].State == key_state &&
+                    key_state == KeyState.Down;
+
+                if (!is_repetition)
+                {
+                    interaction_history[2] = interaction_history[1];
+                    interaction_history[1] = interaction_history[0];
+                    interaction_history[0].Key = key;
+                    interaction_history[0].State = key_state;
+                    interaction_history[0].Time = DateTime.Now;
+                }
+
+                bool is_double_press =
+                    key_state == KeyState.Down &&
+                    interaction_history[1].Key == key &&
+                    interaction_history[2].Key == key &&
+                    (DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.double_click_duration_ms;
+
+                bool is_short_press =
+                    key_state == KeyState.Up &&
+                    interaction_history[1].Key == key &&
+                    (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.short_click_duration_ms;
+
+                return eye_tracking_mouse.OnKeyPressed(key, key_state, is_double_press, is_short_press, is_repetition, is_modifier, SendModifierDown);
+           
+        }
+
+        public struct ReadKeyResult
+        {
+            public Interceptor.Keys key;
+            public bool is_e0_key;
+        }
+        public void ReadKeyAsync(Action<ReadKeyResult> callback)
         {
             lock (Helpers.locker)
             {
-                // Console.WriteLine(e.Key);
-                // Console.WriteLine(e.State);
+                read_key_callback = callback;
+            }
+        }
 
+        public void OnKeyPressed(object sender, Interceptor.KeyPressedEventArgs e)
+        {
+            // Console.WriteLine(e.Key);
+            // Console.WriteLine(e.State);
+
+            lock (Helpers.locker)
+            {
                 e.Handled = true;
 
                 // Interceptor.KeyState is a mess. Different Keys produce different KeyState when pressed and released.
@@ -54,7 +108,8 @@ namespace eye_tracking_mouse
                 else if ((e.State & Interceptor.KeyState.Up) != 0)
                 {
                     key_state = KeyState.Up;
-                } else
+                }
+                else
                 {
                     e.Handled = false;
                     return;
@@ -78,102 +133,23 @@ namespace eye_tracking_mouse
 
 
                 var key_bindings = Options.Instance.key_bindings;
-                // If you hold a key pressed for a second it will start to produce a sequence of rrrrrrrrrrepeated |KeyState.Down| events.
-                // For most keys we don't want to handle such events and assume that a key stays pressed until |KeyState.Up| appears.
-                var repeteation_white_list = new SortedSet<Interceptor.Keys> {
-                    key_bindings.calibrate_down,
-                    key_bindings.calibrate_up,
-                    key_bindings.calibrate_left,
-                    key_bindings.calibrate_right,
-                    key_bindings.scroll_down,
-                    key_bindings.scroll_up,
-                    key_bindings.scroll_left,
-                    key_bindings.scroll_right,
-                };
-
-                if (!repeteation_white_list.Contains(e.Key) &&
-                    interaction_history[0].Key == e.Key &&
-                    interaction_history[0].State == e.State &&
-                    key_state == KeyState.Down)
+                Key key = Key.Unbound;
+                if (key_bindings.bindings.ContainsValue(e.Key))
                 {
-                    if (eye_tracking_mouse.mouse_state == EyeTrackingMouse.MouseState.Idle)
-                        e.Handled = false;
+                    key = key_bindings.bindings.First(pair =>
+                    {
+                        return pair.Value == e.Key;
+                    }).Key;
+                }
+
+                if (key_state == KeyState.Down && read_key_callback != null)
+                {
+                    read_key_callback(new ReadKeyResult { is_e0_key = is_e0_key, key = e.Key });
+                    read_key_callback = null;
+                    e.Handled = true;
                     return;
                 }
-
-                interaction_history[2] = interaction_history[1];
-                interaction_history[1] = interaction_history[0];
-                interaction_history[0].Key = e.Key;
-                interaction_history[0].State = e.State;
-                interaction_history[0].Time = DateTime.Now;
-
-                bool is_double_press =
-                    key_state == KeyState.Down &&
-                    interaction_history[1].Key == e.Key &&
-                    interaction_history[2].Key == e.Key &&
-                    (DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.double_click_duration_ms;
-
-                bool is_short_press =
-                    key_state == KeyState.Up &&
-                    interaction_history[1].Key == e.Key &&
-                    (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.short_click_duration_ms;
-
-                // The application grabs control over cursor when modifier is pressed.
-                if (e.Key == key_bindings.modifier)
-                {
-                    if (key_state == InputManager.KeyState.Down)
-                    {
-                        eye_tracking_mouse.StartControlling();
-                    }
-                    else if (key_state == InputManager.KeyState.Up)
-                    {
-                        if (eye_tracking_mouse.mouse_state == EyeTrackingMouse.MouseState.Idle)
-                        {
-                            e.Handled = false;
-                        }
-                        else if (is_short_press)
-                        {
-                            input.SendKey(key_bindings.modifier, key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
-                            Thread.Sleep(Options.Instance.win_press_delay_ms);
-                            input.SendKey(key_bindings.modifier, key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 | Interceptor.KeyState.Up : Interceptor.KeyState.Up);
-                        }
-
-                        eye_tracking_mouse.StopControlling();
-                    }
-                    return;
-                }
-
-
-                if (eye_tracking_mouse.mouse_state == EyeTrackingMouse.MouseState.Idle)
-                {
-                    e.Handled = false;
-                    return;
-                }
-
-                bool is_key_bound = false;
-                foreach (var key_binding in typeof(KeyBindings).GetFields())
-                {
-                    if (key_binding.FieldType == typeof(Interceptor.Keys) && key_binding.GetValue(key_bindings).Equals(e.Key))
-                    {
-                        is_key_bound = true;
-                    }
-                }
-
-                if (!is_key_bound)
-                {
-                    // The application intercepts modifier key presses. We do not want to lose modifier when handling unbound keys.
-                    // We stop controlling cursor when facing the first unbound key and send modifier keystroke to OS before handling pressed key.
-                    if (eye_tracking_mouse.mouse_state != EyeTrackingMouse.MouseState.Idle  && !Helpers.modifier_keys.Contains(e.Key))
-                    {
-                        eye_tracking_mouse.StopControlling();
-                        input.SendKey(key_bindings.modifier, key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
-                    }
-                    e.Handled = false;
-                    return;
-                }
-
-
-                eye_tracking_mouse.OnKeyPressed(e.Key, key_state, is_double_press);
+                e.Handled = OnKeyPressed(key, key_state, Helpers.modifier_keys.Contains(e.Key));
             }
         }
 

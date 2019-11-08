@@ -73,8 +73,9 @@ namespace eye_tracking_mouse
         {
             InitializeComponent();
             Description.Text =
-                "HIDE CALIBRATION VIEW: " + Options.Instance.key_bindings.modifier.ToString().ToUpper() + "+" + Options.Instance.key_bindings.show_calibration + "\n" +
-                "YOU CAN RESET CALIBRATION VIA TRAY ICON MENU";
+                "CALIBRATIONS COUNT: " + ShiftsStorage.Instance.shifts.Count + "/" + Options.Instance.calibration_max_zones_count + " \n" +
+                "HIDE CALIBRATION VIEW: " + Options.Instance.key_bindings[Key.Modifier].ToString().ToUpper() + "+" + Options.Instance.key_bindings[Key.ShowCalibrationView] + "\n" +
+                "YOU CAN RESET CALIBRATIONS VIA TRAY ICON MENU";
 
             OnShiftStorageCahnged(null, null);
             ShiftsStorage.Instance.Changed += OnShiftStorageCahnged;
