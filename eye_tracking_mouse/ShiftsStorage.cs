@@ -13,8 +13,27 @@ namespace eye_tracking_mouse
 {
     class ShiftsStorage
     {
+        public class ShiftItem
+        {
+            public ShiftItem(Point position, Point shift)
+            {
+                Position = position;
+                Shift = shift;
+                SectorX = (int)(position.X / 500.0);
+                SectorY = (int)(position.Y / 500.0);
+            }
+
+            public Point Position { get; private set; }
+            public Point Shift { get; private set; }
+
+            // To calculate points density we split the screen to sectors. This algprithm is not accurate but simple and fast.
+            public int SectorX { get; private set; }
+
+            public int SectorY { get; private set; }
+        }
+
         private static string Filepath { get { return Path.Combine(Helpers.GetLocalFolder(), "calibration.json"); } }
-        public List<Tuple<Point, Point>> shifts = new List<Tuple<Point, Point>>();
+        public List<ShiftItem> Shifts { private set; get; } = new List<ShiftItem>();
 
         private DateTime last_save_time = DateTime.Now;
 
@@ -30,32 +49,33 @@ namespace eye_tracking_mouse
             {
                 try
                 {
-                    storage.shifts = JsonConvert.DeserializeObject<List<Tuple<Point, Point>>>(File.ReadAllText(Filepath));
-                } catch (Exception) {}
+                    storage.Shifts = JsonConvert.DeserializeObject<List<ShiftItem>>(File.ReadAllText(Filepath));
+                }
+                catch (Exception) { }
             }
             return storage;
         }
 
         public Point GetShift(Point cursor_position)
         {
-            var closest_indices = GetClosestShiftIndexes(cursor_position);
+            var closest_indices = GetClosestShiftIndexes(cursor_position, Options.Instance.calibration_considered_zones_count);
             if (closest_indices == null)
             {
-                Debug.Assert(shifts.Count() == 0);
+                Debug.Assert(Shifts.Count() == 0);
                 return new Point(0, 0);
             }
 
             double sum_of_reverse_distances = 0;
-            foreach(var index in closest_indices)
+            foreach (var index in closest_indices)
             {
-                sum_of_reverse_distances += (1/index.Item2);
+                sum_of_reverse_distances += (1 / index.Item2);
             }
 
             Point resulting_shift = new Point(0, 0);
             foreach (var index in closest_indices)
             {
-                resulting_shift.X += (int)(shifts[index.Item1].Item2.X / index.Item2 / sum_of_reverse_distances);
-                resulting_shift.Y += (int)(shifts[index.Item1].Item2.Y / index.Item2 / sum_of_reverse_distances);
+                resulting_shift.X += (int)(Shifts[index.Item1].Shift.X / index.Item2 / sum_of_reverse_distances);
+                resulting_shift.Y += (int)(Shifts[index.Item1].Shift.Y / index.Item2 / sum_of_reverse_distances);
             }
 
             return resulting_shift;
@@ -63,21 +83,21 @@ namespace eye_tracking_mouse
 
         public void Reset()
         {
-            shifts.Clear();
+            Shifts.Clear();
             NotifyOnChange();
         }
         public void OnSettingsChanged()
         {
             // Adjust to new calibration zone size.
-            for(int i = 0; i < shifts.Count; )
+            for (int i = 0; i < Shifts.Count - 1;)
             {
                 bool did_remove = false;
-                foreach(var shift in shifts)
+                for (int j = i + 1; j < Shifts.Count; j++)
                 {
-                    if (Helpers.GetDistance(shift.Item1, shifts[i].Item1) < Options.Instance.calibration_zone_size)
+                    if (Helpers.GetDistance(Shifts[j].Position, Shifts[i].Position) < Options.Instance.calibration_zone_size)
                     {
                         did_remove = true;
-                        shifts.RemoveAt(i);
+                        Shifts.RemoveAt(i);
                         break;
                     }
                 }
@@ -87,8 +107,8 @@ namespace eye_tracking_mouse
             }
 
             // Adjust to new calibration zones count.
-            while (shifts.Count > Options.Instance.calibration_max_zones_count)
-                shifts.RemoveAt(0);
+            while (Shifts.Count > Options.Instance.calibration_max_zones_count)
+                Shifts.RemoveAt(0);
 
             SaveToFileAsync();
             NotifyOnChange();
@@ -100,30 +120,34 @@ namespace eye_tracking_mouse
                 save_to_file_task.Wait();
 
             last_save_time = DateTime.Now;
-            var deep_copy = new List<Tuple<Point, Point>>();
-            foreach (var i in shifts)
+            var deep_copy = new List<ShiftItem>();
+            foreach (var i in Shifts)
             {
-                deep_copy.Add(new Tuple<Point, Point>(i.Item1, i.Item2));
+                deep_copy.Add(new ShiftItem(i.Position, i.Shift));
             }
 
-            save_to_file_task = Task.Factory.StartNew(() => {
+            save_to_file_task = Task.Factory.StartNew(() =>
+            {
                 File.WriteAllText(Filepath, JsonConvert.SerializeObject(deep_copy, Formatting.Indented));
             });
         }
 
         public void AddShift(Point cursor_position, Point shift)
         {
-            var indices = GetClosestShiftIndexes(cursor_position);
-            if (shifts.Count() < Options.Instance.calibration_max_zones_count)
+            var indices = GetClosestShiftIndexes(cursor_position, 2);
+            if (indices != null && indices[0].Item2 < Options.Instance.calibration_zone_size)
             {
-                if (indices == null || indices[0].Item2 >  Options.Instance.calibration_zone_size)
-                    shifts.Add(new Tuple<Point, Point>(cursor_position, shift));
-                else
-                    shifts[indices[0].Item1] = new Tuple<Point, Point>(cursor_position, shift);
+                Shifts[indices[0].Item1] = new ShiftItem(cursor_position, shift);
+                if (indices.Count > 1 && indices[1].Item2 < Options.Instance.calibration_zone_size)
+                    Shifts.RemoveAt(indices[1].Item1);
+            }
+            else if (Shifts.Count() < Options.Instance.calibration_max_zones_count)
+            {
+                Shifts.Add(new ShiftItem(cursor_position, shift));
             }
             else
             {
-                shifts[indices[0].Item1] = new Tuple<Point, Point>(cursor_position, shift);
+                Shifts[GetClosestPointOfHihestDensity(cursor_position)] = new ShiftItem(cursor_position, shift);
             }
 
             if ((DateTime.Now - last_save_time).TotalSeconds > 10 && (save_to_file_task == null || save_to_file_task.IsCompleted))
@@ -139,42 +163,88 @@ namespace eye_tracking_mouse
             Changed?.Invoke(this, new EventArgs());
         }
 
-        private Tuple<int /*index*/, double /*distance*/>[] GetClosestShiftIndexes(Point cursor_position)
+        private int GetSectorNumber(ShiftItem shift, int max_sector_x)
         {
-            if (shifts.Count() == 0)
+            return shift.SectorX + shift.SectorY * (max_sector_x + 1);
+        }
+
+        private int GetClosestPointOfHihestDensity(Point cursor_position)
+        {
+            Debug.Assert(Shifts.Count > 0);
+
+            int max_sector_x = 0;
+            for (int i = 0; i < Shifts.Count; i++)
+                if (Shifts[i].SectorX > max_sector_x)
+                    max_sector_x = Shifts[i].SectorX;
+
+            var sectors = new Dictionary<int /*number of sector*/, int /*Count of points in sector*/>();
+            for (int i = 0; i < Shifts.Count; i++)
+            {
+                int sector_number = GetSectorNumber(Shifts[i], max_sector_x);
+                if (!sectors.ContainsKey(sector_number))
+                    sectors.Add(sector_number, 0);
+
+                sectors[sector_number]++;
+            }
+
+            int max_points_count_in_sector = 0;
+            for (int i = 0; i < sectors.Count; i++)
+            {
+                int points_number_in_sector = sectors.ElementAt(i).Value;
+                if (points_number_in_sector > max_points_count_in_sector)
+                    max_points_count_in_sector = points_number_in_sector;
+            }
+
+            int index_of_closest_point = 0;
+            double min_distance = double.MaxValue;
+            for (int i = 0; i < Shifts.Count; i++)
+            {
+                if (sectors[GetSectorNumber(Shifts[i], max_sector_x)] == max_points_count_in_sector)
+                {
+                    double distance = Helpers.GetDistance(Shifts[i].Position, cursor_position);
+                    if (min_distance > distance)
+                    {
+                        min_distance = distance;
+                        index_of_closest_point = i;
+                    }
+                }
+            }
+
+            return index_of_closest_point;
+        }
+
+        private List<Tuple<int /*index*/, double /*distance*/>> GetClosestShiftIndexes(Point cursor_position, int number)
+        {
+            if (Shifts.Count() == 0)
                 return null;
 
-            Tuple<int, double>[] retval = new Tuple<int, double>[3] {
-                new Tuple<int, double>(-1, double.MaxValue),
-                new Tuple<int, double>(-1, double.MaxValue),
-                new Tuple<int, double>(-1, double.MaxValue),
-            };
-
-            for (int i = 0; i < shifts.Count(); i++)
+            var retval = new List<Tuple<int, double>>();
+            for (int i = 0; i < Shifts.Count(); i++)
             {
-                double distance = Helpers.GetDistance(shifts[i].Item1, cursor_position);
-                if (distance < 1)
-                    distance = 1;
+                double distance = Helpers.GetDistance(Shifts[i].Position, cursor_position);
+                if (distance < 0.1)
+                    distance = 0.1;
 
-                if (distance < retval[0].Item2)
+                if (retval.Count == 0)
                 {
-                    retval[2] = retval[1];
-                    retval[1] = retval[0];
-                    retval[0] = new Tuple<int, double>(i, distance);
-                    if (retval[1].Item1 == -1)
-                        retval[1] = retval[0];
-                    if (retval[2].Item1 == -1)
-                        retval[2] = retval[0];
+                    retval.Add(new Tuple<int, double>(i, distance));
+                    continue;
                 }
-                else if (distance < retval[1].Item2)
+
+                int j = 0;
+                for (; j < retval.Count; j++)
                 {
-                    retval[2] = retval[1];
-                    retval[1] = new Tuple<int, double>(i, distance);
+                    if (distance < retval[j].Item2)
+                    {
+                        retval.Insert(j, new Tuple<int, double>(i, distance));
+                        break;
+                    }
                 }
-                else if (distance < retval[1].Item2)
-                {
-                    retval[2] = new Tuple<int, double>(i, distance);
-                }
+                if (j == retval.Count)
+                    retval.Add(new Tuple<int, double>(i, distance));
+
+                if (retval.Count > number)
+                    retval.RemoveAt(retval.Count - 1);
             }
             return retval;
         }

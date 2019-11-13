@@ -37,6 +37,7 @@ namespace eye_tracking_mouse
             OblitaDriver
         }
         public InterceptionMethod interception_method = InterceptionMethod.OblitaDriver;
+        public bool is_driver_installed = false;
 
         public Interceptor.Keys this[Key key]
         {
@@ -68,20 +69,21 @@ namespace eye_tracking_mouse
     {
         public KeyBindings key_bindings = new KeyBindings();
 
-        public int calibration_step = 5;
-        public int calibration_zone_size = 150; // TODO: add options
-        public int calibration_max_zones_count = 45; // TODO: add options
-        public int calibration_shift_ttl_ms = 100; // Not configurable since it is hard to explain what it means.
+        public int calibration_step = 3;
+        public int calibration_zone_size = 150;
+        public int calibration_max_zones_count = 15;
+        public int calibration_considered_zones_count = 5; // Not configurable since it is hard to explain what it means.
+        public int calibration_shift_ttl_ms = 50; // Not configurable since it is hard to explain what it means.
         public int calibration_reset_zone_size = 400; // Not configurable since it is hard to explain what it means.
 
         public int horizontal_scroll_step = 4;
         public int vertical_scroll_step = 4;
 
         public int win_press_delay_ms = 10; // Not configurable since changing it wouldn't improve user experience.
-        public int calibrate_freeze_time_ms = 800;
+        public int calibrate_freeze_time_ms = 400;
         public int click_freeze_time_ms = 400;
         public int double_click_duration_ms = 300;
-        public int short_click_duration_ms = 150;
+        public int short_click_duration_ms = 100;
 
         public int smothening_zone_radius = 250;
         public int smothening_points_count = 15;

@@ -39,7 +39,7 @@ namespace eye_tracking_mouse
 
         private readonly List<Petzold.Media2D.ArrowLine> arrows = new List<Petzold.Media2D.ArrowLine>();
 
-        private void OnShiftStorageCahnged(object sender, EventArgs e)
+        private void Update(object sender, EventArgs e)
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -52,19 +52,24 @@ namespace eye_tracking_mouse
 
                     arrows.Clear();
 
-                    foreach (var shift in ShiftsStorage.Instance.shifts)
+                    foreach (var shift in ShiftsStorage.Instance.Shifts)
                     {
                         var arrow = new Petzold.Media2D.ArrowLine();
-                        arrow.X1 = shift.Item1.X;
-                        arrow.Y1 = shift.Item1.Y;
-                        arrow.X2 = shift.Item1.X + shift.Item2.X;
-                        arrow.Y2 = shift.Item1.Y + shift.Item2.Y;
+                        arrow.X1 = shift.Position.X;
+                        arrow.Y1 = shift.Position.Y;
+                        arrow.X2 = shift.Position.X + shift.Shift.X;
+                        arrow.Y2 = shift.Position.Y + shift.Shift.Y;
                         arrow.Stroke = Brushes.Red;
                         arrow.StrokeThickness = 3;
 
                         Canvas.Children.Add(arrow);
                         arrows.Add(arrow);
                     }
+
+                    Description.Text =
+                        "CALIBRATIONS COUNT: " + ShiftsStorage.Instance.Shifts.Count + "/" + Options.Instance.calibration_max_zones_count + " \n" +
+                        "HIDE CALIBRATION VIEW: " + Options.Instance.key_bindings[Key.Modifier].ToString().ToUpper() + "+" + Options.Instance.key_bindings[Key.ShowCalibrationView] + "\n" +
+                        "YOU CAN RESET CALIBRATIONS VIA TRAY ICON MENU";
                 }
             }));
         }
@@ -72,13 +77,9 @@ namespace eye_tracking_mouse
         public CalibrationWindow()
         {
             InitializeComponent();
-            Description.Text =
-                "CALIBRATIONS COUNT: " + ShiftsStorage.Instance.shifts.Count + "/" + Options.Instance.calibration_max_zones_count + " \n" +
-                "HIDE CALIBRATION VIEW: " + Options.Instance.key_bindings[Key.Modifier].ToString().ToUpper() + "+" + Options.Instance.key_bindings[Key.ShowCalibrationView] + "\n" +
-                "YOU CAN RESET CALIBRATIONS VIA TRAY ICON MENU";
-
-            OnShiftStorageCahnged(null, null);
-            ShiftsStorage.Instance.Changed += OnShiftStorageCahnged;
+            Update(null, null);
+            ShiftsStorage.Instance.Changed += Update;
+            Settings.KeyBindingsChanged += Update;
         }
 
         private void Window_Deactivated(object sender, EventArgs e)
@@ -86,6 +87,12 @@ namespace eye_tracking_mouse
             Topmost = true;
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            ShiftsStorage.Instance.Changed -= Update;
+            Settings.KeyBindingsChanged -= Update;
+            base.OnClosed(e);
+        }
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);

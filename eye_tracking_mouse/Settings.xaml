@@ -143,7 +143,7 @@
                     <Image  Grid.Row="3" Grid.Column="1" Name="CalibrationStepTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
                     <TextBlock Grid.Row="4" Grid.Column="0">Max calibration zones count</TextBlock>
-                    <Slider Grid.Row="4" Grid.Column="2" Name="CalibrationPointsCount" Minimum="10" Maximum="500" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="CalibrationPointsCount_ValueChanged"></Slider>
+                    <Slider Grid.Row="4" Grid.Column="2" Name="CalibrationPointsCount" Minimum="5" Maximum="50" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="CalibrationPointsCount_ValueChanged"></Slider>
                     <TextBox Grid.Row="4" Grid.Column="3" Text="{Binding ElementName=CalibrationPointsCount, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
                     <Image  Grid.Row="4" Grid.Column="1" Name="CalibrationPointsCountTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 

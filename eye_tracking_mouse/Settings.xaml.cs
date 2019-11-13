@@ -28,6 +28,9 @@ namespace eye_tracking_mouse
         private bool is_initialized = false;
 
         private InputManager input_manager;
+
+        public static EventHandler KeyBindingsChanged;
+
         public Settings(InputManager input_manager)
         {
             this.input_manager = input_manager;
@@ -319,14 +322,15 @@ namespace eye_tracking_mouse
                                 {
                                     UpdateKeyBindingControls();
                                     UpdateTooltips();
+                                    Options.Instance.SaveToFile();
+                                    KeyBindingsChanged?.Invoke(this, new EventArgs());
                                 }
                             }));
                         }
                     });
 
-                    key_binding_control.new_binding.Background = new SolidColorBrush(Colors.Blue);
+                    key_binding_control.new_binding.Background = new SolidColorBrush(Colors.LightBlue);
                     key_binding_control.new_binding.Content = "PRESS ANY KEY";
-
                     return;
                 }
                 else if (key_binding_control.default_binding == sender)
@@ -336,6 +340,8 @@ namespace eye_tracking_mouse
                         Options.Instance.key_bindings[key_binding_control.key] = KeyBindings.default_bindings[key_binding_control.key];
                         UpdateKeyBindingControls();
                         UpdateTooltips();
+                        Options.Instance.SaveToFile();
+                        KeyBindingsChanged?.Invoke(this, new EventArgs());
                     }
                     return;
                 }
@@ -393,6 +399,7 @@ namespace eye_tracking_mouse
                     Options.Instance.key_bindings.bindings = new Dictionary<Key, Interceptor.Keys>(KeyBindings.default_bindings);
                     Options.Instance.key_bindings.interception_method = KeyBindings.InterceptionMethod.WinApi;
                     Options.Instance.SaveToFile();
+                    KeyBindingsChanged?.Invoke(this, new EventArgs());
 
                     UpdateKeyBindingControls();
                     UpdateTooltips();
