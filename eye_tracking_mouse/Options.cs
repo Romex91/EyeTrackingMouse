@@ -65,6 +65,7 @@ namespace eye_tracking_mouse
         public Dictionary<Key, Interceptor.Keys> bindings = new Dictionary<Key, Interceptor.Keys>(default_bindings);
     };
 
+    // TODO: check all accesses to this and other shared classes are in critical section.
     class Options
     {
         public KeyBindings key_bindings = new KeyBindings();

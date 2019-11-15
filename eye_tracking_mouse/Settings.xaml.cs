@@ -16,7 +16,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-
 namespace eye_tracking_mouse
 {
     /// <summary>
@@ -24,7 +23,6 @@ namespace eye_tracking_mouse
     /// </summary>
     public partial class Settings : Window
     {
-
         private bool is_initialized = false;
 
         private InputManager input_manager;
@@ -373,16 +371,20 @@ namespace eye_tracking_mouse
 
             lock (Helpers.locker)
             {
+                bool is_driver_loaded = input_manager.IsDriverLoaded();
+                if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver)
+                    InterceptionMethod.SelectedIndex = 1;
+
                 foreach (var key_binding_control in key_binding_controls_list)
-                {
+                {                    
                     key_binding_control.new_binding.Content = Options.Instance.key_bindings[key_binding_control.key].ToString();
-                    key_binding_control.new_binding.IsEnabled = InterceptionMethod.SelectedIndex == 1;
+                    key_binding_control.new_binding.IsEnabled = InterceptionMethod.SelectedIndex == 1 && is_driver_loaded;
                     key_binding_control.new_binding.Background = new SolidColorBrush(Colors.White);
 
-                    key_binding_control.default_binding.IsEnabled = InterceptionMethod.SelectedIndex == 1;
+                    key_binding_control.default_binding.IsEnabled = InterceptionMethod.SelectedIndex == 1 && is_driver_loaded;
                 }
 
-                WinApiWarning.Visibility = InterceptionMethod.SelectedIndex == 0 ? Visibility.Visible : Visibility.Hidden;
+                WinApiWarning.Visibility = InterceptionMethod.SelectedIndex == 0 || !is_driver_loaded ? Visibility.Visible : Visibility.Hidden;
             }
         }
 
@@ -414,6 +416,32 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 Options.Instance.key_bindings.interception_method = InterceptionMethod.SelectedIndex == 0 ? KeyBindings.InterceptionMethod.WinApi : KeyBindings.InterceptionMethod.OblitaDriver;
+                bool success = input_manager.UpdateInterceptionMethod();
+                if (!success) {
+                    if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.WinApi)
+                    {
+                        throw new Exception("Failed setting WinAPI interception method.");
+                    }
+
+                    if (!Options.Instance.key_bindings.is_driver_installed)
+                    {
+                        if (MessageBox.Show(
+                            "This interception method will require driver installation and OS reboot.\nContinue?",
+                            Helpers.application_name,
+                            MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                        {
+                            var driver_installation_window = new DriverInstallationWindow();
+                            driver_installation_window.ShowDialog();
+                        }
+                    } else
+                    {
+                        MessageBox.Show(
+                            "Failed loading interception driver." +
+                            "Reinstall EyeTrackingMouse or install the driver from command line:" +
+                            " https://github.com/oblitum/Interception. Application will run using WinAPI.",
+                            Helpers.application_name, MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }                    
                 UpdateKeyBindingControls();
                 UpdateTooltips();
             }

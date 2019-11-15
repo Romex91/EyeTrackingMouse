@@ -5,13 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Windows;
 
 namespace eye_tracking_mouse
 {
     public class InputManager
     {
-        private readonly Interceptor.Input input = new Interceptor.Input();
+        private readonly Interceptor.Input driver_input = new Interceptor.Input();
         private readonly EyeTrackingMouse eye_tracking_mouse;
 
         // For hardcoded stop-word.
@@ -35,45 +35,49 @@ namespace eye_tracking_mouse
 
         public void Stop()
         {
-            input.Unload();
+            lock (Helpers.locker)
+            {
+                if (driver_input.IsLoaded)
+                    driver_input.Unload();
+            }
         }
 
         private void SendModifierDown()
         {
-            input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
+            driver_input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
             Thread.Sleep(Options.Instance.win_press_delay_ms);
         }
 
         private bool OnKeyPressed(Key key, KeyState key_state, bool is_modifier)
         {
-                // If you hold a key pressed for a second it will start to produce a sequence of rrrrrrrrrrepeated |KeyState.Down| events.
-                // For most keys we don't want to handle such events and assume that a key stays pressed until |KeyState.Up| appears.
-                bool is_repetition = interaction_history[0].Key == key &&
-                    interaction_history[0].State == key_state &&
-                    key_state == KeyState.Down;
+            // If you hold a key pressed for a second it will start to produce a sequence of rrrrrrrrrrepeated |KeyState.Down| events.
+            // For most keys we don't want to handle such events and assume that a key stays pressed until |KeyState.Up| appears.
+            bool is_repetition = interaction_history[0].Key == key &&
+                interaction_history[0].State == key_state &&
+                key_state == KeyState.Down;
 
-                if (!is_repetition)
-                {
-                    interaction_history[2] = interaction_history[1];
-                    interaction_history[1] = interaction_history[0];
-                    interaction_history[0].Key = key;
-                    interaction_history[0].State = key_state;
-                    interaction_history[0].Time = DateTime.Now;
-                }
+            if (!is_repetition)
+            {
+                interaction_history[2] = interaction_history[1];
+                interaction_history[1] = interaction_history[0];
+                interaction_history[0].Key = key;
+                interaction_history[0].State = key_state;
+                interaction_history[0].Time = DateTime.Now;
+            }
 
-                bool is_double_press =
-                    key_state == KeyState.Down &&
-                    interaction_history[1].Key == key &&
-                    interaction_history[2].Key == key &&
-                    (DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.double_click_duration_ms;
+            bool is_double_press =
+                key_state == KeyState.Down &&
+                interaction_history[1].Key == key &&
+                interaction_history[2].Key == key &&
+                (DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.double_click_duration_ms;
 
-                bool is_short_press =
-                    key_state == KeyState.Up &&
-                    interaction_history[1].Key == key &&
-                    (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.short_click_duration_ms;
+            bool is_short_press =
+                key_state == KeyState.Up &&
+                interaction_history[1].Key == key &&
+                (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.short_click_duration_ms;
 
-                return eye_tracking_mouse.OnKeyPressed(key, key_state, is_double_press, is_short_press, is_repetition, is_modifier, SendModifierDown);
-           
+            return eye_tracking_mouse.OnKeyPressed(key, key_state, is_double_press, is_short_press, is_repetition, is_modifier, SendModifierDown);
+
         }
 
         public struct ReadKeyResult
@@ -89,7 +93,7 @@ namespace eye_tracking_mouse
             }
         }
 
-        public void OnKeyPressed(object sender, Interceptor.KeyPressedEventArgs e)
+        public void OnKeyPressedInterceptionDriver(object sender, Interceptor.KeyPressedEventArgs e)
         {
             // Console.WriteLine(e.Key);
             // Console.WriteLine(e.State);
@@ -131,7 +135,7 @@ namespace eye_tracking_mouse
                     return;
                 }
 
-
+                // Convert |Interceptor.Keys| to |eye_tracking_mouse.Key|
                 var key_bindings = Options.Instance.key_bindings;
                 Key key = Key.Unbound;
                 if (key_bindings.bindings.ContainsValue(e.Key))
@@ -153,18 +157,51 @@ namespace eye_tracking_mouse
             }
         }
 
+        // Enables keys interception with selected |interception_method|. Backs off to WinAPI if failed loading interception driver.
+        public bool UpdateInterceptionMethod()
+        {
+            lock (Helpers.locker)
+            {
+                eye_tracking_mouse.StopControlling();
+                if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver)
+                {
+                    if (driver_input.IsLoaded)
+                        return true;
+                    driver_input.OnKeyPressed += OnKeyPressedInterceptionDriver;
+                    driver_input.KeyboardFilterMode = Interceptor.KeyboardFilterMode.All;
+
+                    if (driver_input.Load())
+                        return true;
+                }
+
+                if (driver_input.IsLoaded)
+                {
+                    driver_input.Unload();
+                    driver_input.OnKeyPressed -= OnKeyPressedInterceptionDriver;
+                }
+                return Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.WinApi;
+            }
+        }
+
+        public bool IsDriverLoaded()
+        {
+            lock (Helpers.locker)
+            {
+                return driver_input.IsLoaded;
+            }
+        }
         public InputManager(EyeTrackingMouse eye_tracking_mouse)
         {
             this.eye_tracking_mouse = eye_tracking_mouse;
-
-            input.KeyboardFilterMode = Interceptor.KeyboardFilterMode.All;
-            if (!input.Load())
+            if (!UpdateInterceptionMethod())
             {
-                Helpers.ShowBaloonNotification("Failed loading interception driver. Try reinstalling EyeTrackingMouse.");
-                System.Windows.Forms.Application.Exit();
+                MessageBox.Show(
+                    "Failed loading interception driver." +
+                    "Reinstall EyeTrackingMouse or install the driver from command line: " +
+                    "https://github.com/oblitum/Interception. Application will run using WinAPI.",
+                    Helpers.application_name, MessageBoxButton.OK, MessageBoxImage.Warning);
+                Options.Instance.key_bindings.interception_method = KeyBindings.InterceptionMethod.WinApi;
             }
-
-            input.OnKeyPressed += OnKeyPressed;
         }
     }
 }
