@@ -33,13 +33,43 @@ namespace eye_tracking_mouse
             BalloonTipTitle = application_name,
         };
 
-        public static readonly SortedSet<Interceptor.Keys> modifier_keys = new SortedSet<Interceptor.Keys> {
+        public static bool IsModifier(Interceptor.Keys key)
+        {
+            return modifier_keys_intrerceptor.Contains(key);
+        }
+
+        private static readonly SortedSet<Interceptor.Keys> modifier_keys_intrerceptor = new SortedSet<Interceptor.Keys> {
             Interceptor.Keys.WindowsKey,
             Interceptor.Keys.LeftShift,
             Interceptor.Keys.RightShift,
             Interceptor.Keys.Control,
             Interceptor.Keys.RightAlt,
         };
+
+        public static bool IsModifier(System.Windows.Forms.Keys key)
+        {
+            return modifier_keys.Contains(key);
+        }
+
+        private static readonly SortedSet<System.Windows.Forms.Keys> modifier_keys = new SortedSet<System.Windows.Forms.Keys> {
+            System.Windows.Forms.Keys.LWin,
+            System.Windows.Forms.Keys.RWin,
+            
+            System.Windows.Forms.Keys.Control,
+            System.Windows.Forms.Keys.RControlKey,
+            System.Windows.Forms.Keys.LControlKey,
+            
+            System.Windows.Forms.Keys.Shift,
+            System.Windows.Forms.Keys.LShiftKey,
+            System.Windows.Forms.Keys.RShiftKey,
+            
+            System.Windows.Forms.Keys.LMenu,
+            System.Windows.Forms.Keys.RMenu,
+            System.Windows.Forms.Keys.Menu,
+
+            System.Windows.Forms.Keys.Alt,
+        };
+
 
         private static readonly SortedSet<Interceptor.Keys> e0_keys = new SortedSet<Interceptor.Keys> { 
             Interceptor.Keys.WindowsKey, 

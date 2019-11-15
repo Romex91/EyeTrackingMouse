@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,47 +38,70 @@ namespace eye_tracking_mouse
         {
             lock (Helpers.locker)
             {
+                eye_tracking_mouse.StopControlling();
                 if (driver_input.IsLoaded)
+                {
                     driver_input.Unload();
+                    driver_input.OnKeyPressed -= OnKeyPressedInterceptionDriver;
+                }
+
+                if (win_api_hook_id != IntPtr.Zero)
+                {
+                    UnhookWindowsHookEx(win_api_hook_id);
+                    win_api_hook_id = IntPtr.Zero;
+                }
             }
         }
 
         private void SendModifierDown()
         {
-            driver_input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
-            Thread.Sleep(Options.Instance.win_press_delay_ms);
+            lock (Helpers.locker)
+            {
+                if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver && driver_input.IsLoaded)
+                {
+                    driver_input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
+                    Thread.Sleep(Options.Instance.win_press_delay_ms);
+                }
+                else
+                {
+                    ignore_next_key_press = true;
+                    keybd_event((byte)System.Windows.Forms.Keys.LWin, 0, 1, 0);
+                }
+            }
         }
 
         private bool OnKeyPressed(Key key, KeyState key_state, bool is_modifier)
         {
-            // If you hold a key pressed for a second it will start to produce a sequence of rrrrrrrrrrepeated |KeyState.Down| events.
-            // For most keys we don't want to handle such events and assume that a key stays pressed until |KeyState.Up| appears.
-            bool is_repetition = interaction_history[0].Key == key &&
-                interaction_history[0].State == key_state &&
-                key_state == KeyState.Down;
-
-            if (!is_repetition)
+            lock (Helpers.locker)
             {
-                interaction_history[2] = interaction_history[1];
-                interaction_history[1] = interaction_history[0];
-                interaction_history[0].Key = key;
-                interaction_history[0].State = key_state;
-                interaction_history[0].Time = DateTime.Now;
+                // If you hold a key pressed for a second it will start to produce a sequence of rrrrrrrrrrepeated |KeyState.Down| events.
+                // For some keys we don't want to handle such events and assume that a key stays pressed until |KeyState.Up| appears.
+                bool is_repetition = interaction_history[0].Key == key &&
+                    interaction_history[0].State == key_state &&
+                    key_state == KeyState.Down;
+
+                if (!is_repetition)
+                {
+                    interaction_history[2] = interaction_history[1];
+                    interaction_history[1] = interaction_history[0];
+                    interaction_history[0].Key = key;
+                    interaction_history[0].State = key_state;
+                    interaction_history[0].Time = DateTime.Now;
+                }
+
+                bool is_double_press =
+                    key_state == KeyState.Down &&
+                    interaction_history[1].Key == key &&
+                    interaction_history[2].Key == key &&
+                    (DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.double_click_duration_ms;
+
+                bool is_short_press =
+                    key_state == KeyState.Up &&
+                    interaction_history[1].Key == key &&
+                    (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.short_click_duration_ms;
+
+                return eye_tracking_mouse.OnKeyPressed(key, key_state, is_double_press, is_short_press, is_repetition, is_modifier, SendModifierDown);
             }
-
-            bool is_double_press =
-                key_state == KeyState.Down &&
-                interaction_history[1].Key == key &&
-                interaction_history[2].Key == key &&
-                (DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.double_click_duration_ms;
-
-            bool is_short_press =
-                key_state == KeyState.Up &&
-                interaction_history[1].Key == key &&
-                (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.short_click_duration_ms;
-
-            return eye_tracking_mouse.OnKeyPressed(key, key_state, is_double_press, is_short_press, is_repetition, is_modifier, SendModifierDown);
-
         }
 
         public struct ReadKeyResult
@@ -91,6 +115,78 @@ namespace eye_tracking_mouse
             {
                 read_key_callback = callback;
             }
+        }
+
+        private IntPtr win_api_hook_id = IntPtr.Zero;
+        private const int WH_KEYBOARD_LL = 13;
+        private const int WM_KEYDOWN = 0x0100;
+        private const int WM_KEYUP = 0x0101;
+        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+        private LowLevelKeyboardProc win_api_callback;
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        private bool ignore_next_key_press = false;
+        private IntPtr OnKeyPressedWinApi(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (ignore_next_key_press)
+            {
+                ignore_next_key_press = false;
+                return CallNextHookEx(win_api_hook_id, nCode, wParam, lParam);
+            }
+            if (nCode >= 0)
+            {
+                Dictionary<System.Windows.Forms.Keys, Key> bindings = new Dictionary<System.Windows.Forms.Keys, Key>
+                {
+                    {System.Windows.Forms.Keys.LWin, Key.Modifier},
+                    {System.Windows.Forms.Keys.J, Key.LeftMouseButton},
+                    {System.Windows.Forms.Keys.K, Key.RightMouseButton},
+                    {System.Windows.Forms.Keys.N, Key.ScrollDown},
+                    {System.Windows.Forms.Keys.H,Key.ScrollUp},
+                    {System.Windows.Forms.Keys.Oemcomma,Key.ScrollLeft},
+                    {System.Windows.Forms.Keys.OemPeriod, Key.ScrollRight},
+                    {System.Windows.Forms.Keys.M, Key.ShowCalibrationView},
+                    {System.Windows.Forms.Keys.A, Key.CalibrateLeft},
+                    {System.Windows.Forms.Keys.D,Key.CalibrateRight},
+                    {System.Windows.Forms.Keys.W, Key.CalibrateUp},
+                    {System.Windows.Forms.Keys.S, Key.CalibrateDown},
+                };
+
+                System.Windows.Forms.Keys key_code = (System.Windows.Forms.Keys)Marshal.ReadInt32(lParam);
+                Key key = Key.Unbound;
+                if (bindings.ContainsKey(key_code))
+                    key = bindings[key_code];
+                KeyState key_state;
+
+                if (wParam == (IntPtr)WM_KEYDOWN)
+                {
+                    key_state = KeyState.Down;
+                }
+                else if (wParam == (IntPtr)WM_KEYUP)
+                {
+                    key_state = KeyState.Up;
+                }
+                else
+                {
+                    return CallNextHookEx(win_api_hook_id, nCode, wParam, lParam);
+                }
+
+                if (OnKeyPressed(key, key_state, Helpers.IsModifier(key_code)))
+                    return new IntPtr(1);
+            }
+
+            return CallNextHookEx(win_api_hook_id, nCode, wParam, lParam);
         }
 
         public void OnKeyPressedInterceptionDriver(object sender, Interceptor.KeyPressedEventArgs e)
@@ -127,7 +223,6 @@ namespace eye_tracking_mouse
                     else if (key_state == KeyState.Up)
                         is_win_pressed = false;
                 }
-
                 if (e.Key == Interceptor.Keys.Delete &&
                     key_state == KeyState.Down && is_win_pressed)
                 {
@@ -153,7 +248,7 @@ namespace eye_tracking_mouse
                     e.Handled = true;
                     return;
                 }
-                e.Handled = OnKeyPressed(key, key_state, Helpers.modifier_keys.Contains(e.Key));
+                e.Handled = OnKeyPressed(key, key_state, Helpers.IsModifier(e.Key));
             }
         }
 
@@ -162,11 +257,10 @@ namespace eye_tracking_mouse
         {
             lock (Helpers.locker)
             {
-                eye_tracking_mouse.StopControlling();
+                Stop();
+
                 if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver)
                 {
-                    if (driver_input.IsLoaded)
-                        return true;
                     driver_input.OnKeyPressed += OnKeyPressedInterceptionDriver;
                     driver_input.KeyboardFilterMode = Interceptor.KeyboardFilterMode.All;
 
@@ -174,11 +268,13 @@ namespace eye_tracking_mouse
                         return true;
                 }
 
-                if (driver_input.IsLoaded)
+                using (Process curProcess = Process.GetCurrentProcess())
+                using (ProcessModule curModule = curProcess.MainModule)
                 {
-                    driver_input.Unload();
-                    driver_input.OnKeyPressed -= OnKeyPressedInterceptionDriver;
+                    win_api_hook_id = SetWindowsHookEx(WH_KEYBOARD_LL, win_api_callback,
+                        GetModuleHandle(curModule.ModuleName), 0);
                 }
+
                 return Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.WinApi;
             }
         }
@@ -190,9 +286,11 @@ namespace eye_tracking_mouse
                 return driver_input.IsLoaded;
             }
         }
+
         public InputManager(EyeTrackingMouse eye_tracking_mouse)
         {
             this.eye_tracking_mouse = eye_tracking_mouse;
+            win_api_callback = OnKeyPressedWinApi;
             if (!UpdateInterceptionMethod())
             {
                 MessageBox.Show(

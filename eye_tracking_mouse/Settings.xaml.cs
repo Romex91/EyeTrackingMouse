@@ -374,6 +374,8 @@ namespace eye_tracking_mouse
                 bool is_driver_loaded = input_manager.IsDriverLoaded();
                 if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver)
                     InterceptionMethod.SelectedIndex = 1;
+                else
+                    InterceptionMethod.SelectedIndex = 0;
 
                 foreach (var key_binding_control in key_binding_controls_list)
                 {                    
@@ -416,6 +418,7 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 Options.Instance.key_bindings.interception_method = InterceptionMethod.SelectedIndex == 0 ? KeyBindings.InterceptionMethod.WinApi : KeyBindings.InterceptionMethod.OblitaDriver;
+                Options.Instance.SaveToFile();
                 bool success = input_manager.UpdateInterceptionMethod();
                 if (!success) {
                     if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.WinApi)

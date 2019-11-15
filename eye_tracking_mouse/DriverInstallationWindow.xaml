@@ -1,0 +1,40 @@
+﻿<Window x:Class="eye_tracking_mouse.DriverInstallationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:eye_tracking_mouse"
+        mc:Ignorable="d"
+        Title="Installing Oblita Interception Driver." Height="221.287" Width="632.178"
+        ResizeMode="NoResize">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="15"></ColumnDefinition>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="15"></RowDefinition>
+                    <RowDefinition Height="auto"></RowDefinition>
+                    <RowDefinition Height="auto"></RowDefinition>
+                    <RowDefinition Height="auto"></RowDefinition>
+                    <RowDefinition Height="10"></RowDefinition>
+                    <RowDefinition Height="auto"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="1" Grid.Column="1">This wizzard will install Oblita Interception Driver <Hyperlink>https://github.com/oblitum/Interception</Hyperlink>. <LineBreak/> 
+            This will allow EyeTrackerMouse to intercept key presses on OS level. <LineBreak/> 
+            <LineBreak/> 
+            <LineBreak/> 
+            <Bold>WARNING</Bold> Installing any driver may cause problems. This driver handles key presses. If something go wrong<LineBreak/>
+            your keyboard and mouse may stop working. You won't be able to uninstall the driver from OS. Windows <LineBreak/>
+            restore point will be the only option in this case.
+                </TextBlock>
+                <CheckBox Name="CreateRestorePoint" Grid.Row="3" Grid.Column="1" IsChecked="True">
+                    Create windows restore point.
+                </CheckBox>
+
+                <Button Grid.Column="1" Grid.Row="5" Width="70" HorizontalAlignment="Left" Click="Cancel_Click">Cancel</Button>
+                <Button Grid.Column="1" Grid.Row="5" Width="70" HorizontalAlignment="Right" Click="Install_Click" >Install</Button>
+            </Grid>
+</Window>
