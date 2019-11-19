@@ -80,17 +80,24 @@ namespace eye_tracking_mouse
                     interaction_history[0].State == key_state &&
                     key_state == KeyState.Down;
 
-                interaction_history[2] = interaction_history[1];
-                interaction_history[1] = interaction_history[0];
-                interaction_history[0].Key = key;
-                interaction_history[0].State = key_state;
-                interaction_history[0].Time = DateTime.Now;
+                if (!is_repetition)
+                {
+                    interaction_history[2] = interaction_history[1];
+                    interaction_history[1] = interaction_history[0];
+                    interaction_history[0].Key = key;
+                    interaction_history[0].State = key_state;
+                    interaction_history[0].Time = DateTime.Now;
+                }
 
                 double speed_up = 1.0;
 
-                if (key_state == KeyState.Down &&
-                    interaction_history[1].Key == key &&
-                    interaction_history[2].Key == key)
+                if (is_repetition)
+                {
+                    speed_up = 4.0;
+                }
+                else if (key_state == KeyState.Down &&
+                  interaction_history[1].Key == key &&
+                  interaction_history[2].Key == key)
                 {
                     if ((DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.quadriple_speed_up_press_time_ms)
                         speed_up = 4.0;
