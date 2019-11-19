@@ -77,14 +77,18 @@ namespace eye_tracking_mouse
                     "How long cursor will stay still ignoring your gaze after you calibrate (" + calibration_buttons + "). " +
                     "Longer the time easier to click tiny areas but slightly worse long-term calibration.";
 
-                DoublePressTimeMsTooltip.ToolTip =
+                DoubleSpeedUpTimeMsTooltip.ToolTip =
                     "Frequent presses speed-up calibration and scrolling. " +
-                    "If you press " + calibration_buttons + " two times during this time then the second press will move cursor twice farther. " +
-                    "The same is true about scrolling." +
-                    "Longer the time faster to cover long distance but slower precise movements.";
+                    "If you press " + calibration_buttons + " twice during this time then the second press will move cursor twice farther. " +
+                    "The same is true about scrolling.";
 
-                ShortPressTimeMsTooltip.ToolTip =
-                    "If you press down and up " + key_bindings[Key.Modifier] + " faster than this time this press will go to OS. " +
+                QuadrupleSpeedUpTimeMsTooltip.ToolTip =
+                    "Frequent presses speed-up calibration and scrolling. " +
+                    "If you press " + calibration_buttons + " twice during this time then the second press will move cursor four times farther. " +
+                    "The same is true about scrolling.";
+
+                ModifierShortPressTimeMsTooltip.ToolTip =
+                    "If you press " + key_bindings[Key.Modifier] + " for short period of time this press will go to OS. " +
                     "The reason this option exist is to make Windows Start Menu available." +
                     "If you see Start Menu more often than you want then decrease this time." +
                     "If you cannot open Start Menu because " + Helpers.application_name + " intercepts your key presses then increase it.";
@@ -121,8 +125,11 @@ namespace eye_tracking_mouse
         {
             SmotheningZoneRadius.Value = Options.Instance.smothening_zone_radius;
             SmootheningPointsCount.Value = Options.Instance.smothening_points_count;
-            ShortPressTimeMs.Value = Options.Instance.short_click_duration_ms;
-            DoublePressTimeMs.Value = Options.Instance.double_click_duration_ms;
+            ModifierShortPressTimeMs.Value = Options.Instance.modifier_short_press_duration_ms;
+
+            QuadrupleSpeedUpTimeMs.Value = Options.Instance.quadriple_speed_up_press_time_ms;
+            DoubleSpeedUpTimeMs.Value = Options.Instance.double_speedup_press_time_ms;
+
             CalibrationFreezeTimeMs.Value = Options.Instance.calibrate_freeze_time_ms;
             ClickFreezeTimeMs.Value = Options.Instance.click_freeze_time_ms;
             HorizontalScrollStep.Value = Options.Instance.horizontal_scroll_step;
@@ -132,143 +139,65 @@ namespace eye_tracking_mouse
             CalibrationPointsCount.Value = Options.Instance.calibration_max_zones_count;
         }
 
-        private void SmotheningZoneRadius_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (!is_initialized)
                 return;
             lock (Helpers.locker)
             {
-                Options.Instance.smothening_zone_radius = (int)SmotheningZoneRadius.Value;
+                // TODO: test sliders with dinamic minimum and maximum.
+
+                if (sender == SmotheningZoneRadius)
+                {
+                    Options.Instance.smothening_zone_radius = (int)SmotheningZoneRadius.Value;
+                }
+                else if (sender == CalibrationZoneSize)
+                {
+                    Options.Instance.calibration_zone_size = (int)CalibrationZoneSize.Value;
+                }
+                else if (sender == CalibrationPointsCount)
+                {
+                    Options.Instance.calibration_max_zones_count = (int)CalibrationPointsCount.Value;
+                }
+                else if (sender == CalibrationStep)
+                {
+                    Options.Instance.calibration_step = (int)CalibrationStep.Value;
+                }
+                else if (sender == VerticalScrollStep)
+                {
+                    Options.Instance.vertical_scroll_step = (int)VerticalScrollStep.Value;
+                }
+                else if (sender == HorizontalScrollStep)
+                {
+                    Options.Instance.horizontal_scroll_step = (int)HorizontalScrollStep.Value;
+                }
+                else if (sender == ClickFreezeTimeMs)
+                {
+                    Options.Instance.click_freeze_time_ms = (int)ClickFreezeTimeMs.Value;
+                }
+                else if (sender == CalibrationFreezeTimeMs)
+                {
+                    Options.Instance.calibrate_freeze_time_ms = (int)CalibrationFreezeTimeMs.Value;
+                }
+                else if (sender == QuadrupleSpeedUpTimeMs)
+                {
+                    Options.Instance.quadriple_speed_up_press_time_ms = (int)QuadrupleSpeedUpTimeMs.Value;
+                }
+                else if (sender == DoubleSpeedUpTimeMs)
+                {
+                    Options.Instance.double_speedup_press_time_ms = (int)DoubleSpeedUpTimeMs.Value;
+                }
+                else if (sender == ModifierShortPressTimeMs)
+                {
+                    Options.Instance.modifier_short_press_duration_ms = (int)ModifierShortPressTimeMs.Value;
+                }
+                else if (sender == SmootheningPointsCount)
+                {
+                    Options.Instance.smothening_points_count = (int)SmootheningPointsCount.Value;
+                }
                 Options.Instance.SaveToFile();
             }
         }
-
-        private void SmootheningPointsCount_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!is_initialized)
-                return;
-
-            lock (Helpers.locker)
-            {
-                Options.Instance.smothening_points_count = (int)SmootheningPointsCount.Value;
-                Options.Instance.SaveToFile();
-            }
-
-        }
-
-        private void ShortPressTimeMs_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!is_initialized)
-                return;
-
-            lock (Helpers.locker)
-            {
-                Options.Instance.short_click_duration_ms = (int)ShortPressTimeMs.Value;
-                Options.Instance.SaveToFile();
-            }
-
-        }
-
-        private void DoublePressTimeMs_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!is_initialized)
-                return;
-
-            lock (Helpers.locker)
-            {
-                Options.Instance.double_click_duration_ms = (int)DoublePressTimeMs.Value;
-                Options.Instance.SaveToFile();
-            }
-
-        }
-
-        private void CalibrationFreezeTimeMs_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!is_initialized)
-                return;
-
-            lock (Helpers.locker)
-            {
-                Options.Instance.calibrate_freeze_time_ms = (int)CalibrationFreezeTimeMs.Value;
-                Options.Instance.SaveToFile();
-            }
-
-        }
-
-        private void ClickFreezeTimeMs_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!is_initialized)
-                return;
-
-            lock (Helpers.locker)
-            {
-                Options.Instance.click_freeze_time_ms = (int)ClickFreezeTimeMs.Value;
-                Options.Instance.SaveToFile();
-            }
-        }
-
-        private void HorizontalScrollStep_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!is_initialized)
-                return;
-
-            lock (Helpers.locker)
-            {
-                Options.Instance.horizontal_scroll_step = (int)HorizontalScrollStep.Value;
-                Options.Instance.SaveToFile();
-            }
-        }
-
-        private void VerticalScrollStep_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!is_initialized)
-                return;
-
-            lock (Helpers.locker)
-            {
-                Options.Instance.vertical_scroll_step = (int)VerticalScrollStep.Value;
-                Options.Instance.SaveToFile();
-            }
-        }
-
-        private void CalibrationStep_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!is_initialized)
-                return;
-
-            lock (Helpers.locker)
-            {
-                Options.Instance.calibration_step = (int)CalibrationStep.Value;
-                Options.Instance.SaveToFile();
-                ShiftsStorage.Instance.OnSettingsChanged();
-            }
-        }
-
-        private void CalibrationPointsCount_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!is_initialized)
-                return;
-
-            lock (Helpers.locker)
-            {
-                Options.Instance.calibration_max_zones_count = (int)CalibrationPointsCount.Value;
-                Options.Instance.SaveToFile();
-                ShiftsStorage.Instance.OnSettingsChanged();
-            }
-        }
-
-        private void CalibrationZoneSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!is_initialized)
-                return;
-
-            lock (Helpers.locker)
-            {
-                Options.Instance.calibration_zone_size = (int)CalibrationZoneSize.Value;
-                Options.Instance.SaveToFile();
-            }
-        }
-
 
         private void ResetDefaults_Click(object sender, RoutedEventArgs e)
         {

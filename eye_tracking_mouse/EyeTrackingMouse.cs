@@ -103,8 +103,8 @@ namespace eye_tracking_mouse
         public bool OnKeyPressed(
             Key key, 
             InputManager.KeyState key_state, 
-            bool is_double_press, 
-            bool is_short_press, 
+            double speed_up, 
+            bool is_short_modifier_press,
             bool is_repetition, 
             bool is_modifier,
             Action SendModifierDown)
@@ -126,7 +126,7 @@ namespace eye_tracking_mouse
                     }
 
                     bool handled = true;
-                    if (is_short_press)
+                    if (is_short_modifier_press)
                     {
                         SendModifierDown();
                         handled = false;
@@ -172,7 +172,7 @@ namespace eye_tracking_mouse
             if (key_state == InputManager.KeyState.Down)
             {
                 // Calibration
-                int calibration_step = (int)(Options.Instance.calibration_step * (is_double_press ? 2.5 : 1.0));
+                int calibration_step = (int)(Options.Instance.calibration_step * speed_up);
                 if (key == Key.CalibrateLeft)
                 {
                     StartCalibration();
@@ -201,19 +201,19 @@ namespace eye_tracking_mouse
                 // Scroll
                 if (key == Key.ScrollDown)
                 {
-                    MouseButtons.WheelDown(Options.Instance.vertical_scroll_step * (is_double_press ? 2 : 1));
+                    MouseButtons.WheelDown((int)(Options.Instance.vertical_scroll_step * speed_up));
                 }
                 if (key == Key.ScrollUp)
                 {
-                    MouseButtons.WheelUp(Options.Instance.vertical_scroll_step * (is_double_press ? 2 : 1));
+                    MouseButtons.WheelUp((int)(Options.Instance.vertical_scroll_step * speed_up));
                 }
                 if (key == Key.ScrollLeft)
                 {
-                    MouseButtons.WheelLeft(Options.Instance.horizontal_scroll_step * (is_double_press ? 2 : 1));
+                    MouseButtons.WheelLeft((int)(Options.Instance.horizontal_scroll_step * speed_up));
                 }
                 if (key == Key.ScrollRight)
                 {
-                    MouseButtons.WheelRight(Options.Instance.horizontal_scroll_step * (is_double_press ? 2 : 1));
+                    MouseButtons.WheelRight((int)(Options.Instance.horizontal_scroll_step * speed_up));
                 }
             }
 

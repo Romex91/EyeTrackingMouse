@@ -126,64 +126,70 @@
                         <RowDefinition Height="auto"></RowDefinition>
                         <RowDefinition Height="auto"></RowDefinition>
                         <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="1" Grid.Column="0">Vertical scroll step</TextBlock>
-                    <Slider Grid.Row="1" Grid.Column="2" Name="VerticalScrollStep" Minimum="1" Maximum="15" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="VerticalScrollStep_ValueChanged"></Slider>
+                    <Slider Grid.Row="1" Grid.Column="2" Name="VerticalScrollStep" Minimum="1" Maximum="15" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
                     <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding ElementName=VerticalScrollStep, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
                     <Image  Grid.Row="1" Grid.Column="1" Name="VerticalScrollStepTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
                     <TextBlock Grid.Row="2" Grid.Column="0">Horizontal scroll step</TextBlock>
-                    <Slider Grid.Row="2" Grid.Column="2" Name="HorizontalScrollStep" Minimum="1" Maximum="15" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="HorizontalScrollStep_ValueChanged"></Slider>
+                    <Slider Grid.Row="2" Grid.Column="2" Name="HorizontalScrollStep" Minimum="1" Maximum="15" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
                     <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding ElementName=HorizontalScrollStep, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
                     <Image  Grid.Row="2" Grid.Column="1" Name="HorizontalScrollStepTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
                     <TextBlock Grid.Row="3" Grid.Column="0">Calibration step in pixels</TextBlock>
-                    <Slider Grid.Row="3" Grid.Column="2" Name="CalibrationStep" Minimum="1" Maximum="15" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="CalibrationStep_ValueChanged"></Slider>
+                    <Slider Grid.Row="3" Grid.Column="2" Name="CalibrationStep" Minimum="1" Maximum="15" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
                     <TextBox Grid.Row="3" Grid.Column="3" Text="{Binding ElementName=CalibrationStep, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
                     <Image  Grid.Row="3" Grid.Column="1" Name="CalibrationStepTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
                     <TextBlock Grid.Row="4" Grid.Column="0">Max calibration zones count</TextBlock>
-                    <Slider Grid.Row="4" Grid.Column="2" Name="CalibrationPointsCount" Minimum="1" Maximum="50" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="CalibrationPointsCount_ValueChanged"></Slider>
+                    <Slider Grid.Row="4" Grid.Column="2" Name="CalibrationPointsCount" Minimum="1" Maximum="50" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
                     <TextBox Grid.Row="4" Grid.Column="3" Text="{Binding ElementName=CalibrationPointsCount, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
                     <Image  Grid.Row="4" Grid.Column="1" Name="CalibrationPointsCountTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
                     <TextBlock Grid.Row="5" Grid.Column="0">Calibration zone size in pixels</TextBlock>
-                    <Slider Grid.Row="5" Grid.Column="2" Name="CalibrationZoneSize" Minimum="30" Maximum="500" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="CalibrationZoneSize_ValueChanged"></Slider>
+                    <Slider Grid.Row="5" Grid.Column="2" Name="CalibrationZoneSize" Minimum="30" Maximum="500" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
                     <TextBox Grid.Row="5" Grid.Column="3" Text="{Binding ElementName=CalibrationZoneSize, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
                     <Image  Grid.Row="5" Grid.Column="1" Name="CalibrationZoneSizeTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
                     <TextBlock Grid.Row="6" Grid.Column="0">Click freeze time (ms)</TextBlock>
-                    <Slider Grid.Row="6" Grid.Column="2" Name="ClickFreezeTimeMs" Minimum="0" Maximum="1000" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="ClickFreezeTimeMs_ValueChanged"></Slider>
+                    <Slider Grid.Row="6" Grid.Column="2" Name="ClickFreezeTimeMs" Minimum="0" Maximum="1000" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
                     <TextBox Grid.Row="6" Grid.Column="3" Text="{Binding ElementName=ClickFreezeTimeMs, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
                     <Image  Grid.Row="6" Grid.Column="1" Name="ClickFreezeTimeMsTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
                     <TextBlock Grid.Row="7" Grid.Column="0">Calibration freeze time (ms)</TextBlock>
-                    <Slider Grid.Row="7" Grid.Column="2" Name="CalibrationFreezeTimeMs" Minimum="0" Maximum="2000" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="CalibrationFreezeTimeMs_ValueChanged"></Slider>
+                    <Slider Grid.Row="7" Grid.Column="2" Name="CalibrationFreezeTimeMs" Minimum="0" Maximum="2000" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
                     <TextBox Grid.Row="7" Grid.Column="3" Text="{Binding ElementName=CalibrationFreezeTimeMs, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
                     <Image  Grid.Row="7" Grid.Column="1" Name="CalibrationFreezeTimeMsTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
-                    <TextBlock Grid.Row="8" Grid.Column="0">Double press speed-up time (ms)</TextBlock>
-                    <Slider Grid.Row="8" Grid.Column="2" Name="DoublePressTimeMs" Minimum="0" Maximum="1000" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="DoublePressTimeMs_ValueChanged"></Slider>
-                    <TextBox Grid.Row="8" Grid.Column="3" Text="{Binding ElementName=DoublePressTimeMs, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
-                    <Image  Grid.Row="8" Grid.Column="1" Name="DoublePressTimeMsTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
+                    <TextBlock Grid.Row="8" Grid.Column="0">Double speed-up time (ms)</TextBlock>
+                    <Slider Grid.Row="8" Grid.Column="2" Name="DoubleSpeedUpTimeMs" Maximum="500" Minimum="{Binding ElementName=QuadrupleSpeedUpTimeMs, Path=Value}"  TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
+                    <TextBox Grid.Row="8" Grid.Column="3" Text="{Binding ElementName=DoubleSpeedUpTimeMs, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
+                    <Image  Grid.Row="8" Grid.Column="1" Name="DoubleSpeedUpTimeMsTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
-                    <TextBlock Grid.Row="9" Grid.Column="0">Modifier short press time (ms)</TextBlock>
-                    <Slider Grid.Row="9" Grid.Column="2" Name="ShortPressTimeMs" Minimum="0" Maximum="1000" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="ShortPressTimeMs_ValueChanged"></Slider>
-                    <TextBox Grid.Row="9" Grid.Column="3" Text="{Binding ElementName=ShortPressTimeMs, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
-                    <Image  Grid.Row="9" Grid.Column="1" Name="ShortPressTimeMsTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
+                    <TextBlock Grid.Row="9" Grid.Column="0">Quadruple speed-up time (ms)</TextBlock>
+                    <Slider Grid.Row="9" Grid.Column="2" Name="QuadrupleSpeedUpTimeMs" Maximum="{Binding ElementName=DoubleSpeedUpTimeMs, Path=Value}" Minimum="0" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
+                    <TextBox Grid.Row="9" Grid.Column="3" Text="{Binding ElementName=QuadrupleSpeedUpTimeMs, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
+                    <Image  Grid.Row="9" Grid.Column="1" Name="QuadrupleSpeedUpTimeMsTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
-                    <TextBlock Grid.Row="10" Grid.Column="0">Smoothening points count</TextBlock>
-                    <Slider Grid.Row="10" Grid.Column="2" Name="SmootheningPointsCount" Minimum="1" Maximum="400" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="SmootheningPointsCount_ValueChanged"></Slider>
-                    <TextBox Grid.Row="10" Grid.Column="3" Text="{Binding ElementName=SmootheningPointsCount, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
-                    <Image  Grid.Row="10" Grid.Column="1" Name="SmootheningPointsCountTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
+                    <TextBlock Grid.Row="10" Grid.Column="0">Modifier short press time (ms)</TextBlock>
+                    <Slider Grid.Row="10" Grid.Column="2" Name="ModifierShortPressTimeMs" Minimum="0" Maximum="1000" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
+                    <TextBox Grid.Row="10" Grid.Column="3" Text="{Binding ElementName=ModifierShortPressTimeMs, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
+                    <Image  Grid.Row="10" Grid.Column="1" Name="ModifierShortPressTimeMsTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
-                    <TextBlock Grid.Row="11" Grid.Column="0">Smoothening zone radius in pixels</TextBlock>
-                    <Slider Grid.Row="11" Grid.Column="2" Name="SmotheningZoneRadius" Minimum="1" Maximum="1000" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="SmotheningZoneRadius_ValueChanged"></Slider>
-                    <TextBox Grid.Row="11" Grid.Column="3" Text="{Binding ElementName=SmotheningZoneRadius, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
-                    <Image  Grid.Row="11" Grid.Column="1" Name="SmotheningZoneRadiusTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
+                    <TextBlock Grid.Row="11" Grid.Column="0">Smoothening points count</TextBlock>
+                    <Slider Grid.Row="11" Grid.Column="2" Name="SmootheningPointsCount" Minimum="1" Maximum="400" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
+                    <TextBox Grid.Row="11" Grid.Column="3" Text="{Binding ElementName=SmootheningPointsCount, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
+                    <Image  Grid.Row="11" Grid.Column="1" Name="SmootheningPointsCountTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
-                    <Button Grid.Row="12" Grid.Column="2" Grid.ColumnSpan="1" Name="ResetDefaults" Click="ResetDefaults_Click">Reset default options</Button>
+                    <TextBlock Grid.Row="12" Grid.Column="0">Smoothening zone radius in pixels</TextBlock>
+                    <Slider Grid.Row="12" Grid.Column="2" Name="SmotheningZoneRadius" Minimum="1" Maximum="1000" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
+                    <TextBox Grid.Row="12" Grid.Column="3" Text="{Binding ElementName=SmotheningZoneRadius, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
+                    <Image  Grid.Row="12" Grid.Column="1" Name="SmotheningZoneRadiusTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
+
+                    <Button Grid.Row="13" Grid.Column="2" Grid.ColumnSpan="1" Name="ResetDefaults" Click="ResetDefaults_Click">Reset default options</Button>
                 </Grid>
             </TabItem>
             <TabItem Header="About"></TabItem>

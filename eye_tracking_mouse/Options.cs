@@ -80,11 +80,14 @@ namespace eye_tracking_mouse
         public int horizontal_scroll_step = 4;
         public int vertical_scroll_step = 4;
 
-        public int win_press_delay_ms = 10; // Not configurable since changing it wouldn't improve user experience.
-        public int calibrate_freeze_time_ms = 400;
+        public int calibrate_freeze_time_ms = 500;
         public int click_freeze_time_ms = 400;
-        public int double_click_duration_ms = 300;
-        public int short_click_duration_ms = 100;
+
+        public int double_speedup_press_time_ms = 320;
+
+        public int quadriple_speed_up_press_time_ms = 160;
+
+        public int modifier_short_press_duration_ms = 100;
 
         public int smothening_zone_radius = 250;
         public int smothening_points_count = 15;

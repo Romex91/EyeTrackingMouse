@@ -60,7 +60,7 @@ namespace eye_tracking_mouse
                 if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver && driver_input.IsLoaded)
                 {
                     driver_input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
-                    Thread.Sleep(Options.Instance.win_press_delay_ms);
+                    Thread.Sleep(10);
                 }
                 else
                 {
@@ -80,27 +80,30 @@ namespace eye_tracking_mouse
                     interaction_history[0].State == key_state &&
                     key_state == KeyState.Down;
 
-                if (!is_repetition)
+                interaction_history[2] = interaction_history[1];
+                interaction_history[1] = interaction_history[0];
+                interaction_history[0].Key = key;
+                interaction_history[0].State = key_state;
+                interaction_history[0].Time = DateTime.Now;
+
+                double speed_up = 1.0;
+
+                if (key_state == KeyState.Down &&
+                    interaction_history[1].Key == key &&
+                    interaction_history[2].Key == key)
                 {
-                    interaction_history[2] = interaction_history[1];
-                    interaction_history[1] = interaction_history[0];
-                    interaction_history[0].Key = key;
-                    interaction_history[0].State = key_state;
-                    interaction_history[0].Time = DateTime.Now;
+                    if ((DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.quadriple_speed_up_press_time_ms)
+                        speed_up = 4.0;
+                    else if ((DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.double_speedup_press_time_ms)
+                        speed_up = 2.0;
                 }
 
-                bool is_double_press =
-                    key_state == KeyState.Down &&
-                    interaction_history[1].Key == key &&
-                    interaction_history[2].Key == key &&
-                    (DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.double_click_duration_ms;
-
-                bool is_short_press =
+                bool is_short_modifier_press =
                     key_state == KeyState.Up &&
                     interaction_history[1].Key == key &&
-                    (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.short_click_duration_ms;
+                    (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.modifier_short_press_duration_ms;
 
-                return eye_tracking_mouse.OnKeyPressed(key, key_state, is_double_press, is_short_press, is_repetition, is_modifier, SendModifierDown);
+                return eye_tracking_mouse.OnKeyPressed(key, key_state, speed_up, is_short_modifier_press, is_repetition, is_modifier, SendModifierDown);
             }
         }
 
