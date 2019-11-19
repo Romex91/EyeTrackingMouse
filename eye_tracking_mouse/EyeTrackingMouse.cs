@@ -84,6 +84,11 @@ namespace eye_tracking_mouse
         {
             freeze_until = DateTime.Now;
             mouse_state = MouseState.Idle;
+
+            if (MouseButtons.RightPressed)
+                MouseButtons.RightUp();
+            if (MouseButtons.LeftPressed)
+                MouseButtons.LeftUp();
         }
 
         private void StartCalibration()

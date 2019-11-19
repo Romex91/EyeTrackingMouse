@@ -20,6 +20,9 @@ namespace eye_tracking_mouse
         private const int MOUSEEVENTF_WHEEL = 0x800;
         private const int MOUSEEVENTF_HWHEEL = 0x1000;
 
+        public static bool LeftPressed { private set; get; } = false;
+        public static bool RightPressed { private set; get; } = false;
+
         private static void MouseEvent(uint dwFlags, int cButtons)
         {
             uint X = (uint)Cursor.Position.X;
@@ -29,21 +32,25 @@ namespace eye_tracking_mouse
 
         public static void LeftDown()
         {
+            LeftPressed = true;
             MouseEvent(MOUSEEVENTF_LEFTDOWN, 0);
         }
 
         public static void LeftUp()
         {
+            LeftPressed = false;
             MouseEvent(MOUSEEVENTF_LEFTUP, 0);
         }
 
         public static void RightDown()
         {
+            RightPressed = true;
             MouseEvent(MOUSEEVENTF_RIGHTDOWN , 0);
         }
 
         public static void RightUp()
         {
+            RightPressed = false;
             MouseEvent(MOUSEEVENTF_RIGHTUP, 0);
         }
 
