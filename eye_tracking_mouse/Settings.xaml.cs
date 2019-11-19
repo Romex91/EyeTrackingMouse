@@ -293,8 +293,8 @@ namespace eye_tracking_mouse
         private class KeyBindingControl
         {
             public Key key;
-            public Button new_binding;
-            public Button default_binding;
+            public Button set_new_binding_button;
+            public Button set_default_binding_button;
         }
 
         private List<KeyBindingControl> key_binding_controls_list;
@@ -303,7 +303,7 @@ namespace eye_tracking_mouse
         {
             foreach (var key_binding_control in key_binding_controls_list)
             {
-                if (key_binding_control.new_binding == sender)
+                if (key_binding_control.set_new_binding_button == sender)
                 {
                     Key key_binding = key_binding_control.key;
                     input_manager.ReadKeyAsync((read_key_result) =>
@@ -322,20 +322,25 @@ namespace eye_tracking_mouse
                                     UpdateTooltips();
                                     Options.Instance.SaveToFile();
                                     KeyBindingsChanged?.Invoke(this, new EventArgs());
+                                    IsEnabled = true;
                                 }
                             }));
                         }
                     });
 
-                    key_binding_control.new_binding.Background = new SolidColorBrush(Colors.LightBlue);
-                    key_binding_control.new_binding.Content = "PRESS ANY KEY";
+                    key_binding_control.set_new_binding_button.Background = new SolidColorBrush(Colors.LightBlue);
+                    key_binding_control.set_new_binding_button.Content = "PRESS ANY KEY";
+
+                    IsEnabled = false;
                     return;
                 }
-                else if (key_binding_control.default_binding == sender)
+                else if (key_binding_control.set_default_binding_button == sender)
                 {
                     lock (Helpers.locker)
                     {
                         Options.Instance.key_bindings[key_binding_control.key] = KeyBindings.default_bindings[key_binding_control.key];
+                        if (key_binding_control.key == Key.Modifier)
+                            Options.Instance.key_bindings.is_modifier_e0 = true;
                         UpdateKeyBindingControls();
                         UpdateTooltips();
                         Options.Instance.SaveToFile();
@@ -348,24 +353,28 @@ namespace eye_tracking_mouse
             throw new Exception("Click event from unassigned button");
         }
 
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e) {
+            e.Cancel = !IsEnabled;
+        }
+
         private void UpdateKeyBindingControls()
         {
             if (key_binding_controls_list == null)
             {
                 key_binding_controls_list = new List<KeyBindingControl>
                 {
-                    new KeyBindingControl { key = Key.CalibrateDown, new_binding = CalibrateDown, default_binding = CalibrateDownDefault },
-                    new KeyBindingControl { key = Key.CalibrateLeft, new_binding = CalibrateLeft, default_binding = CalibrateLeftDefault },
-                    new KeyBindingControl { key = Key.CalibrateRight, new_binding = CalibrateRigth, default_binding = CalibrateRigthDefault },
-                    new KeyBindingControl { key = Key.CalibrateUp, new_binding = CalibrateUp, default_binding = CalibrateUpDefault },
-                    new KeyBindingControl { key = Key.LeftMouseButton, new_binding = LeftMouseButton, default_binding = LeftMouseButtonDefault },
-                    new KeyBindingControl { key = Key.Modifier, new_binding = EnableMouseControll, default_binding = EnableMouseControllDefault },
-                    new KeyBindingControl { key = Key.RightMouseButton, new_binding = RightMouseButton, default_binding = RightMouseButtonDefault },
-                    new KeyBindingControl { key = Key.ScrollDown, new_binding = ScrollDown, default_binding = ScrollDownDefault },
-                    new KeyBindingControl { key = Key.ScrollLeft, new_binding = ScrollLeft, default_binding = ScrollLeftDefault },
-                    new KeyBindingControl { key = Key.ScrollRight, new_binding = ScrollRight, default_binding = ScrollRightDefault },
-                    new KeyBindingControl { key = Key.ScrollUp, new_binding = ScrollUp, default_binding = ScrollUpDefault },
-                    new KeyBindingControl { key = Key.ShowCalibrationView, new_binding = CalibrationView, default_binding = CalibrationViewDefault },
+                    new KeyBindingControl { key = Key.CalibrateDown, set_new_binding_button = CalibrateDown, set_default_binding_button = CalibrateDownDefault },
+                    new KeyBindingControl { key = Key.CalibrateLeft, set_new_binding_button = CalibrateLeft, set_default_binding_button = CalibrateLeftDefault },
+                    new KeyBindingControl { key = Key.CalibrateRight, set_new_binding_button = CalibrateRigth, set_default_binding_button = CalibrateRigthDefault },
+                    new KeyBindingControl { key = Key.CalibrateUp, set_new_binding_button = CalibrateUp, set_default_binding_button = CalibrateUpDefault },
+                    new KeyBindingControl { key = Key.LeftMouseButton, set_new_binding_button = LeftMouseButton, set_default_binding_button = LeftMouseButtonDefault },
+                    new KeyBindingControl { key = Key.Modifier, set_new_binding_button = EnableMouseControll, set_default_binding_button = EnableMouseControllDefault },
+                    new KeyBindingControl { key = Key.RightMouseButton, set_new_binding_button = RightMouseButton, set_default_binding_button = RightMouseButtonDefault },
+                    new KeyBindingControl { key = Key.ScrollDown, set_new_binding_button = ScrollDown, set_default_binding_button = ScrollDownDefault },
+                    new KeyBindingControl { key = Key.ScrollLeft, set_new_binding_button = ScrollLeft, set_default_binding_button = ScrollLeftDefault },
+                    new KeyBindingControl { key = Key.ScrollRight, set_new_binding_button = ScrollRight, set_default_binding_button = ScrollRightDefault },
+                    new KeyBindingControl { key = Key.ScrollUp, set_new_binding_button = ScrollUp, set_default_binding_button = ScrollUpDefault },
+                    new KeyBindingControl { key = Key.ShowCalibrationView, set_new_binding_button = CalibrationView, set_default_binding_button = CalibrationViewDefault },
                 };
             }
 
@@ -378,12 +387,28 @@ namespace eye_tracking_mouse
                     InterceptionMethod.SelectedIndex = 0;
 
                 foreach (var key_binding_control in key_binding_controls_list)
-                {                    
-                    key_binding_control.new_binding.Content = Options.Instance.key_bindings[key_binding_control.key].ToString();
-                    key_binding_control.new_binding.IsEnabled = InterceptionMethod.SelectedIndex == 1 && is_driver_loaded;
-                    key_binding_control.new_binding.Background = new SolidColorBrush(Colors.White);
+                {
+                    Interceptor.Keys key= Options.Instance.key_bindings[key_binding_control.key];
 
-                    key_binding_control.default_binding.IsEnabled = InterceptionMethod.SelectedIndex == 1 && is_driver_loaded;
+                    string button_content = "";
+                    if (key_binding_control.key == Key.Modifier && (key == Interceptor.Keys.RightAlt || key == Interceptor.Keys.Control))
+                    {
+                        button_content = Options.Instance.key_bindings.is_modifier_e0 ? "Right" : "Left";
+                    }
+
+                    if (key == Interceptor.Keys.RightAlt)
+                    {
+                        button_content += "Alt"; 
+                    } else
+                    {
+                        button_content += key.ToString();
+                    }
+
+                    key_binding_control.set_new_binding_button.Content = button_content;
+                    key_binding_control.set_new_binding_button.IsEnabled = InterceptionMethod.SelectedIndex == 1 && is_driver_loaded;
+                    key_binding_control.set_new_binding_button.Background = new SolidColorBrush(Colors.White);
+
+                    key_binding_control.set_default_binding_button.IsEnabled = InterceptionMethod.SelectedIndex == 1 && is_driver_loaded;
                 }
 
                 WinApiWarning.Visibility = InterceptionMethod.SelectedIndex == 0 || !is_driver_loaded ? Visibility.Visible : Visibility.Hidden;
@@ -400,8 +425,7 @@ namespace eye_tracking_mouse
             {
                 lock (Helpers.locker)
                 {
-                    Options.Instance.key_bindings.bindings = new Dictionary<Key, Interceptor.Keys>(KeyBindings.default_bindings);
-                    Options.Instance.key_bindings.interception_method = KeyBindings.InterceptionMethod.WinApi;
+                    Options.Instance.key_bindings = new KeyBindings();
                     Options.Instance.SaveToFile();
                     KeyBindingsChanged?.Invoke(this, new EventArgs());
 

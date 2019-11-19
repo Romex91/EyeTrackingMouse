@@ -24,19 +24,27 @@ namespace eye_tracking_mouse
 
         private static Settings settings_window;
 
-        // TODO: prevent multiple windows.
         private static void OpenSettings(object sender, EventArgs e)
         {
-            settings_window = new Settings(input_manager);
-            settings_window.Show();
-            settings_window.TabControl.SelectedIndex = 0;
+            if (settings_window == null || !settings_window.IsLoaded)
+            {
+                settings_window = new Settings(input_manager);
+                settings_window.Show();
+            }
+
+            if (settings_window.IsEnabled)
+                settings_window.TabControl.SelectedIndex = 0;
         }
         private static void OpenAbout(object sender, EventArgs e)
         {
-            settings_window = new Settings(input_manager);
-            settings_window.Show();
+            if (settings_window == null || !settings_window.IsLoaded)
+            {
+                settings_window = new Settings(input_manager);
+                settings_window.Show();
+            }
 
-            settings_window.TabControl.SelectedIndex = 2;
+            if (settings_window.IsEnabled)
+                settings_window.TabControl.SelectedIndex = 2;
         }
         private static void Shutdown(object sender, EventArgs e)
         {
@@ -122,6 +130,7 @@ namespace eye_tracking_mouse
 
                 context_menu_strip.ResumeLayout(false);
                 Helpers.tray_icon.ContextMenuStrip = context_menu_strip;
+                Helpers.tray_icon.MouseClick += Tray_icon_Click;
             }
 
             eye_tracking_mouse = new EyeTrackingMouse();
@@ -132,6 +141,12 @@ namespace eye_tracking_mouse
 
             eye_tracking_mouse.Dispose();
             Helpers.tray_icon.Visible = false;
+        }
+
+        private static void Tray_icon_Click(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+                OpenAbout(sender, e);
         }
 
         private void Application_Startup(object sender, StartupEventArgs e)

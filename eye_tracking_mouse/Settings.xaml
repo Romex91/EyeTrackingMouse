@@ -94,10 +94,11 @@
                         <ComboBoxItem>Oblita Interception Driver</ComboBoxItem>
                     </ComboBox>
 
-                    <TextBlock Name="WinApiWarning" Grid.Row="5" Grid.RowSpan="2" Grid.Column="4" Grid.ColumnSpan="2">
-                        Custom key bindings are not available under WinAPI. <LineBreak></LineBreak>
-                        Change interception method to Oblita Interception <LineBreak></LineBreak>
-                        Driver to enable key bindings.
+                    <TextBlock Name="WinApiWarning" Grid.Row="5" Grid.RowSpan="4" Grid.Column="4" Grid.ColumnSpan="2">
+                        Custom key bindings are not available <LineBreak></LineBreak>
+                        under WinAPI. Change interception <LineBreak></LineBreak>
+                        method to Oblita Interception Driver <LineBreak></LineBreak> 
+                        to enable key bindings.
                     </TextBlock>
 
                 </Grid>

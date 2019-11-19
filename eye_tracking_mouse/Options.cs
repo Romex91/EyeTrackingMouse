@@ -36,7 +36,7 @@ namespace eye_tracking_mouse
             WinApi,
             OblitaDriver
         }
-        public InterceptionMethod interception_method = InterceptionMethod.OblitaDriver;
+        public InterceptionMethod interception_method = InterceptionMethod.WinApi;
         public bool is_driver_installed = false;
 
         public Interceptor.Keys this[Key key]
@@ -72,7 +72,7 @@ namespace eye_tracking_mouse
 
         public int calibration_step = 3;
         public int calibration_zone_size = 150;
-        public int calibration_max_zones_count = 15;
+        public int calibration_max_zones_count = 25;
         public int calibration_considered_zones_count = 5; // Not configurable since it is hard to explain what it means.
         public int calibration_shift_ttl_ms = 50; // Not configurable since it is hard to explain what it means.
         public int calibration_reset_zone_size = 400; // Not configurable since it is hard to explain what it means.

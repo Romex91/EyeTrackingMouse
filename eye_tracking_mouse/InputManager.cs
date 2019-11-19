@@ -230,6 +230,14 @@ namespace eye_tracking_mouse
                     return;
                 }
 
+                if (key_state == KeyState.Down && read_key_callback != null)
+                {
+                    read_key_callback(new ReadKeyResult { is_e0_key = is_e0_key, key = e.Key });
+                    read_key_callback = null;
+                    e.Handled = true;
+                    return;
+                }
+
                 // Convert |Interceptor.Keys| to |eye_tracking_mouse.Key|
                 var key_bindings = Options.Instance.key_bindings;
                 Key key = Key.Unbound;
@@ -241,13 +249,9 @@ namespace eye_tracking_mouse
                     }).Key;
                 }
 
-                if (key_state == KeyState.Down && read_key_callback != null)
-                {
-                    read_key_callback(new ReadKeyResult { is_e0_key = is_e0_key, key = e.Key });
-                    read_key_callback = null;
-                    e.Handled = true;
-                    return;
-                }
+                if (key == Key.Modifier && key_bindings.is_modifier_e0 != is_e0_key)
+                    key = Key.Unbound;
+
                 e.Handled = OnKeyPressed(key, key_state, Helpers.IsModifier(e.Key));
             }
         }
