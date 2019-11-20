@@ -59,7 +59,8 @@ namespace eye_tracking_mouse
                         arrow.Y1 = shift.Position.Y;
                         arrow.X2 = shift.Position.X + shift.Shift.X;
                         arrow.Y2 = shift.Position.Y + shift.Shift.Y;
-                        arrow.Stroke = Brushes.Red;
+                        arrow.Stroke = Options.Instance.calibration.multidimension_calibration_type == MultidimensionCalibrationType.None ?
+                            Brushes.Red : new SolidColorBrush(shift.Position.GetColor());
                         arrow.StrokeThickness = 3;
 
                         Canvas.Children.Add(arrow);
@@ -67,9 +68,55 @@ namespace eye_tracking_mouse
                     }
 
                     Description.Text =
-                        "CALIBRATIONS COUNT: " + ShiftsStorage.Instance.Shifts.Count + "/" + Options.Instance.calibration_max_zones_count + " \n" +
+                        "CALIBRATIONS COUNT: " + ShiftsStorage.Instance.Shifts.Count + "/" + Options.Instance.calibration.max_zones_count + " \n" +
                         "HIDE CALIBRATION VIEW: " + Options.Instance.key_bindings[Key.Modifier].ToString().ToUpper() + "+" + Options.Instance.key_bindings[Key.ShowCalibrationView] + "\n" +
                         "YOU CAN RESET CALIBRATIONS VIA TRAY ICON MENU";
+                }
+            }));
+        }
+
+        private void UpdateColor(object sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                lock (Helpers.locker)
+                {
+
+                    MultidimensionCalibrationType type = Options.Instance.calibration.multidimension_calibration_type;
+
+                    if (type == MultidimensionCalibrationType.None)
+                    {
+                        HeadPositionDescription.Text = "";
+                        CurrentHeadPositionColor.Background = Brushes.Red;
+                        return;
+                    }
+
+                    CurrentHeadPositionColor.Background = new SolidColorBrush(ShiftsStorage.Instance.LastPosition.GetColor());
+
+                    string head_position_description = "";
+                    var last_position = ShiftsStorage.Instance.LastPosition;
+
+                    if ((type & MultidimensionCalibrationType.HeadPosition) != MultidimensionCalibrationType.None)
+                    {
+                        head_position_description += "Head position: \nX: " + last_position.HeadPosition.X + "\n" + "Y: " + last_position.HeadPosition.Y + "\n" + "Z: " + last_position.HeadPosition.Z;
+                    }
+
+                    if ((type & MultidimensionCalibrationType.HeadDirection) != MultidimensionCalibrationType.None)
+                    {
+                        head_position_description += "\nHead direction: \n Pitch: " + last_position.HeadDirection.X + "\n" + "Yaw: " + last_position.HeadDirection.Y + "\n" + "Roll: " + last_position.HeadDirection.Z;
+                    }
+
+                    if ((type & MultidimensionCalibrationType.LeftEye) != MultidimensionCalibrationType.None)
+                    {
+                        head_position_description += "\nLeft eye: \nX: " + last_position.LeftEye.X + "\n" + "Y: " + last_position.LeftEye.Y + "\n" + "Z: " + last_position.LeftEye.Z;
+                    }
+
+                    if ((type & MultidimensionCalibrationType.RightEye) != MultidimensionCalibrationType.None)
+                    {
+                        head_position_description += "\nRight eye: \nX: " + last_position.LeftEye.X + "\n" + "Y: " + last_position.LeftEye.Y + "\n" + "Z: " + last_position.LeftEye.Z;
+                    }
+
+                    HeadPositionDescription.Text = head_position_description;
                 }
             }));
         }
@@ -80,6 +127,7 @@ namespace eye_tracking_mouse
             Update(null, null);
             ShiftsStorage.Instance.Changed += Update;
             Settings.KeyBindingsChanged += Update;
+            ShiftsStorage.Instance.CursorPositionUpdated += UpdateColor;
         }
 
         private void Window_Deactivated(object sender, EventArgs e)
@@ -91,6 +139,7 @@ namespace eye_tracking_mouse
         {
             ShiftsStorage.Instance.Changed -= Update;
             Settings.KeyBindingsChanged -= Update;
+            ShiftsStorage.Instance.CursorPositionUpdated -= UpdateColor;
             base.OnClosed(e);
         }
         protected override void OnSourceInitialized(EventArgs e)

@@ -24,5 +24,10 @@
     <Canvas  x:Name="Canvas">
         <TextBlock  Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType=Canvas}}" TextAlignment="Center" Canvas.Top="50"> CALIBRATION VIEW </TextBlock>
         <TextBlock Canvas.Right="100" Canvas.Bottom="100" Name ="Description"></TextBlock>
+        <Grid Canvas.Right="100" Canvas.Top="100" Width="200" Height="100" Name="CurrentHeadPositionColor" Background="RED">
+            <TextBlock TextAlignment="Center"  Background="Gray" VerticalAlignment="Top">CURRENT HEAD <LineBreak/> POSITION COLOR</TextBlock>
+        </Grid>
+        <TextBlock Canvas.Right="100" Canvas.Top="300" Name ="HeadPositionDescription"></TextBlock>
+
     </Canvas>
 </Window>

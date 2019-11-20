@@ -13,10 +13,18 @@ namespace eye_tracking_mouse
     public class EyeTrackingMouse : IDisposable
     {
         private readonly Tobii.Interaction.Host host = new Tobii.Interaction.Host();
-        private readonly Tobii.Interaction.GazePointDataStream gazePointDataStream;
+        private readonly Tobii.Interaction.GazePointDataStream gaze_point_data_stream;
+
+        private readonly Tobii.Interaction.EyePositionStream eye_position_stream;
+        private readonly Tobii.Interaction.HeadPoseStream head_pose_stream;
 
         private Point gaze_point = new Point(0, 0);
         private readonly GazeSmoother gaze_smoother = new GazeSmoother();
+
+        private Tobii.Interaction.Vector3 left_eye;
+        private Tobii.Interaction.Vector3 right_eye;
+        private Tobii.Interaction.Vector3 head_position;
+        private Tobii.Interaction.Vector3 head_direction;
 
         // |gaze_point| is not accurate. To enable precise cursor control the application supports calibration by W/A/S/D.
         // |calibration_shift| is result of such calibration. Application sets cursor position to |gaze_point| + |calibration_shift| when in |Controlling| state.
@@ -30,9 +38,6 @@ namespace eye_tracking_mouse
         private DateTime last_shift_update_time = DateTime.Now;
 
         private DateTime freeze_until = DateTime.Now;
-
-        // For dpi.
-        private Graphics graphics = Graphics.FromHwnd(IntPtr.Zero);
 
         public enum MouseState
         {
@@ -51,6 +56,35 @@ namespace eye_tracking_mouse
             Cursor.Position = new Point(gaze_point.X + calibration_shift.X, gaze_point.Y + calibration_shift.Y);
         }
 
+        private void OnHeadPose(double unused, Tobii.Interaction.Vector3 head_position, Tobii.Interaction.Vector3 head_direction)
+        {
+            lock (Helpers.locker)
+            {
+                if (!(head_position.X == 0 && head_position.Y == 0 && head_position.Z == 0))
+                {
+                    this.head_position = head_position;
+                    this.head_direction = new Tobii.Interaction.Vector3(head_direction.X * 200, head_direction.Y * 200, head_direction.Z * 200); 
+                }
+            }
+        }
+
+        private void OnEyePosition(Tobii.Interaction.EyePositionData obj)
+        {
+            lock (Helpers.locker)
+            {
+                if (obj.HasLeftEyePosition)
+                {
+                    var v = obj.LeftEyeNormalized;
+                    this.left_eye = new Tobii.Interaction.Vector3(v.X * 200, v.Y * 100, v.Z * 500);
+                }
+                if (obj.HasRightEyePosition)
+                {
+                    var v = obj.RightEyeNormalized;
+                    this.right_eye = new Tobii.Interaction.Vector3(v.X * 200, v.Y * 100, v.Z * 500);
+                }
+            }
+        }
+
         private void OnGazePoint(double x, double y, double ts)
         {
             lock (Helpers.locker)
@@ -62,16 +96,17 @@ namespace eye_tracking_mouse
                         gaze_smoother.AddGazePoint(new Point((int)(x), (int)(y)));
                         gaze_point = gaze_smoother.GetSmoothenedGazePoint();
 
-                        if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.calibration_reset_zone_size)
+                        if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.calibration.reset_zone_size)
                         {
                             mouse_state = MouseState.Controlling;
                         }
 
                         if (mouse_state == MouseState.Controlling &&
-                            (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration_shift_ttl_ms)
+                            (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration.shift_ttl_ms)
                         {
                             last_shift_update_time = DateTime.Now;
-                            calibration_shift =  ShiftsStorage.Instance.GetShift(gaze_point);
+                            calibration_shift = ShiftsStorage.Instance.GetShift(new ShiftsStorage.Position(
+                                gaze_point.X, gaze_point.Y, left_eye, right_eye, head_position, head_direction));
                         }
                     }
 
@@ -101,11 +136,11 @@ namespace eye_tracking_mouse
         }
 
         public bool OnKeyPressed(
-            Key key, 
-            InputManager.KeyState key_state, 
-            double speed_up, 
+            Key key,
+            InputManager.KeyState key_state,
+            double speed_up,
             bool is_short_modifier_press,
-            bool is_repetition, 
+            bool is_repetition,
             bool is_modifier,
             Action SendModifierDown)
         {
@@ -172,7 +207,7 @@ namespace eye_tracking_mouse
             if (key_state == InputManager.KeyState.Down)
             {
                 // Calibration
-                int calibration_step = (int)(Options.Instance.calibration_step * speed_up);
+                int calibration_step = (int)(Options.Instance.calibration.step * speed_up);
                 if (key == Key.CalibrateLeft)
                 {
                     StartCalibration();
@@ -222,7 +257,9 @@ namespace eye_tracking_mouse
                 key_state == InputManager.KeyState.Down &&
                 (key == Key.LeftMouseButton || key == Key.RightMouseButton))
             {
-                ShiftsStorage.Instance.AddShift(gaze_point, calibration_shift);
+                ShiftsStorage.Instance.AddShift(
+                    new ShiftsStorage.Position(gaze_point.X, gaze_point.Y, left_eye, right_eye, head_position, head_direction),
+                    calibration_shift);
                 mouse_state = MouseState.Controlling;
             }
 
@@ -233,7 +270,8 @@ namespace eye_tracking_mouse
                     // Freeze cursor for a short period of time after mouse clicks to make double clicks esier.
                     MouseButtons.LeftDown();
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.click_freeze_time_ms);
-                } else if (key_state == InputManager.KeyState.Up)
+                }
+                else if (key_state == InputManager.KeyState.Up)
                 {
                     MouseButtons.LeftUp();
                 }
@@ -261,17 +299,33 @@ namespace eye_tracking_mouse
             return true;
         }
 
+        public void UpdateTobiiStreams()
+        {
+
+            MultidimensionCalibrationType type = Options.Instance.calibration.multidimension_calibration_type;
+            head_pose_stream.IsEnabled = (type & MultidimensionCalibrationType.HeadPosition) != MultidimensionCalibrationType.None ||
+                (type & MultidimensionCalibrationType.HeadDirection) != MultidimensionCalibrationType.None;
+
+            eye_position_stream.IsEnabled = (type & MultidimensionCalibrationType.LeftEye) != MultidimensionCalibrationType.None ||
+                (type & MultidimensionCalibrationType.RightEye) != MultidimensionCalibrationType.None;
+        }
 
         public EyeTrackingMouse()
         {
-            gazePointDataStream = host.Streams.CreateGazePointDataStream();
-            gazePointDataStream.GazePoint(OnGazePoint);
+            gaze_point_data_stream = host.Streams.CreateGazePointDataStream();
+            eye_position_stream = host.Streams.CreateEyePositionStream();
+            head_pose_stream = host.Streams.CreateHeadPoseStream();
+
+            UpdateTobiiStreams();
+
+            gaze_point_data_stream.GazePoint(OnGazePoint);
+            eye_position_stream.EyePosition(OnEyePosition);
+            head_pose_stream.HeadPose(OnHeadPose);
         }
 
         public void Dispose()
         {
             host.Dispose();
-            graphics.Dispose();
         }
     }
 }

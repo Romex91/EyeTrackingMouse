@@ -134,9 +134,9 @@ namespace eye_tracking_mouse
             ClickFreezeTimeMs.Value = Options.Instance.click_freeze_time_ms;
             HorizontalScrollStep.Value = Options.Instance.horizontal_scroll_step;
             VerticalScrollStep.Value = Options.Instance.vertical_scroll_step;
-            CalibrationStep.Value = Options.Instance.calibration_step;
-            CalibrationZoneSize.Value = Options.Instance.calibration_zone_size;
-            CalibrationPointsCount.Value = Options.Instance.calibration_max_zones_count;
+            CalibrationStep.Value = Options.Instance.calibration.step;
+            CalibrationZoneSize.Value = Options.Instance.calibration.zone_size;
+            CalibrationPointsCount.Value = Options.Instance.calibration.max_zones_count;
         }
 
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -153,15 +153,15 @@ namespace eye_tracking_mouse
                 }
                 else if (sender == CalibrationZoneSize)
                 {
-                    Options.Instance.calibration_zone_size = (int)CalibrationZoneSize.Value;
+                    Options.Instance.calibration.zone_size = (int)CalibrationZoneSize.Value;
                 }
                 else if (sender == CalibrationPointsCount)
                 {
-                    Options.Instance.calibration_max_zones_count = (int)CalibrationPointsCount.Value;
+                    Options.Instance.calibration.max_zones_count = (int)CalibrationPointsCount.Value;
                 }
                 else if (sender == CalibrationStep)
                 {
-                    Options.Instance.calibration_step = (int)CalibrationStep.Value;
+                    Options.Instance.calibration.step = (int)CalibrationStep.Value;
                 }
                 else if (sender == VerticalScrollStep)
                 {
