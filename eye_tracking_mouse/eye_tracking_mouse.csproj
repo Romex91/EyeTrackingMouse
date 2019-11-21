@@ -80,9 +80,11 @@
     <Compile Include="Arrowheads\ArrowEnds.cs" />
     <Compile Include="Arrowheads\ArrowLine.cs" />
     <Compile Include="Arrowheads\ArrowLineBase.cs" />
+    <Compile Include="AsyncSaver.cs" />
     <Compile Include="CalibrationWindow.xaml.cs">
       <DependentUpon>CalibrationWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Statistics.cs" />
     <Compile Include="DriverInstallationWindow.xaml.cs">
       <DependentUpon>DriverInstallationWindow.xaml</DependentUpon>
     </Compile>

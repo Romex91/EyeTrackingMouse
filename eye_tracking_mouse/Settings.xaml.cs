@@ -28,6 +28,7 @@ namespace eye_tracking_mouse
         private InputManager input_manager;
 
         public static EventHandler KeyBindingsChanged;
+        public static EventHandler OptionsChanged;
 
         public Settings(InputManager input_manager)
         {
@@ -195,6 +196,7 @@ namespace eye_tracking_mouse
                 {
                     Options.Instance.smothening_points_count = (int)SmootheningPointsCount.Value;
                 }
+                OptionsChanged?.Invoke(this, new EventArgs());
                 Options.Instance.SaveToFile();
             }
         }
@@ -211,8 +213,9 @@ namespace eye_tracking_mouse
                     var key_bindings = Options.Instance.key_bindings;
                     Options.Instance = Options.Default();
                     Options.Instance.key_bindings = key_bindings;
-                    Options.Instance.SaveToFile();
+                    OptionsChanged?.Invoke(this, new EventArgs());
 
+                    Options.Instance.SaveToFile();
                     UpdateSliders();
                 }
             }

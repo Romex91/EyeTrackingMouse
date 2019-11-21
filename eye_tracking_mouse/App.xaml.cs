@@ -60,8 +60,8 @@ namespace eye_tracking_mouse
                 input_manager.Stop();
                 eye_tracking_mouse.StopControlling();
                 Helpers.tray_icon.Visible = false;
-                ShiftsStorage.Instance.SaveToFileAsync();
-                ShiftsStorage.Instance.save_to_file_task.Wait();
+
+                AsyncSaver.FlushSynchroniously();
             }
         }
 

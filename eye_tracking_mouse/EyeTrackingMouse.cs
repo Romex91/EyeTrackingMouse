@@ -39,6 +39,8 @@ namespace eye_tracking_mouse
 
         private DateTime freeze_until = DateTime.Now;
 
+        private Statistics statistics = Statistics.LoadFromFile();
+
         public enum MouseState
         {
             // Application does nothing. 
@@ -189,7 +191,6 @@ namespace eye_tracking_mouse
                 return false;
             }
 
-
             var repetition_white_list = new SortedSet<Key> {
                     Key.ScrollDown,
                     Key.ScrollUp,
@@ -213,24 +214,28 @@ namespace eye_tracking_mouse
                     StartCalibration();
                     calibration_shift.X -= calibration_step;
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
+                    statistics.OnCalibrate();
                 }
                 if (key == Key.CalibrateRight)
                 {
                     StartCalibration();
                     calibration_shift.X += calibration_step;
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
+                    statistics.OnCalibrate();
                 }
                 if (key == Key.CalibrateUp)
                 {
                     StartCalibration();
                     calibration_shift.Y -= calibration_step;
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
+                    statistics.OnCalibrate();
                 }
                 if (key == Key.CalibrateDown)
                 {
                     StartCalibration();
                     calibration_shift.Y += calibration_step;
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
+                    statistics.OnCalibrate();
                 }
 
                 // Scroll
@@ -270,6 +275,7 @@ namespace eye_tracking_mouse
                     // Freeze cursor for a short period of time after mouse clicks to make double clicks esier.
                     MouseButtons.LeftDown();
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.click_freeze_time_ms);
+                    statistics.OnClick();
                 }
                 else if (key_state == InputManager.KeyState.Up)
                 {
@@ -284,6 +290,7 @@ namespace eye_tracking_mouse
                     // Freeze cursor for a short period of time after mouse clicks to make double clicks esier.
                     MouseButtons.RightDown();
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.click_freeze_time_ms);
+                    statistics.OnClick();
                 }
                 else if (key_state == InputManager.KeyState.Up)
                 {

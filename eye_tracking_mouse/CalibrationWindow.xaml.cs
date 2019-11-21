@@ -125,9 +125,9 @@ namespace eye_tracking_mouse
         {
             InitializeComponent();
             Update(null, null);
-            ShiftsStorage.Instance.Changed += Update;
+            ShiftsStorage.Changed += Update;
             Settings.KeyBindingsChanged += Update;
-            ShiftsStorage.Instance.CursorPositionUpdated += UpdateColor;
+            ShiftsStorage.CursorPositionUpdated += UpdateColor;
         }
 
         private void Window_Deactivated(object sender, EventArgs e)
@@ -137,9 +137,9 @@ namespace eye_tracking_mouse
 
         protected override void OnClosed(EventArgs e)
         {
-            ShiftsStorage.Instance.Changed -= Update;
+            ShiftsStorage.Changed -= Update;
             Settings.KeyBindingsChanged -= Update;
-            ShiftsStorage.Instance.CursorPositionUpdated -= UpdateColor;
+            ShiftsStorage.CursorPositionUpdated -= UpdateColor;
             base.OnClosed(e);
         }
         protected override void OnSourceInitialized(EventArgs e)

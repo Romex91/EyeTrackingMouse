@@ -151,19 +151,15 @@ namespace eye_tracking_mouse
             public Position Position { get; private set; }
         }
 
-
         private static string Filepath { get { return Path.Combine(Helpers.GetLocalFolder(), "calibration" + Options.Instance.calibration.multidimension_calibration_type + ".json"); } }
+
         public List<ShiftItem> Shifts { private set; get; } = new List<ShiftItem>();
 
         public Position LastPosition { private set; get; }
 
-        private DateTime last_save_time = DateTime.Now;
+        public static event EventHandler Changed;
 
-        public Task save_to_file_task;
-
-        public event EventHandler Changed;
-
-        public event EventHandler CursorPositionUpdated;
+        public static event EventHandler CursorPositionUpdated;
         public static ShiftsStorage Instance { get; set; } = LoadFromFile();
 
         public static ShiftsStorage LoadFromFile()
@@ -180,6 +176,11 @@ namespace eye_tracking_mouse
                 catch (Exception) { }
             }
             return storage;
+        }
+
+        public ShiftsStorage()
+        {
+            Settings.OptionsChanged += OnSettingsChanged;
         }
 
         public Point GetShift(Position cursor_position)
@@ -214,18 +215,22 @@ namespace eye_tracking_mouse
             Shifts.Clear();
             NotifyOnChange();
         }
-        public void OnSettingsChanged()
+        private static void OnSettingsChanged(object sender, EventArgs e)
         {
+            AsyncSaver.FlushSynchroniously();
+
+            Instance = LoadFromFile();
+
             // Adjust to new calibration zone size.
-            for (int i = 0; i < Shifts.Count - 1;)
+            for (int i = 0; i < Instance.Shifts.Count - 1;)
             {
                 bool did_remove = false;
-                for (int j = i + 1; j < Shifts.Count; j++)
+                for (int j = i + 1; j < Instance.Shifts.Count; j++)
                 {
-                    if (Shifts[j].Position.GetDistance(Shifts[i].Position) < Options.Instance.calibration.zone_size)
+                    if (Instance.Shifts[j].Position.GetDistance(Instance.Shifts[i].Position) < Options.Instance.calibration.zone_size)
                     {
                         did_remove = true;
-                        Shifts.RemoveAt(i);
+                        Instance.Shifts.RemoveAt(i);
                         break;
                     }
                 }
@@ -235,29 +240,22 @@ namespace eye_tracking_mouse
             }
 
             // Adjust to new calibration zones count.
-            while (Shifts.Count > Options.Instance.calibration.max_zones_count)
-                Shifts.RemoveAt(0);
+            while (Instance.Shifts.Count > Options.Instance.calibration.max_zones_count)
+                Instance.Shifts.RemoveAt(0);
 
-            SaveToFileAsync();
-            NotifyOnChange();
+            AsyncSaver.Save(Filepath, Instance.GetDeepCopy);
+            Instance.NotifyOnChange();
         }
 
-        public void SaveToFileAsync()
+        private object GetDeepCopy()
         {
-            if (save_to_file_task != null && !save_to_file_task.IsCompleted)
-                save_to_file_task.Wait();
-
-            last_save_time = DateTime.Now;
             var deep_copy = new List<ShiftItem>();
             foreach (var i in Shifts)
             {
                 deep_copy.Add(new ShiftItem(i.Position, i.Shift));
             }
 
-            save_to_file_task = Task.Factory.StartNew(() =>
-            {
-                File.WriteAllText(Filepath, JsonConvert.SerializeObject(deep_copy, Formatting.Indented));
-            });
+            return deep_copy;
         }
 
         public void AddShift(Position cursor_position, Point shift)
@@ -278,11 +276,7 @@ namespace eye_tracking_mouse
                 Shifts[GetClosestPointOfHihestDensity(cursor_position)] = new ShiftItem(cursor_position, shift);
             }
 
-            if ((DateTime.Now - last_save_time).TotalSeconds > 10 && (save_to_file_task == null || save_to_file_task.IsCompleted))
-            {
-                SaveToFileAsync();
-            }
-
+            AsyncSaver.Save(Filepath, GetDeepCopy);
             NotifyOnChange();
         }
 
