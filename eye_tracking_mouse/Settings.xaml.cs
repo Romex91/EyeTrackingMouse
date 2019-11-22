@@ -29,6 +29,7 @@ namespace eye_tracking_mouse
 
         public static EventHandler KeyBindingsChanged;
         public static EventHandler OptionsChanged;
+        public static EventHandler CalibrationModeChanged;
 
         public Settings(InputManager input_manager)
         {
@@ -103,41 +104,43 @@ namespace eye_tracking_mouse
                     "Bigger the radius means less cursor shaking but slower movement when moving cursor to a huge distance." +
                     "If you move your gaze farther than this radius cursor will move instantly. Otherwise it will move smoothly.";
 
-                CalibrationZoneSizeTooltip.ToolTip =
-                    "Size of calibration zone on screen. There can be only one calibration per zone." +
-                    "Smaller zones mean more precise but longer calibration and higher CPU usage." +
-                    "You may want to increase zones count if you make zone size small." +
-                    "Press " + Options.Instance.key_bindings[Key.Modifier].ToString() + " + " +
-                    Options.Instance.key_bindings[Key.ShowCalibrationView] +
-                    " to see your curent calibrations.";
-
-                CalibrationPointsCountTooltip.ToolTip =
-                    "Maximal number of calibration zones on screen. There can be only one calibration per zone. \n" +
-                    "More zones mean more precise calibration and higher CPU usage.\n" +
-                    "You may want to decrease zone size if you set large zones count.\n" +
-                    "Press " + Options.Instance.key_bindings[Key.Modifier].ToString() + " + " +
-                    Options.Instance.key_bindings[Key.ShowCalibrationView].ToString() +
-                    " to see your curent calibrations.";
-
             }
         }
 
         private void UpdateSliders()
         {
-            SmotheningZoneRadius.Value = Options.Instance.smothening_zone_radius;
-            SmootheningPointsCount.Value = Options.Instance.smothening_points_count;
-            ModifierShortPressTimeMs.Value = Options.Instance.modifier_short_press_duration_ms;
+            lock (Helpers.locker)
+            {
 
-            QuadrupleSpeedUpTimeMs.Value = Options.Instance.quadriple_speed_up_press_time_ms;
-            DoubleSpeedUpTimeMs.Value = Options.Instance.double_speedup_press_time_ms;
+                SmotheningZoneRadius.Value = Options.Instance.smothening_zone_radius;
+                SmootheningPointsCount.Value = Options.Instance.smothening_points_count;
+                ModifierShortPressTimeMs.Value = Options.Instance.modifier_short_press_duration_ms;
 
-            CalibrationFreezeTimeMs.Value = Options.Instance.calibrate_freeze_time_ms;
-            ClickFreezeTimeMs.Value = Options.Instance.click_freeze_time_ms;
-            HorizontalScrollStep.Value = Options.Instance.horizontal_scroll_step;
-            VerticalScrollStep.Value = Options.Instance.vertical_scroll_step;
-            CalibrationStep.Value = Options.Instance.calibration.step;
-            CalibrationZoneSize.Value = Options.Instance.calibration.zone_size;
-            CalibrationPointsCount.Value = Options.Instance.calibration.max_zones_count;
+                QuadrupleSpeedUpTimeMs.Value = Options.Instance.quadriple_speed_up_press_time_ms;
+                DoubleSpeedUpTimeMs.Value = Options.Instance.double_speedup_press_time_ms;
+
+                CalibrationFreezeTimeMs.Value = Options.Instance.calibrate_freeze_time_ms;
+                ClickFreezeTimeMs.Value = Options.Instance.click_freeze_time_ms;
+                HorizontalScrollStep.Value = Options.Instance.horizontal_scroll_step;
+                VerticalScrollStep.Value = Options.Instance.vertical_scroll_step;
+                CalibrationStep.Value = Options.Instance.calibration_step;
+
+                if (Options.Instance.calibration_mode.Equals(Options.CalibrationMode.MultiDimensionPreset))
+                {
+                    CalibrationModeCombo.SelectedIndex = 0;
+                    CustomCalibrationMode.Visibility = Visibility.Collapsed;
+                }
+                else if (Options.Instance.calibration_mode.Equals(Options.CalibrationMode.SingleDimensionPreset))
+                {
+                    CalibrationModeCombo.SelectedIndex = 1;
+                    CustomCalibrationMode.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    CustomCalibrationMode.Visibility = Visibility.Visible;
+                    CalibrationModeCombo.SelectedIndex = 2;
+                }
+            }
         }
 
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -152,17 +155,9 @@ namespace eye_tracking_mouse
                 {
                     Options.Instance.smothening_zone_radius = (int)SmotheningZoneRadius.Value;
                 }
-                else if (sender == CalibrationZoneSize)
-                {
-                    Options.Instance.calibration.zone_size = (int)CalibrationZoneSize.Value;
-                }
-                else if (sender == CalibrationPointsCount)
-                {
-                    Options.Instance.calibration.max_zones_count = (int)CalibrationPointsCount.Value;
-                }
                 else if (sender == CalibrationStep)
                 {
-                    Options.Instance.calibration.step = (int)CalibrationStep.Value;
+                    Options.Instance.calibration_step = (int)CalibrationStep.Value;
                 }
                 else if (sender == VerticalScrollStep)
                 {
@@ -285,7 +280,8 @@ namespace eye_tracking_mouse
             throw new Exception("Click event from unassigned button");
         }
 
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e) {
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
             e.Cancel = !IsEnabled;
         }
 
@@ -320,7 +316,7 @@ namespace eye_tracking_mouse
 
                 foreach (var key_binding_control in key_binding_controls_list)
                 {
-                    Interceptor.Keys key= Options.Instance.key_bindings[key_binding_control.key];
+                    Interceptor.Keys key = Options.Instance.key_bindings[key_binding_control.key];
 
                     string button_content = "";
                     if (key_binding_control.key == Key.Modifier && (key == Interceptor.Keys.RightAlt || key == Interceptor.Keys.Control))
@@ -330,8 +326,9 @@ namespace eye_tracking_mouse
 
                     if (key == Interceptor.Keys.RightAlt)
                     {
-                        button_content += "Alt"; 
-                    } else
+                        button_content += "Alt";
+                    }
+                    else
                     {
                         button_content += key.ToString();
                     }
@@ -376,7 +373,8 @@ namespace eye_tracking_mouse
                 Options.Instance.key_bindings.interception_method = InterceptionMethod.SelectedIndex == 0 ? KeyBindings.InterceptionMethod.WinApi : KeyBindings.InterceptionMethod.OblitaDriver;
                 Options.Instance.SaveToFile();
                 bool success = input_manager.UpdateInterceptionMethod();
-                if (!success) {
+                if (!success)
+                {
                     if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.WinApi)
                     {
                         throw new Exception("Failed setting WinAPI interception method.");
@@ -392,7 +390,8 @@ namespace eye_tracking_mouse
                             var driver_installation_window = new DriverInstallationWindow();
                             driver_installation_window.ShowDialog();
                         }
-                    } else
+                    }
+                    else
                     {
                         MessageBox.Show(
                             "Failed loading interception driver." +
@@ -400,12 +399,42 @@ namespace eye_tracking_mouse
                             " https://github.com/oblitum/Interception. Application will run using WinAPI.",
                             Helpers.application_name, MessageBoxButton.OK, MessageBoxImage.Error);
                     }
-                }                    
+                }
                 UpdateKeyBindingControls();
                 UpdateTooltips();
             }
         }
 
+        private void CalibrationModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+            if (!is_initialized)
+                return;
+            lock (Helpers.locker)
+            {
+                if (CalibrationModeCombo.SelectedIndex == 0)
+                {
+                    Options.Instance.calibration_mode = Options.CalibrationMode.MultiDimensionPreset;
+                    CustomCalibrationMode.Visibility = Visibility.Collapsed;
+                }
+                else if (CalibrationModeCombo.SelectedIndex == 1)
+                {
+                    Options.Instance.calibration_mode = Options.CalibrationMode.SingleDimensionPreset;
+                    CustomCalibrationMode.Visibility = Visibility.Collapsed;
+                }
+
+                CalibrationModeChanged?.Invoke(this, null);
+                OptionsChanged?.Invoke(this, new EventArgs());
+                Options.Instance.SaveToFile();
+            }
+        }
+
+        private void AdvancedCalibrationSettings_Click(object sender, RoutedEventArgs e)
+        {
+            CalibrationSettings calibration_settings = new CalibrationSettings();
+            calibration_settings.ShowDialog();
+            UpdateSliders();
+        }
     }
     public class IconToImageSourceConverter : IValueConverter
     {

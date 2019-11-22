@@ -59,7 +59,7 @@ namespace eye_tracking_mouse
                         arrow.Y1 = shift.Position.Y;
                         arrow.X2 = shift.Position.X + shift.Shift.X;
                         arrow.Y2 = shift.Position.Y + shift.Shift.Y;
-                        arrow.Stroke = Options.Instance.calibration.multidimension_calibration_type == MultidimensionCalibrationType.None ?
+                        arrow.Stroke = Options.Instance.calibration_mode.multidimension_calibration_type == MultidimensionCalibrationType.None ?
                             Brushes.Red : new SolidColorBrush(shift.Position.GetColor());
                         arrow.StrokeThickness = 3;
 
@@ -68,7 +68,7 @@ namespace eye_tracking_mouse
                     }
 
                     Description.Text =
-                        "CALIBRATIONS COUNT: " + ShiftsStorage.Instance.Shifts.Count + "/" + Options.Instance.calibration.max_zones_count + " \n" +
+                        "CALIBRATIONS COUNT: " + ShiftsStorage.Instance.Shifts.Count + "/" + Options.Instance.calibration_mode.max_zones_count + " \n" +
                         "HIDE CALIBRATION VIEW: " + Options.Instance.key_bindings[Key.Modifier].ToString().ToUpper() + "+" + Options.Instance.key_bindings[Key.ShowCalibrationView] + "\n" +
                         "YOU CAN RESET CALIBRATIONS VIA TRAY ICON MENU";
                 }
@@ -81,8 +81,7 @@ namespace eye_tracking_mouse
             {
                 lock (Helpers.locker)
                 {
-
-                    MultidimensionCalibrationType type = Options.Instance.calibration.multidimension_calibration_type;
+                    MultidimensionCalibrationType type = Options.Instance.calibration_mode.multidimension_calibration_type;
 
                     if (type == MultidimensionCalibrationType.None)
                     {

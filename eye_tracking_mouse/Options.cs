@@ -51,7 +51,7 @@ namespace eye_tracking_mouse
 
         public Interceptor.Keys this[Key key]
         {
-            get => interception_method == InterceptionMethod.OblitaDriver ? bindings [key] : default_bindings[key];
+            get => interception_method == InterceptionMethod.OblitaDriver ? bindings[key] : default_bindings[key];
             set => bindings[key] = value;
         }
 
@@ -75,54 +75,71 @@ namespace eye_tracking_mouse
         public Dictionary<Key, Interceptor.Keys> bindings = new Dictionary<Key, Interceptor.Keys>(default_bindings);
     };
 
-    class CalibrationSettings
-    {
-        public int step = 3;
-        public int zone_size = 150;
-        public int max_zones_count = 25;
-        public int considered_zones_count = 5; // Not configurable since it is hard to explain what it means.
-        public int shift_ttl_ms = 50; // Not configurable since it is hard to explain what it means.
-        public int reset_zone_size = 400; // Not configurable since it is hard to explain what it means.
-
-        public MultidimensionCalibrationType multidimension_calibration_type = MultidimensionCalibrationType.LeftEye;
-        public double multi_dimensions_detalization = 10;
-
-        public static CalibrationSettings SingleDemensionPreset()
-        {
-            return new CalibrationSettings
-            {
-                considered_zones_count = 5,
-                max_zones_count = 25,
-                multidimension_calibration_type = MultidimensionCalibrationType.None,
-                multi_dimensions_detalization = 1,
-                reset_zone_size = 400,
-                shift_ttl_ms = 50,
-                step = 3,
-                zone_size = 150
-            };
-        }
-        public static CalibrationSettings MultiDemensionPreset()
-        {
-            return new CalibrationSettings
-            {
-                considered_zones_count = 7,
-                max_zones_count = 700,
-                multidimension_calibration_type = MultidimensionCalibrationType.HeadDirection | MultidimensionCalibrationType.HeadPosition,
-                multi_dimensions_detalization = 7,
-                reset_zone_size = 400,
-                shift_ttl_ms = 50,
-                step = 3,
-                zone_size = 150
-            };
-        }
-    }
 
     // TODO: check all accesses to this and other shared classes are in critical section.
     class Options
     {
         public KeyBindings key_bindings = new KeyBindings();
 
-        public CalibrationSettings calibration = CalibrationSettings.MultiDemensionPreset();
+        public class CalibrationMode
+        {
+            public int zone_size;
+            public int max_zones_count;
+            public int considered_zones_count;
+            public int update_period_ms;
+
+            public MultidimensionCalibrationType multidimension_calibration_type;
+            public int multi_dimensions_detalization;
+           
+            public bool Equals(CalibrationMode other)
+            {
+                return 
+                    zone_size == other.zone_size && 
+                    max_zones_count == other.max_zones_count && 
+                    considered_zones_count == other.considered_zones_count && 
+                    update_period_ms == other.update_period_ms && 
+                    multidimension_calibration_type == other.multidimension_calibration_type &&
+                    multi_dimensions_detalization == other.multi_dimensions_detalization;
+            }
+
+            public static CalibrationMode SingleDimensionPreset
+            {
+                get
+                {
+                    return new CalibrationMode
+                    {
+                        considered_zones_count = 5,
+                        max_zones_count = 25,
+                        multidimension_calibration_type = MultidimensionCalibrationType.None,
+                        multi_dimensions_detalization = 1,
+                        update_period_ms = 20,
+                        zone_size = 150
+                    };
+                }
+            }
+
+            public static CalibrationMode MultiDimensionPreset
+            {
+                get
+                {
+                    return new CalibrationMode
+                    {
+                        considered_zones_count = 7,
+                        max_zones_count = 700,
+                        multidimension_calibration_type = MultidimensionCalibrationType.HeadDirection | MultidimensionCalibrationType.HeadPosition,
+                        multi_dimensions_detalization = 7,
+                        update_period_ms = 20,
+                        zone_size = 150
+                    };
+                }
+            }
+
+        }
+        public CalibrationMode calibration_mode = CalibrationMode.MultiDimensionPreset;
+
+        public int calibration_step = 3;
+
+        public int reset_calibration_zone_size = 400; // Not configurable since it is hard to explain what it means.
 
         public int horizontal_scroll_step = 4;
         public int vertical_scroll_step = 4;
@@ -157,6 +174,7 @@ namespace eye_tracking_mouse
             }
             return options;
         }
+
         public static Options Default()
         {
             return new Options();

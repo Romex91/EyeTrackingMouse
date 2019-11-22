@@ -13,7 +13,7 @@ namespace eye_tracking_mouse
         public Statistics()
         {
             Settings.OptionsChanged += UpdateCurrentItemKey;
-            UpdateCurrentItemKey(null, null); 
+            UpdateCurrentItemKey(null, null);
         }
 
         public void OnClick()
@@ -35,15 +35,27 @@ namespace eye_tracking_mouse
             {
                 statistics.items = JsonConvert.DeserializeObject<Dictionary<string, StatisticsItem>>(File.ReadAllText(Filepath));
             }
+            if (!statistics.items.ContainsKey(current_item_key))
+            {
+                statistics.items.Add(current_item_key, new StatisticsItem());
+            }
             return statistics;
         }
 
         private void UpdateCurrentItemKey(object sender, EventArgs e)
         {
-            current_item_key = JsonConvert.SerializeObject(Options.Instance.calibration, Formatting.None);
-            if (!items.ContainsKey(current_item_key))
+            lock (Helpers.locker)
             {
-                items.Add(current_item_key, new StatisticsItem());
+                current_item_key = JsonConvert.SerializeObject(
+                    new Dictionary<string, object> { 
+                        { "mode", Options.Instance.calibration_mode } ,
+                        { "step", Options.Instance.calibration_step}},
+                    Formatting.None);
+
+                if (!items.ContainsKey(current_item_key))
+                {
+                    items.Add(current_item_key, new StatisticsItem());
+                }
             }
         }
 
@@ -65,7 +77,7 @@ namespace eye_tracking_mouse
             }
         }
 
-        private string current_item_key = "";
+        private static string current_item_key = "";
         private Dictionary<string, StatisticsItem> items = new Dictionary<string, StatisticsItem>();
     }
 }

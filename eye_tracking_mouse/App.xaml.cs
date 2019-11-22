@@ -35,7 +35,7 @@ namespace eye_tracking_mouse
             if (settings_window.IsEnabled)
                 settings_window.TabControl.SelectedIndex = 0;
 
-            settings_window.Topmost = true;
+            settings_window.Activate();
         }
         private static void OpenAbout(object sender, EventArgs e)
         {
@@ -47,7 +47,7 @@ namespace eye_tracking_mouse
 
             if (settings_window.IsEnabled)
                 settings_window.TabControl.SelectedIndex = 2;
-            settings_window.Topmost = true;
+            settings_window.Activate();
         }
         private static void Shutdown(object sender, EventArgs e)
         {

@@ -26,7 +26,7 @@ namespace eye_tracking_mouse
                 X = x;
                 Y = y;
 
-                MultidimensionCalibrationType type = Options.Instance.calibration.multidimension_calibration_type;
+                MultidimensionCalibrationType type = Options.Instance.calibration_mode.multidimension_calibration_type;
                 if ((type & MultidimensionCalibrationType.HeadPosition) != MultidimensionCalibrationType.None)
                 {
                     HeadPosition = head_position;
@@ -122,7 +122,7 @@ namespace eye_tracking_mouse
 
             private static double SquaredDistance(Tobii.Interaction.Vector3 a, Tobii.Interaction.Vector3 b)
             {
-                return (Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2) + Math.Pow(a.Z - b.Z, 2)) * Math.Pow(Options.Instance.calibration.multi_dimensions_detalization, 2);
+                return (Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2) + Math.Pow(a.Z - b.Z, 2)) * Math.Pow(Options.Instance.calibration_mode.multi_dimensions_detalization, 2);
             }
 
             public double GetDistance(Position other)
@@ -151,43 +151,44 @@ namespace eye_tracking_mouse
             public Position Position { get; private set; }
         }
 
-        private static string Filepath { get { return Path.Combine(Helpers.GetLocalFolder(), "calibration" + Options.Instance.calibration.multidimension_calibration_type + ".json"); } }
+        private static string Filepath { get { return Path.Combine(Helpers.GetLocalFolder(), "calibration" + Options.Instance.calibration_mode.multidimension_calibration_type + ".json"); } }
 
         public List<ShiftItem> Shifts { private set; get; } = new List<ShiftItem>();
 
         public Position LastPosition { private set; get; }
 
         public static event EventHandler Changed;
-
         public static event EventHandler CursorPositionUpdated;
-        public static ShiftsStorage Instance { get; set; } = LoadFromFile();
+        public static ShiftsStorage Instance { get; set; } = new ShiftsStorage();
 
-        public static ShiftsStorage LoadFromFile()
+        private void LoadFromFile()
         {
-            var storage = new ShiftsStorage();
-            if (File.Exists(Filepath))
+            try
             {
-                try
-                {
-                    storage.Shifts = JsonConvert.DeserializeObject<List<ShiftItem>>(File.ReadAllText(Filepath));
-                    foreach (var shift in storage.Shifts)
-                        shift.Position.AdjustColorBoundaries();
-                }
-                catch (Exception) { }
+                Shifts.Clear();
+                if (File.Exists(Filepath))
+                    Shifts = JsonConvert.DeserializeObject<List<ShiftItem>>(File.ReadAllText(Filepath));
+                foreach (var shift in Shifts)
+                    shift.Position.AdjustColorBoundaries();
             }
-            return storage;
+            catch (Exception e) { 
+                Shifts = new List<ShiftItem>();
+                System.Windows.MessageBox.Show("Failed reading shifts storage: " + e.Message, Helpers.application_name, System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
         }
 
         public ShiftsStorage()
         {
             Settings.OptionsChanged += OnSettingsChanged;
+            Settings.CalibrationModeChanged += OnCalibrationModeChanged;
+            LoadFromFile();
         }
 
         public Point GetShift(Position cursor_position)
         {
             LastPosition = cursor_position;
             CursorPositionUpdated?.Invoke(this, new EventArgs());
-            var closest_indices = GetClosestShiftIndexes(cursor_position, Options.Instance.calibration.considered_zones_count);
+            var closest_indices = GetClosestShiftIndexes(cursor_position, Options.Instance.calibration_mode.considered_zones_count);
             if (closest_indices == null)
             {
                 Debug.Assert(Shifts.Count() == 0);
@@ -215,19 +216,22 @@ namespace eye_tracking_mouse
             Shifts.Clear();
             NotifyOnChange();
         }
-        private static void OnSettingsChanged(object sender, EventArgs e)
+
+        private static void OnCalibrationModeChanged(object sender, EventArgs e)
         {
             AsyncSaver.FlushSynchroniously();
+            Instance.LoadFromFile();
+        }
 
-            Instance = LoadFromFile();
-
+        private static void OnSettingsChanged(object sender, EventArgs e)
+        {
             // Adjust to new calibration zone size.
             for (int i = 0; i < Instance.Shifts.Count - 1;)
             {
                 bool did_remove = false;
                 for (int j = i + 1; j < Instance.Shifts.Count; j++)
                 {
-                    if (Instance.Shifts[j].Position.GetDistance(Instance.Shifts[i].Position) < Options.Instance.calibration.zone_size)
+                    if (Instance.Shifts[j].Position.GetDistance(Instance.Shifts[i].Position) < Options.Instance.calibration_mode.zone_size)
                     {
                         did_remove = true;
                         Instance.Shifts.RemoveAt(i);
@@ -240,7 +244,7 @@ namespace eye_tracking_mouse
             }
 
             // Adjust to new calibration zones count.
-            while (Instance.Shifts.Count > Options.Instance.calibration.max_zones_count)
+            while (Instance.Shifts.Count > Options.Instance.calibration_mode.max_zones_count)
                 Instance.Shifts.RemoveAt(0);
 
             AsyncSaver.Save(Filepath, Instance.GetDeepCopy);
@@ -261,13 +265,13 @@ namespace eye_tracking_mouse
         public void AddShift(Position cursor_position, Point shift)
         {
             var indices = GetClosestShiftIndexes(cursor_position, 2);
-            if (indices != null && indices[0].Item2 < Options.Instance.calibration.zone_size)
+            if (indices != null && indices[0].Item2 < Options.Instance.calibration_mode.zone_size)
             {
                 Shifts[indices[0].Item1] = new ShiftItem(cursor_position, shift);
-                if (indices.Count > 1 && indices[1].Item2 < Options.Instance.calibration.zone_size)
+                if (indices.Count > 1 && indices[1].Item2 < Options.Instance.calibration_mode.zone_size)
                     Shifts.RemoveAt(indices[1].Item1);
             }
-            else if (Shifts.Count() < Options.Instance.calibration.max_zones_count)
+            else if (Shifts.Count() < Options.Instance.calibration_mode.max_zones_count)
             {
                 Shifts.Add(new ShiftItem(cursor_position, shift));
             }

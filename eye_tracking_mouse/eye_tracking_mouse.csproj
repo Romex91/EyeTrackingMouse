@@ -81,6 +81,9 @@
     <Compile Include="Arrowheads\ArrowLine.cs" />
     <Compile Include="Arrowheads\ArrowLineBase.cs" />
     <Compile Include="AsyncSaver.cs" />
+    <Compile Include="CalibrationSettings.xaml.cs">
+      <DependentUpon>CalibrationSettings.xaml</DependentUpon>
+    </Compile>
     <Compile Include="CalibrationWindow.xaml.cs">
       <DependentUpon>CalibrationWindow.xaml</DependentUpon>
     </Compile>
@@ -104,6 +107,10 @@
     <Compile Include="GazeSmoother.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="InputManager.cs" />
+    <Page Include="CalibrationSettings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="CalibrationWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

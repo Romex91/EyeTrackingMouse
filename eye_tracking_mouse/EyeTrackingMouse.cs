@@ -98,13 +98,13 @@ namespace eye_tracking_mouse
                         gaze_smoother.AddGazePoint(new Point((int)(x), (int)(y)));
                         gaze_point = gaze_smoother.GetSmoothenedGazePoint();
 
-                        if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.calibration.reset_zone_size)
+                        if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.reset_calibration_zone_size)
                         {
                             mouse_state = MouseState.Controlling;
                         }
 
                         if (mouse_state == MouseState.Controlling &&
-                            (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration.shift_ttl_ms)
+                            (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration_mode.update_period_ms)
                         {
                             last_shift_update_time = DateTime.Now;
                             calibration_shift = ShiftsStorage.Instance.GetShift(new ShiftsStorage.Position(
@@ -208,7 +208,7 @@ namespace eye_tracking_mouse
             if (key_state == InputManager.KeyState.Down)
             {
                 // Calibration
-                int calibration_step = (int)(Options.Instance.calibration.step * speed_up);
+                int calibration_step = (int)(Options.Instance.calibration_step * speed_up);
                 if (key == Key.CalibrateLeft)
                 {
                     StartCalibration();
@@ -306,10 +306,10 @@ namespace eye_tracking_mouse
             return true;
         }
 
-        public void UpdateTobiiStreams()
+        public void UpdateTobiiStreams(object sender, EventArgs e)
         {
 
-            MultidimensionCalibrationType type = Options.Instance.calibration.multidimension_calibration_type;
+            MultidimensionCalibrationType type = Options.Instance.calibration_mode.multidimension_calibration_type;
             head_pose_stream.IsEnabled = (type & MultidimensionCalibrationType.HeadPosition) != MultidimensionCalibrationType.None ||
                 (type & MultidimensionCalibrationType.HeadDirection) != MultidimensionCalibrationType.None;
 
@@ -323,7 +323,9 @@ namespace eye_tracking_mouse
             eye_position_stream = host.Streams.CreateEyePositionStream();
             head_pose_stream = host.Streams.CreateHeadPoseStream();
 
-            UpdateTobiiStreams();
+            UpdateTobiiStreams(null, null);
+
+            Settings.CalibrationModeChanged += UpdateTobiiStreams;
 
             gaze_point_data_stream.GazePoint(OnGazePoint);
             eye_position_stream.EyePosition(OnEyePosition);
