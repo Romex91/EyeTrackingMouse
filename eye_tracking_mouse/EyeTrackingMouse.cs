@@ -55,7 +55,7 @@ namespace eye_tracking_mouse
 
         private void UpdateCursorPosition()
         {
-            Cursor.Position = new Point(gaze_point.X + calibration_shift.X, gaze_point.Y + calibration_shift.Y);
+            MouseButtons.Move(gaze_point.X + calibration_shift.X, gaze_point.Y + calibration_shift.Y);
         }
 
         private void OnHeadPose(double unused, Tobii.Interaction.Vector3 head_position, Tobii.Interaction.Vector3 head_direction)

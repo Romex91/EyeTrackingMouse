@@ -20,14 +20,32 @@ namespace eye_tracking_mouse
         private const int MOUSEEVENTF_WHEEL = 0x800;
         private const int MOUSEEVENTF_HWHEEL = 0x1000;
 
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        public static extern int GetSystemMetrics(int nIndex);
+        private const int MOUSEEVENTF_MOVE = 0x0001;
+        private const int MOUSEEVENTF_ABSOLUTE = 0x8000;
+        private const int SM_CXSCREEN = 0;
+        private const int SM_CYSCREEN = 1;
+
         public static bool LeftPressed { private set; get; } = false;
         public static bool RightPressed { private set; get; } = false;
 
         private static void MouseEvent(uint dwFlags, int cButtons)
         {
-            uint X = (uint)Cursor.Position.X;
-            uint Y = (uint)Cursor.Position.Y;
-            mouse_event(dwFlags, X, Y, cButtons, 0);
+            mouse_event(dwFlags, 0, 0, cButtons, 0);
+        }
+
+        private static Task save_to_file_task = null;
+
+        public static void Move(int x, int y)
+        {
+            if (save_to_file_task == null || save_to_file_task.IsCompleted)
+            {
+                save_to_file_task = Task.Factory.StartNew(() => {
+                    mouse_event(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, (uint)(x * (65536 / GetSystemMetrics(SM_CXSCREEN))), (uint)(y * (65536 / GetSystemMetrics(SM_CYSCREEN))), 0, 0);
+                });
+            }
         }
 
         public static void LeftDown()
