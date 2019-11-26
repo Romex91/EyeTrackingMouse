@@ -38,7 +38,7 @@
 
 
         <TextBlock Grid.Row="1" Grid.Column="0">Max zones count</TextBlock>
-        <Slider Grid.Row="1" Grid.Column="2" Name="CalibrationPointsCount" Minimum="1" Maximum="1500" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
+        <Slider Grid.Row="1" Grid.Column="2" Name="CalibrationPointsCount" Minimum="1" Maximum="5000" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
         <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding ElementName=CalibrationPointsCount, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
         <Image  Grid.Row="1" Grid.Column="1" Name="CalibrationPointsCountTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 

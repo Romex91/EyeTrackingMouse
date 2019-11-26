@@ -125,7 +125,7 @@ namespace eye_tracking_mouse
                     return new CalibrationMode
                     {
                         considered_zones_count = 7,
-                        max_zones_count = 700,
+                        max_zones_count = 2000,
                         multidimension_calibration_type = MultidimensionCalibrationType.HeadDirection | MultidimensionCalibrationType.HeadPosition,
                         multi_dimensions_detalization = 7,
                         update_period_ms = 20,
