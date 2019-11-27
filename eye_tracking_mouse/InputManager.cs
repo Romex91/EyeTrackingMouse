@@ -93,7 +93,7 @@ namespace eye_tracking_mouse
 
                 if (is_repetition)
                 {
-                    speed_up = 4.0;
+                    speed_up = 2.0;
                 }
                 else if (key_state == KeyState.Down &&
                   interaction_history[1].Key == key &&
