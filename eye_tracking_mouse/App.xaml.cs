@@ -136,26 +136,20 @@ namespace eye_tracking_mouse
             });
 
             SquirrelAwareApp.HandleEvents(
-                onAppUpdate: v =>
-                {
-                    update_manager.CreateShortcutForThisExe();
-                },
-
-                onInitialInstall: v =>
-                {
-                    update_manager.CreateShortcutForThisExe();
-                },
                 onAppUninstall: v =>
                 {
-                    update_manager.RemoveShortcutForThisExe();
+                    Helpers.RemoveShortcuts();
                     if (Options.Instance.key_bindings.is_driver_installed)
                     {
-                        string interception_installer = System.IO.Path.Combine(Environment.CurrentDirectory, "install-interception.exe");
-                        var process = System.Diagnostics.Process.Start(interception_installer, "/uninstall");
+                        string interception_installer = System.IO.Path.Combine(
+                            Environment.CurrentDirectory, "install-interception.exe");
+                        var process = System.Diagnostics.Process.Start(
+                            interception_installer, "/uninstall");
                     }
                 },
                 onFirstRun: () =>
                 {
+                    Helpers.CreateShortcuts();
                     Autostart.Enable();
                     OpenSettings(null, null);
                 });

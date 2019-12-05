@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using IWshRuntimeLibrary;
 
 namespace eye_tracking_mouse
 {
@@ -54,15 +55,15 @@ namespace eye_tracking_mouse
         private static readonly SortedSet<System.Windows.Forms.Keys> modifier_keys = new SortedSet<System.Windows.Forms.Keys> {
             System.Windows.Forms.Keys.LWin,
             System.Windows.Forms.Keys.RWin,
-            
+
             System.Windows.Forms.Keys.Control,
             System.Windows.Forms.Keys.RControlKey,
             System.Windows.Forms.Keys.LControlKey,
-            
+
             System.Windows.Forms.Keys.Shift,
             System.Windows.Forms.Keys.LShiftKey,
             System.Windows.Forms.Keys.RShiftKey,
-            
+
             System.Windows.Forms.Keys.LMenu,
             System.Windows.Forms.Keys.RMenu,
             System.Windows.Forms.Keys.Menu,
@@ -71,8 +72,8 @@ namespace eye_tracking_mouse
         };
 
 
-        private static readonly SortedSet<Interceptor.Keys> e0_keys = new SortedSet<Interceptor.Keys> { 
-            Interceptor.Keys.WindowsKey, 
+        private static readonly SortedSet<Interceptor.Keys> e0_keys = new SortedSet<Interceptor.Keys> {
+            Interceptor.Keys.WindowsKey,
             Interceptor.Keys.Delete,
             Interceptor.Keys.Left,
             Interceptor.Keys.Right,
@@ -98,5 +99,41 @@ namespace eye_tracking_mouse
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), application_name);
         }
 
+
+        private static string StartMenuShortcatLocation
+        {
+            get
+            {
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Programs", application_name, application_name + ".lnk");
+            }
+        }
+
+        private static string DesctopShortcatLocation
+        { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), application_name + ".lnk"); } }
+
+
+        public static void CreateShortcuts()
+        {
+            string pathToExe = Path.Combine(GetAppFolder(), application_name + ".exe");
+
+            if (!Directory.Exists(Directory.GetParent(StartMenuShortcatLocation).FullName))
+                Directory.CreateDirectory(Directory.GetParent(StartMenuShortcatLocation).FullName);
+
+            WshShell shell = new WshShell();
+            IWshShortcut start_menu_shortcut = (IWshShortcut)shell.CreateShortcut(StartMenuShortcatLocation);
+            start_menu_shortcut.TargetPath = pathToExe;
+            start_menu_shortcut.Save();
+
+
+            IWshShortcut desktop_shotrcut = (IWshShortcut)shell.CreateShortcut(DesctopShortcatLocation);
+            desktop_shotrcut.TargetPath = pathToExe;
+            desktop_shotrcut.Save();
+        }
+
+        public static void RemoveShortcuts()
+        {
+            System.IO.File.Delete(DesctopShortcatLocation);
+            System.IO.Directory.Delete(Directory.GetParent(StartMenuShortcatLocation).FullName, true);
+        }
     }
 }
