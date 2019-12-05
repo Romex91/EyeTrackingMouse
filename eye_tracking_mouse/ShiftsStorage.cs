@@ -151,7 +151,7 @@ namespace eye_tracking_mouse
             public Position Position { get; private set; }
         }
 
-        private static string Filepath { get { return Path.Combine(Helpers.GetLocalFolder(), "calibration" + Options.Instance.calibration_mode.multidimension_calibration_type + ".json"); } }
+        private static string Filepath { get { return Path.Combine(Helpers.GetUserDataFolder(), "calibration" + Options.Instance.calibration_mode.multidimension_calibration_type + ".json"); } }
 
         public List<ShiftItem> Shifts { private set; get; } = new List<ShiftItem>();
 

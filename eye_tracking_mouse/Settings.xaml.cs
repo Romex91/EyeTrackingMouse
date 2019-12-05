@@ -43,8 +43,9 @@ namespace eye_tracking_mouse
                 UpdateTooltips();
                 UpdateKeyBindingControls();
 
-                is_initialized = true;
+                CheckboxAutostart.IsChecked = Autostart.IsEnabled;
 
+                is_initialized = true;
             }
         }
 
@@ -241,7 +242,7 @@ namespace eye_tracking_mouse
                                 Options.Instance.key_bindings.is_modifier_e0 = read_key_result.is_e0_key;
                             Options.Instance.key_bindings[key_binding] = read_key_result.key;
 
-                            Dispatcher.BeginInvoke(new Action(() =>
+                            Dispatcher.BeginInvoke(new System.Action(() =>
                             {
                                 lock (Helpers.locker)
                                 {
@@ -434,6 +435,18 @@ namespace eye_tracking_mouse
             CalibrationSettings calibration_settings = new CalibrationSettings();
             calibration_settings.ShowDialog();
             UpdateSliders();
+        }
+
+        private void CheckboxAutostart_Checked(object sender, RoutedEventArgs e)
+        {
+            if (is_initialized)
+                Autostart.Enable();
+        }
+
+        private void CheckboxAutostart_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (is_initialized)
+                Autostart.Disable();
         }
     }
     public class IconToImageSourceConverter : IValueConverter

@@ -88,11 +88,15 @@ namespace eye_tracking_mouse
             tray_icon.ShowBalloonTip(30000);
         }
 
-        public static string GetLocalFolder()
+        public static string GetUserDataFolder()
         {
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), application_name + " User Data");
         }
 
-        public static readonly Microsoft.Win32.RegistryKey autostart_registry_key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+        public static string GetAppFolder()
+        {
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), application_name);
+        }
+
     }
 }

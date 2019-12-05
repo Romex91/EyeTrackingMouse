@@ -92,10 +92,9 @@ namespace eye_tracking_mouse
             ToolTipService.ShowDurationProperty.OverrideMetadata(
                 typeof(DependencyObject), new FrameworkPropertyMetadata(Int32.MaxValue));
 
-            Helpers.autostart_registry_key.SetValue("EyeTrackingMouse", "C:\\Users\\roman\\AppData\\Local\\EyeTrackingMouse\\EyeTrackingMouse.exe");
-            if (!Directory.Exists(Helpers.GetLocalFolder()))
+            if (!Directory.Exists(Helpers.GetUserDataFolder()))
             {
-                Directory.CreateDirectory(Helpers.GetLocalFolder());
+                Directory.CreateDirectory(Helpers.GetUserDataFolder());
             }
 
             System.Diagnostics.Process.GetCurrentProcess().PriorityClass = System.Diagnostics.ProcessPriorityClass.RealTime;
@@ -137,20 +136,30 @@ namespace eye_tracking_mouse
             });
 
             SquirrelAwareApp.HandleEvents(
-                     onInitialInstall: v =>
-                     {
-                         Helpers.autostart_registry_key.SetValue("EyeTrackingMouse", "C:/Users/roman/AppData/Local/EyeTrackingMouse/EyeTrackingMouse.exe");
-                     },
-                     onAppUninstall: v =>
-                     {
-                         Helpers.autostart_registry_key.DeleteValue("EyeTrackingMouse", false);
-                         if (Options.Instance.key_bindings.is_driver_installed)
-                         {
-                             string interception_installer = System.IO.Path.Combine(Environment.CurrentDirectory, "install-interception.exe");
-                             var process = System.Diagnostics.Process.Start(interception_installer, "/uninstall");
-                         }
-                     },
-                     onFirstRun: () => OpenSettings(null, null));
+                onAppUpdate: v =>
+                {
+                    update_manager.CreateShortcutForThisExe();
+                },
+
+                onInitialInstall: v =>
+                {
+                    update_manager.CreateShortcutForThisExe();
+                },
+                onAppUninstall: v =>
+                {
+                    update_manager.RemoveShortcutForThisExe();
+                    if (Options.Instance.key_bindings.is_driver_installed)
+                    {
+                        string interception_installer = System.IO.Path.Combine(Environment.CurrentDirectory, "install-interception.exe");
+                        var process = System.Diagnostics.Process.Start(interception_installer, "/uninstall");
+                    }
+                },
+                onFirstRun: () =>
+                {
+                    Autostart.Enable();
+                    OpenSettings(null, null);
+                });
+
 
             application.Run();
 
