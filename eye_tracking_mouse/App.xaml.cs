@@ -129,7 +129,11 @@ namespace eye_tracking_mouse
 
             Task.Run(() =>
             {
-                update_manager.UpdateApp().Wait();
+                if (Path.GetFullPath(Environment.CurrentDirectory).StartsWith(
+                        Path.GetFullPath(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData))))
+                {
+                    update_manager.UpdateApp().Wait();
+                }
             });
 
             SquirrelAwareApp.HandleEvents(
