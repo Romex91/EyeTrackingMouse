@@ -70,7 +70,7 @@ namespace eye_tracking_mouse
             {Key.CalibrateUp, Interceptor.Keys.W},
             {Key.CalibrateDown, Interceptor.Keys.S},
         };
-
+         
         [JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public Dictionary<Key, Interceptor.Keys> bindings = new Dictionary<Key, Interceptor.Keys>(default_bindings);
     };
@@ -135,7 +135,7 @@ namespace eye_tracking_mouse
             }
 
         }
-        public CalibrationMode calibration_mode = CalibrationMode.MultiDimensionPreset;
+        public CalibrationMode calibration_mode = CalibrationMode.SingleDimensionPreset;
 
         public int calibration_step = 3;
 

@@ -12,6 +12,7 @@
     </Window.Resources>
     <Grid>
         <TabControl x:Name="TabControl">
+            <TabItem Header="Application"></TabItem>
             <TabItem Header="Key bindings">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -193,7 +194,6 @@
                     <Button Grid.Row="13" Grid.Column="2" Grid.ColumnSpan="1" Name="ResetDefaults" Click="ResetDefaults_Click">Reset default options</Button>
                 </Grid>
             </TabItem>
-            <TabItem Header="About"></TabItem>
         </TabControl>
     </Grid>
 </Window>

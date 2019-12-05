@@ -8,7 +8,7 @@ using System.Windows;
 using System.Drawing;
 using System.IO;
 using System.Windows.Controls;
-
+using Squirrel;
 namespace eye_tracking_mouse
 {
     /// <summary>
@@ -35,18 +35,6 @@ namespace eye_tracking_mouse
             if (settings_window.IsEnabled)
                 settings_window.TabControl.SelectedIndex = 0;
 
-            settings_window.Activate();
-        }
-        private static void OpenAbout(object sender, EventArgs e)
-        {
-            if (settings_window == null || !settings_window.IsLoaded)
-            {
-                settings_window = new Settings(input_manager);
-                settings_window.Show();
-            }
-
-            if (settings_window.IsEnabled)
-                settings_window.TabControl.SelectedIndex = 2;
             settings_window.Activate();
         }
         private static void Shutdown(object sender, EventArgs e)
@@ -104,6 +92,7 @@ namespace eye_tracking_mouse
             ToolTipService.ShowDurationProperty.OverrideMetadata(
                 typeof(DependencyObject), new FrameworkPropertyMetadata(Int32.MaxValue));
 
+            Helpers.autostart_registry_key.SetValue("EyeTrackingMouse", "C:\\Users\\roman\\AppData\\Local\\EyeTrackingMouse\\EyeTrackingMouse.exe");
             if (!Directory.Exists(Helpers.GetLocalFolder()))
             {
                 Directory.CreateDirectory(Helpers.GetLocalFolder());
@@ -123,13 +112,10 @@ namespace eye_tracking_mouse
                 System.Windows.Forms.ToolStripMenuItem reset_calibration = new System.Windows.Forms.ToolStripMenuItem { Text = "Reset calibration", Visible = true };
                 reset_calibration.Click += ResetCalibration;
 
-                System.Windows.Forms.ToolStripMenuItem about = new System.Windows.Forms.ToolStripMenuItem { Text = "About " + Helpers.application_name, Visible = true };
-                about.Click += OpenAbout;
-
                 System.Windows.Forms.ToolStripMenuItem exit = new System.Windows.Forms.ToolStripMenuItem { Text = "Exit", Visible = true };
                 exit.Click += Shutdown;
 
-                context_menu_strip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { settings, reset_calibration, about, exit });
+                context_menu_strip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { settings, reset_calibration, exit });
 
                 context_menu_strip.ResumeLayout(false);
                 Helpers.tray_icon.ContextMenuStrip = context_menu_strip;
@@ -139,17 +125,40 @@ namespace eye_tracking_mouse
             eye_tracking_mouse = new EyeTrackingMouse();
             input_manager = new InputManager(eye_tracking_mouse);
 
+            var update_manager = new UpdateManager("D:\\projects\\EyeTrackingMouse\\Releases");
+
+            Task.Run(() =>
+            {
+                update_manager.UpdateApp().Wait();
+            });
+
+            SquirrelAwareApp.HandleEvents(
+                     onInitialInstall: v =>
+                     {
+                         Helpers.autostart_registry_key.SetValue("EyeTrackingMouse", "C:/Users/roman/AppData/Local/EyeTrackingMouse/EyeTrackingMouse.exe");
+                     },
+                     onAppUninstall: v =>
+                     {
+                         Helpers.autostart_registry_key.DeleteValue("EyeTrackingMouse", false);
+                         if (Options.Instance.key_bindings.is_driver_installed)
+                         {
+                             string interception_installer = System.IO.Path.Combine(Environment.CurrentDirectory, "install-interception.exe");
+                             var process = System.Diagnostics.Process.Start(interception_installer, "/uninstall");
+                         }
+                     },
+                     onFirstRun: () => OpenSettings(null, null));
 
             application.Run();
 
             eye_tracking_mouse.Dispose();
+            update_manager.Dispose();
             Helpers.tray_icon.Visible = false;
         }
 
         private static void Tray_icon_Click(object sender, System.Windows.Forms.MouseEventArgs e)
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
-                OpenAbout(sender, e);
+                OpenSettings(sender, e);
         }
 
         private void Application_Startup(object sender, StartupEventArgs e)

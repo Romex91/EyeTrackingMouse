@@ -90,7 +90,9 @@ namespace eye_tracking_mouse
 
         public static string GetLocalFolder()
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), application_name);
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), application_name + " User Data");
         }
+
+        public static readonly Microsoft.Win32.RegistryKey autostart_registry_key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
     }
 }
