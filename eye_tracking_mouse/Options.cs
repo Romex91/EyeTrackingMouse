@@ -156,7 +156,7 @@ namespace eye_tracking_mouse
         public int smothening_zone_radius = 250;
         public int smothening_points_count = 15;
 
-        private static string Filepath { get { return Path.Combine(Helpers.GetUserDataFolder(), "options.json"); } }
+        private static string Filepath { get { return Path.Combine(Helpers.UserDataFolder, "options.json"); } }
 
         public void SaveToFile()
         {

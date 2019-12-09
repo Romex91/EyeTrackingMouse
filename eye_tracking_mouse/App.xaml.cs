@@ -44,12 +44,12 @@ namespace eye_tracking_mouse
                     Helpers.application_name,
                     MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                System.Windows.Application.Current.Shutdown();
                 input_manager.Stop();
                 eye_tracking_mouse.StopControlling();
                 Helpers.tray_icon.Visible = false;
 
                 AsyncSaver.FlushSynchroniously();
+                System.Windows.Application.Current.Shutdown();
             }
         }
 
@@ -92,9 +92,9 @@ namespace eye_tracking_mouse
             ToolTipService.ShowDurationProperty.OverrideMetadata(
                 typeof(DependencyObject), new FrameworkPropertyMetadata(Int32.MaxValue));
 
-            if (!Directory.Exists(Helpers.GetUserDataFolder()))
+            if (!Directory.Exists(Helpers.UserDataFolder))
             {
-                Directory.CreateDirectory(Helpers.GetUserDataFolder());
+                Directory.CreateDirectory(Helpers.UserDataFolder);
             }
 
             System.Diagnostics.Process.GetCurrentProcess().PriorityClass = System.Diagnostics.ProcessPriorityClass.RealTime;
@@ -139,13 +139,20 @@ namespace eye_tracking_mouse
                 onAppUninstall: v =>
                 {
                     Helpers.RemoveShortcuts();
-                    if (Options.Instance.key_bindings.is_driver_installed)
+                    lock(Helpers.locker)
                     {
-                        string interception_installer = System.IO.Path.Combine(
-                            Environment.CurrentDirectory, "install-interception.exe");
-                        var process = System.Diagnostics.Process.Start(
-                            interception_installer, "/uninstall");
+                        if (Options.Instance.key_bindings.is_driver_installed)
+                        {
+                            string interception_installer = System.IO.Path.Combine(
+                                Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).FullName,
+                                "install-interception.exe");
+
+                            var process = System.Diagnostics.Process.Start(
+                                interception_installer, " /uninstall");
+                        }
                     }
+
+                    Helpers.DeleteAppFiles();
                 },
                 onFirstRun: () =>
                 {

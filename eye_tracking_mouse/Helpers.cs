@@ -89,16 +89,23 @@ namespace eye_tracking_mouse
             tray_icon.ShowBalloonTip(30000);
         }
 
-        public static string GetUserDataFolder()
+        public static string UserDataFolder
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), application_name + " User Data");
+            get
+            {
+                return Path.Combine(AppFolder, " User Data");
+            }
+
         }
 
-        public static string GetAppFolder()
+        public static string AppFolder
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), application_name);
-        }
+            get
+            {
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), application_name);
+            }
 
+        }
 
         private static string StartMenuShortcatLocation
         {
@@ -114,7 +121,7 @@ namespace eye_tracking_mouse
 
         public static void CreateShortcuts()
         {
-            string pathToExe = Path.Combine(GetAppFolder(), application_name + ".exe");
+            string pathToExe = Path.Combine(AppFolder, application_name + ".exe");
 
             if (!Directory.Exists(Directory.GetParent(StartMenuShortcatLocation).FullName))
                 Directory.CreateDirectory(Directory.GetParent(StartMenuShortcatLocation).FullName);
@@ -128,6 +135,37 @@ namespace eye_tracking_mouse
             IWshShortcut desktop_shotrcut = (IWshShortcut)shell.CreateShortcut(DesctopShortcatLocation);
             desktop_shotrcut.TargetPath = pathToExe;
             desktop_shotrcut.Save();
+        }
+
+        // https://github.com/Squirrel/Squirrel.Windows/issues/197
+        public static void DeleteAppFiles()
+        {
+            var pid = System.Diagnostics.Process.GetCurrentProcess().Id;
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+
+            sb.AppendLine(":loop");
+            sb.AppendLine("tasklist | find \"" + pid + "\" >nul");
+            sb.AppendLine("if not errorlevel 1 (");
+            sb.AppendLine("    timeout /t 2 >nul");
+            sb.AppendLine("goto :loop");
+            sb.AppendLine(")");
+            sb.AppendLine("rmdir /s /q " + Helpers.AppFolder);
+            sb.AppendLine("call :deleteSelf&exit /b");
+            sb.AppendLine(":deleteSelf");
+            sb.AppendLine("start /b \"\" cmd /c del \"%~f0\"&exit /b");
+
+            var tempPath = Path.GetTempPath();
+            var tempSavePath = Path.Combine(tempPath, "squirrel_cleaner.bat");
+
+            System.IO.File.WriteAllText(tempSavePath, sb.ToString(), System.Text.Encoding.ASCII);
+
+            var p = new System.Diagnostics.Process();
+            p.StartInfo.WorkingDirectory = tempPath;
+            p.StartInfo.FileName = tempSavePath;
+            p.StartInfo.CreateNoWindow = true;
+
+            p.Start();
+            p.Dispose();
         }
 
         public static void RemoveShortcuts()

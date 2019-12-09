@@ -307,12 +307,11 @@ namespace eye_tracking_mouse
             win_api_callback = OnKeyPressedWinApi;
             if (!UpdateInterceptionMethod())
             {
-                MessageBox.Show(
-                    "Failed loading interception driver." +
-                    "Reinstall EyeTrackingMouse or install the driver from command line: " +
-                    "https://github.com/oblitum/Interception. Application will run using WinAPI.",
-                    Helpers.application_name, MessageBoxButton.OK, MessageBoxImage.Warning);
-                Options.Instance.key_bindings.interception_method = KeyBindings.InterceptionMethod.WinApi;
+                lock(Helpers.locker)
+                {
+                    Options.Instance.key_bindings.interception_method = KeyBindings.InterceptionMethod.WinApi;
+                    Options.Instance.SaveToFile();
+                }
             }
         }
     }

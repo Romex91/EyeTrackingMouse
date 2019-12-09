@@ -59,7 +59,7 @@ namespace eye_tracking_mouse
             }
         }
 
-        private static string Filepath { get { return Path.Combine(Helpers.GetUserDataFolder(), "statistics.json"); } }
+        private static string Filepath { get { return Path.Combine(Helpers.UserDataFolder, "statistics.json"); } }
 
         private object GetDeepCopy()
         {

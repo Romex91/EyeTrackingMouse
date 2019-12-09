@@ -20,7 +20,7 @@ namespace eye_tracking_mouse
                 return;
             TaskDefinition td = TaskService.Instance.NewTask();
 
-            td.Actions.Add(Path.Combine(Helpers.GetAppFolder(), Helpers.application_name + ".exe"));
+            td.Actions.Add(Path.Combine(Helpers.AppFolder, Helpers.application_name + ".exe"));
             td.Triggers.Add(new LogonTrigger());
             td.Principal.RunLevel = TaskRunLevel.Highest;
 
