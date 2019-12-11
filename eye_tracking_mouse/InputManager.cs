@@ -70,6 +70,24 @@ namespace eye_tracking_mouse
             }
         }
 
+        private void SendModifierUp()
+        {
+            lock (Helpers.locker)
+            {
+                if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver && driver_input.IsLoaded)
+                {
+                    driver_input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 | Interceptor.KeyState.Up : Interceptor.KeyState.Up);
+                    Thread.Sleep(10);
+                }
+                else
+                {
+                    ignore_next_key_press = true;
+                    keybd_event((byte)System.Windows.Forms.Keys.LWin, 0, 2 | 1, 0);
+                }
+            }
+        }
+
+
         private bool OnKeyPressed(Key key, KeyState key_state, bool is_modifier)
         {
             lock (Helpers.locker)
@@ -110,7 +128,7 @@ namespace eye_tracking_mouse
                     interaction_history[1].Key == key &&
                     (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.modifier_short_press_duration_ms;
 
-                return eye_tracking_mouse.OnKeyPressed(key, key_state, speed_up, is_short_modifier_press, is_repetition, is_modifier, SendModifierDown);
+                return eye_tracking_mouse.OnKeyPressed(key, key_state, speed_up, is_short_modifier_press, is_repetition, is_modifier, SendModifierDown, SendModifierUp);
             }
         }
 

@@ -144,7 +144,8 @@ namespace eye_tracking_mouse
             bool is_short_modifier_press,
             bool is_repetition,
             bool is_modifier,
-            Action SendModifierDown)
+            Action SendModifierDown,
+            Action SendModifierUp)
         {
             // The application grabs control over cursor when modifier is pressed.
             if (key == Key.Modifier)
@@ -166,7 +167,8 @@ namespace eye_tracking_mouse
                     if (is_short_modifier_press)
                     {
                         SendModifierDown();
-                        handled = false;
+                        SendModifierUp();
+                        handled = true;
                     }
                     StopControlling();
                     return handled;
