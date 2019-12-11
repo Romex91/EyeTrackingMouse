@@ -137,7 +137,7 @@ namespace eye_tracking_mouse
         }
         public CalibrationMode calibration_mode = CalibrationMode.SingleDimensionPreset;
 
-        public int calibration_step = 3;
+        public int calibration_step = 5;
 
         public int reset_calibration_zone_size = 400; // Not configurable since it is hard to explain what it means.
 

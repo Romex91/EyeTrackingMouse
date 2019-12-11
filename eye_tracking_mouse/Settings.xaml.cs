@@ -40,7 +40,7 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 UpdateSliders();
-                UpdateTooltips();
+                UpdateTexts();
                 UpdateKeyBindingControls();
 
                 CheckboxAutostart.IsChecked = Autostart.IsEnabled;
@@ -50,7 +50,7 @@ namespace eye_tracking_mouse
         }
 
         // TODO: make sure it updates when changing key bindings.
-        public void UpdateTooltips()
+        public void UpdateTexts()
         {
             lock (Helpers.locker)
             {
@@ -105,6 +105,12 @@ namespace eye_tracking_mouse
                     "Bigger the radius means less cursor shaking but slower movement when moving cursor to a huge distance." +
                     "If you move your gaze farther than this radius cursor will move instantly. Otherwise it will move smoothly.";
 
+
+                System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+                TextBlockApplicationDescription.Text = "Version: " + fileVersionInfo.ProductVersion +
+                    "\nVideo tutorial: TODO: Add link" +
+                    "\nSupport me: TODO: Add link"; 
             }
         }
 
@@ -247,7 +253,7 @@ namespace eye_tracking_mouse
                                 lock (Helpers.locker)
                                 {
                                     UpdateKeyBindingControls();
-                                    UpdateTooltips();
+                                    UpdateTexts();
                                     Options.Instance.SaveToFile();
                                     KeyBindingsChanged?.Invoke(this, new EventArgs());
                                     IsEnabled = true;
@@ -270,7 +276,7 @@ namespace eye_tracking_mouse
                         if (key_binding_control.key == Key.Modifier)
                             Options.Instance.key_bindings.is_modifier_e0 = true;
                         UpdateKeyBindingControls();
-                        UpdateTooltips();
+                        UpdateTexts();
                         Options.Instance.SaveToFile();
                         KeyBindingsChanged?.Invoke(this, new EventArgs());
                     }
@@ -360,7 +366,7 @@ namespace eye_tracking_mouse
                     KeyBindingsChanged?.Invoke(this, new EventArgs());
 
                     UpdateKeyBindingControls();
-                    UpdateTooltips();
+                    UpdateTexts();
                 }
             }
         }
@@ -402,13 +408,12 @@ namespace eye_tracking_mouse
                     }
                 }
                 UpdateKeyBindingControls();
-                UpdateTooltips();
+                UpdateTexts();
             }
         }
 
         private void CalibrationModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
             if (!is_initialized)
                 return;
             lock (Helpers.locker)
