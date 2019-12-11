@@ -108,10 +108,14 @@ namespace eye_tracking_mouse
 
                 System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
                 FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
-                TextBlockApplicationDescription.Text = "Version: " + fileVersionInfo.ProductVersion +
-                    "\nVideo tutorial: TODO: Add link" +
-                    "\nSupport me: TODO: Add link"; 
+                TextBlockVersion.Text = "Version: " + fileVersionInfo.ProductVersion;
             }
+        }
+
+        private void Hyperlink_RequestNavigate(
+            object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            System.Diagnostics.Process.Start(e.Uri.AbsoluteUri);
         }
 
         private void UpdateSliders()
@@ -240,7 +244,7 @@ namespace eye_tracking_mouse
                 if (key_binding_control.set_new_binding_button == sender)
                 {
                     Key key_binding = key_binding_control.key;
-                    input_manager.ReadKeyAsync((read_key_result) =>
+                    input_manager.ReadKey((read_key_result) =>
                     {
                         lock (Helpers.locker)
                         {
@@ -325,22 +329,7 @@ namespace eye_tracking_mouse
                 {
                     Interceptor.Keys key = Options.Instance.key_bindings[key_binding_control.key];
 
-                    string button_content = "";
-                    if (key_binding_control.key == Key.Modifier && (key == Interceptor.Keys.RightAlt || key == Interceptor.Keys.Control))
-                    {
-                        button_content = Options.Instance.key_bindings.is_modifier_e0 ? "Right" : "Left";
-                    }
-
-                    if (key == Interceptor.Keys.RightAlt)
-                    {
-                        button_content += "Alt";
-                    }
-                    else
-                    {
-                        button_content += key.ToString();
-                    }
-
-                    key_binding_control.set_new_binding_button.Content = button_content;
+                    key_binding_control.set_new_binding_button.Content = Helpers.GetKeyString(key, key_binding_control.key == Key.Modifier ? Options.Instance.key_bindings.is_modifier_e0 : false);
                     key_binding_control.set_new_binding_button.IsEnabled = InterceptionMethod.SelectedIndex == 1 && is_driver_loaded;
                     key_binding_control.set_new_binding_button.Background = new SolidColorBrush(Colors.White);
 
@@ -453,6 +442,7 @@ namespace eye_tracking_mouse
             if (is_initialized)
                 Autostart.Disable();
         }
+
     }
     public class IconToImageSourceConverter : IValueConverter
     {

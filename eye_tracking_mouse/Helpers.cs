@@ -83,6 +83,26 @@ namespace eye_tracking_mouse
             Interceptor.Keys.PrintScreen,
         };
 
+        public static string GetKeyString(Interceptor.Keys key, bool is_e0)
+        {
+            string retval = "";
+            if (key == Interceptor.Keys.RightAlt || key == Interceptor.Keys.Control)
+            {
+                retval = is_e0 ? "Right" : "Left";
+            }
+
+            if (key == Interceptor.Keys.RightAlt)
+            {
+                retval += "Alt";
+            }
+            else
+            {
+                retval += key.ToString();
+            }
+
+            return retval;
+        }
+
         public static void ShowBaloonNotification(String text)
         {
             tray_icon.BalloonTipText = text;

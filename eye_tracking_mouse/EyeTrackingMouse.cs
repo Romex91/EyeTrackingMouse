@@ -12,7 +12,7 @@ namespace eye_tracking_mouse
 {
     public class EyeTrackingMouse : IDisposable
     {
-        private readonly Tobii.Interaction.Host host = new Tobii.Interaction.Host();
+        private readonly Tobii.Interaction.Host host;
         private readonly Tobii.Interaction.GazePointDataStream gaze_point_data_stream;
 
         private readonly Tobii.Interaction.EyePositionStream eye_position_stream;
@@ -139,24 +139,23 @@ namespace eye_tracking_mouse
 
         public bool OnKeyPressed(
             Key key,
-            InputManager.KeyState key_state,
+            KeyState key_state,
             double speed_up,
             bool is_short_modifier_press,
             bool is_repetition,
             bool is_modifier,
-            Action SendModifierDown,
-            Action SendModifierUp)
+            InputProvider input_provider)
         {
             // The application grabs control over cursor when modifier is pressed.
             if (key == Key.Modifier)
             {
-                if (key_state == InputManager.KeyState.Down)
+                if (key_state == KeyState.Down)
                 {
                     mouse_state = MouseState.Controlling;
                     return true;
                 }
 
-                if (key_state == InputManager.KeyState.Up)
+                if (key_state == KeyState.Up)
                 {
                     if (mouse_state == EyeTrackingMouse.MouseState.Idle)
                     {
@@ -166,8 +165,8 @@ namespace eye_tracking_mouse
                     bool handled = true;
                     if (is_short_modifier_press)
                     {
-                        SendModifierDown();
-                        SendModifierUp();
+                        input_provider.SendModifierDown();
+                        input_provider.SendModifierUp();
                         handled = true;
                     }
                     StopControlling();
@@ -187,7 +186,7 @@ namespace eye_tracking_mouse
                 // We stop controlling cursor when facing the first unbound key and send modifier keystroke to OS before handling pressed key.
                 if (!is_modifier)
                 {
-                    SendModifierDown();
+                    input_provider.SendModifierDown();
                     StopControlling();
                 }
                 return false;
@@ -207,7 +206,7 @@ namespace eye_tracking_mouse
             if (is_repetition && !repetition_white_list.Contains(key))
                 return true;
 
-            if (key_state == InputManager.KeyState.Down)
+            if (key_state == KeyState.Down)
             {
                 // Calibration
                 int calibration_step = (int)(Options.Instance.calibration_step * speed_up);
@@ -261,7 +260,7 @@ namespace eye_tracking_mouse
 
             // Mouse buttons
             if (mouse_state == MouseState.Calibrating &&
-                key_state == InputManager.KeyState.Down &&
+                key_state == KeyState.Down &&
                 (key == Key.LeftMouseButton || key == Key.RightMouseButton))
             {
                 ShiftsStorage.Instance.AddShift(
@@ -272,14 +271,14 @@ namespace eye_tracking_mouse
 
             if (key == Key.LeftMouseButton)
             {
-                if (key_state == InputManager.KeyState.Down)
+                if (key_state == KeyState.Down)
                 {
                     // Freeze cursor for a short period of time after mouse clicks to make double clicks esier.
                     MouseButtons.LeftDown();
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.click_freeze_time_ms);
                     statistics.OnClick();
                 }
-                else if (key_state == InputManager.KeyState.Up)
+                else if (key_state == KeyState.Up)
                 {
                     MouseButtons.LeftUp();
                 }
@@ -287,20 +286,20 @@ namespace eye_tracking_mouse
 
             if (key == Key.RightMouseButton)
             {
-                if (key_state == InputManager.KeyState.Down)
+                if (key_state == KeyState.Down)
                 {
                     // Freeze cursor for a short period of time after mouse clicks to make double clicks esier.
                     MouseButtons.RightDown();
                     freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.click_freeze_time_ms);
                     statistics.OnClick();
                 }
-                else if (key_state == InputManager.KeyState.Up)
+                else if (key_state == KeyState.Up)
                 {
                     MouseButtons.RightUp();
                 }
             }
 
-            if (key == Key.ShowCalibrationView && key_state == InputManager.KeyState.Down)
+            if (key == Key.ShowCalibrationView && key_state == KeyState.Down)
             {
                 App.ToggleCalibrationWindow();
             }
@@ -321,17 +320,25 @@ namespace eye_tracking_mouse
 
         public EyeTrackingMouse()
         {
-            gaze_point_data_stream = host.Streams.CreateGazePointDataStream();
-            eye_position_stream = host.Streams.CreateEyePositionStream();
-            head_pose_stream = host.Streams.CreateHeadPoseStream();
+            try
+            {
+                host = new Tobii.Interaction.Host();
+                gaze_point_data_stream = host.Streams.CreateGazePointDataStream();
+                eye_position_stream = host.Streams.CreateEyePositionStream();
+                head_pose_stream = host.Streams.CreateHeadPoseStream();
 
-            UpdateTobiiStreams(null, null);
+                UpdateTobiiStreams(null, null);
 
-            Settings.CalibrationModeChanged += UpdateTobiiStreams;
+                Settings.CalibrationModeChanged += UpdateTobiiStreams;
 
-            gaze_point_data_stream.GazePoint(OnGazePoint);
-            eye_position_stream.EyePosition(OnEyePosition);
-            head_pose_stream.HeadPose(OnHeadPose);
+                gaze_point_data_stream.GazePoint(OnGazePoint);
+                eye_position_stream.EyePosition(OnEyePosition);
+                head_pose_stream.HeadPose(OnHeadPose);
+            } catch (Exception e)
+            {
+                MessageBox.Show(e.Message + ". Try reinstalling driver for Tobii Eye Tracker 4C.");
+                Environment.Exit(0);
+            }
         }
 
         public void Dispose()

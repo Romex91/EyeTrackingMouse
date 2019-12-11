@@ -10,126 +10,25 @@ using System.Windows;
 
 namespace eye_tracking_mouse
 {
-    public class InputManager
+    public enum KeyState
     {
-        private readonly Interceptor.Input driver_input = new Interceptor.Input();
-        private readonly EyeTrackingMouse eye_tracking_mouse;
+        Up,
+        Down,
+    };
 
-        // For hardcoded stop-word.
-        private bool is_win_pressed = false;
-        private readonly InteractionHistoryEntry[] interaction_history = new InteractionHistoryEntry[3];
-
-        private Action<ReadKeyResult> read_key_callback;
-
-        public enum KeyState
+    // Implementations should intercept key presses.
+    public abstract class InputProvider
+    {
+        public interface IInputReceiver
         {
-            Up,
-            Down,
-        };
-
-        private struct InteractionHistoryEntry
-        {
-            public Key Key;
-            public KeyState State;
-            public DateTime Time;
-        };
-
-        public void Stop()
-        {
-            lock (Helpers.locker)
-            {
-                eye_tracking_mouse.StopControlling();
-                if (driver_input.IsLoaded)
-                {
-                    driver_input.Unload();
-                    driver_input.OnKeyPressed -= OnKeyPressedInterceptionDriver;
-                }
-
-                if (win_api_hook_id != IntPtr.Zero)
-                {
-                    UnhookWindowsHookEx(win_api_hook_id);
-                    win_api_hook_id = IntPtr.Zero;
-                }
-            }
+            bool OnKeyPressed(Key key, KeyState key_state, bool is_modifier);
         }
 
-        private void SendModifierDown()
+        protected IInputReceiver receiver;
+
+        public InputProvider(IInputReceiver receiver)
         {
-            lock (Helpers.locker)
-            {
-                if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver && driver_input.IsLoaded)
-                {
-                    driver_input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
-                    Thread.Sleep(10);
-                }
-                else
-                {
-                    ignore_next_key_press = true;
-                    keybd_event((byte)System.Windows.Forms.Keys.LWin, 0, 1, 0);
-                }
-            }
-        }
-
-        private void SendModifierUp()
-        {
-            lock (Helpers.locker)
-            {
-                if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver && driver_input.IsLoaded)
-                {
-                    driver_input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 | Interceptor.KeyState.Up : Interceptor.KeyState.Up);
-                    Thread.Sleep(10);
-                }
-                else
-                {
-                    ignore_next_key_press = true;
-                    keybd_event((byte)System.Windows.Forms.Keys.LWin, 0, 2 | 1, 0);
-                }
-            }
-        }
-
-
-        private bool OnKeyPressed(Key key, KeyState key_state, bool is_modifier)
-        {
-            lock (Helpers.locker)
-            {
-                // If you hold a key pressed for a second it will start to produce a sequence of rrrrrrrrrrepeated |KeyState.Down| events.
-                // For some keys we don't want to handle such events and assume that a key stays pressed until |KeyState.Up| appears.
-                bool is_repetition = interaction_history[0].Key == key &&
-                    interaction_history[0].State == key_state &&
-                    key_state == KeyState.Down;
-
-                if (!is_repetition)
-                {
-                    interaction_history[2] = interaction_history[1];
-                    interaction_history[1] = interaction_history[0];
-                    interaction_history[0].Key = key;
-                    interaction_history[0].State = key_state;
-                    interaction_history[0].Time = DateTime.Now;
-                }
-
-                double speed_up = 1.0;
-
-                if (is_repetition)
-                {
-                    speed_up = 2.0;
-                }
-                else if (key_state == KeyState.Down &&
-                  interaction_history[1].Key == key &&
-                  interaction_history[2].Key == key)
-                {
-                    if ((DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.quadriple_speed_up_press_time_ms)
-                        speed_up = 4.0;
-                    else if ((DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.double_speedup_press_time_ms)
-                        speed_up = 2.0;
-                }
-
-                bool is_short_modifier_press =
-                    key_state == KeyState.Up &&
-                    interaction_history[1].Key == key &&
-                    (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.modifier_short_press_duration_ms;
-
-                return eye_tracking_mouse.OnKeyPressed(key, key_state, speed_up, is_short_modifier_press, is_repetition, is_modifier, SendModifierDown, SendModifierUp);
-            }
+            this.receiver = receiver;
         }
 
         public struct ReadKeyResult
@@ -137,14 +36,19 @@ namespace eye_tracking_mouse
             public Interceptor.Keys key;
             public bool is_e0_key;
         }
-        public void ReadKeyAsync(Action<ReadKeyResult> callback)
-        {
-            lock (Helpers.locker)
-            {
-                read_key_callback = callback;
-            }
-        }
+        public abstract void ReadKey(Action<ReadKeyResult> callback);
 
+        public abstract void Load();
+        public abstract void Unload();
+
+        public abstract bool IsLoaded { get; }
+
+        public abstract void SendModifierDown();
+        public abstract void SendModifierUp();
+    }
+
+    class WinApiInputProvider : InputProvider
+    {
         private IntPtr win_api_hook_id = IntPtr.Zero;
         private const int WH_KEYBOARD_LL = 13;
         private const int WM_KEYDOWN = 0x0100;
@@ -166,7 +70,8 @@ namespace eye_tracking_mouse
         private static extern IntPtr GetModuleHandle(string lpModuleName);
 
         private bool ignore_next_key_press = false;
-        private IntPtr OnKeyPressedWinApi(int nCode, IntPtr wParam, IntPtr lParam)
+
+        private IntPtr OnKeyPressed(int nCode, IntPtr wParam, IntPtr lParam)
         {
             if (ignore_next_key_press)
             {
@@ -210,14 +115,71 @@ namespace eye_tracking_mouse
                     return CallNextHookEx(win_api_hook_id, nCode, wParam, lParam);
                 }
 
-                if (OnKeyPressed(key, key_state, Helpers.IsModifier(key_code)))
+                if (receiver.OnKeyPressed(key, key_state, Helpers.IsModifier(key_code)))
                     return new IntPtr(1);
             }
 
             return CallNextHookEx(win_api_hook_id, nCode, wParam, lParam);
         }
 
-        public void OnKeyPressedInterceptionDriver(object sender, Interceptor.KeyPressedEventArgs e)
+
+        public WinApiInputProvider(IInputReceiver receiver) : base(receiver) { }
+        public override bool IsLoaded
+        {
+            get
+            {
+                return win_api_hook_id != IntPtr.Zero;
+            }
+        }
+
+        public override void Load()
+        {
+            using (Process curProcess = Process.GetCurrentProcess())
+            using (ProcessModule curModule = curProcess.MainModule)
+            {
+                win_api_callback = OnKeyPressed;
+                win_api_hook_id = SetWindowsHookEx(WH_KEYBOARD_LL, win_api_callback,
+                    GetModuleHandle(curModule.ModuleName), 0);
+            }
+        }
+
+        public override void Unload()
+        {
+            if (win_api_hook_id != IntPtr.Zero)
+            {
+                UnhookWindowsHookEx(win_api_hook_id);
+                win_api_hook_id = IntPtr.Zero;
+            }
+        }
+
+        public override void SendModifierDown()
+        {
+            ignore_next_key_press = true;
+            keybd_event((byte)System.Windows.Forms.Keys.LWin, 0, 1, 0);
+        }
+
+        public override void SendModifierUp()
+        {
+            ignore_next_key_press = true;
+            keybd_event((byte)System.Windows.Forms.Keys.LWin, 0, 2 | 1, 0);
+        }
+
+        public override void ReadKey(Action<ReadKeyResult> callback)
+        {
+            throw new NotImplementedException("WinApi doesn't support proper custom key bindings.");
+        }
+    }
+
+    class OblitaInterceptionInputProvider : InputProvider
+    {
+        // For hardcoded stop-word.
+        private bool is_win_pressed = false;
+
+        private readonly Interceptor.Input driver_input = new Interceptor.Input();
+
+        private Action<ReadKeyResult> read_key_callback;
+
+        public void OnKeyPressed(object sender, Interceptor.KeyPressedEventArgs e)
         {
             // Console.WriteLine(e.Key);
             // Console.WriteLine(e.State);
@@ -280,9 +242,126 @@ namespace eye_tracking_mouse
                 if (key == Key.Modifier && key_bindings.is_modifier_e0 != is_e0_key)
                     key = Key.Unbound;
 
-                e.Handled = OnKeyPressed(key, key_state, Helpers.IsModifier(e.Key));
+                e.Handled = receiver.OnKeyPressed(key, key_state, Helpers.IsModifier(e.Key));
             }
         }
+
+        public OblitaInterceptionInputProvider(IInputReceiver receiver) : base(receiver) { }
+
+        public override bool IsLoaded { get { return driver_input.IsLoaded; } }
+
+        public override void Load()
+        {
+            driver_input.OnKeyPressed += OnKeyPressed;
+            driver_input.KeyboardFilterMode = Interceptor.KeyboardFilterMode.All;
+            driver_input.Load();
+        }
+
+        public override void SendModifierDown()
+        {
+            driver_input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
+            Thread.Sleep(10);
+        }
+
+        public override void SendModifierUp()
+        {
+            driver_input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 | Interceptor.KeyState.Up : Interceptor.KeyState.Up);
+            Thread.Sleep(10);
+        }
+
+        public override void Unload()
+        {
+            if (driver_input.IsLoaded)
+            {
+                driver_input.Unload();
+                driver_input.OnKeyPressed -= OnKeyPressed;
+            }
+        }
+
+        public override void ReadKey(Action<ReadKeyResult> callback)
+        {
+            read_key_callback = callback;
+        }
+    }
+
+    public class InputManager : InputProvider.IInputReceiver
+    {
+        private readonly EyeTrackingMouse eye_tracking_mouse;
+
+        private readonly InteractionHistoryEntry[] interaction_history = new InteractionHistoryEntry[3];
+
+        private InputProvider input_provider;
+
+        private struct InteractionHistoryEntry
+        {
+            public Key Key;
+            public KeyState State;
+            public DateTime Time;
+        };
+
+        public void Stop()
+        {
+            lock (Helpers.locker)
+            {
+                eye_tracking_mouse.StopControlling();
+                if (input_provider != null && input_provider.IsLoaded)
+                    input_provider.Unload();
+                input_provider = null;
+            }
+        }
+
+        bool InputProvider.IInputReceiver.OnKeyPressed(Key key, KeyState key_state, bool is_modifier)
+        {
+            lock (Helpers.locker)
+            {
+                // If you hold a key pressed for a second it will start to produce a sequence of rrrrrrrrrrepeated |KeyState.Down| events.
+                // For some keys we don't want to handle such events and assume that a key stays pressed until |KeyState.Up| appears.
+                bool is_repetition = interaction_history[0].Key == key &&
+                    interaction_history[0].State == key_state &&
+                    key_state == KeyState.Down;
+
+                if (!is_repetition)
+                {
+                    interaction_history[2] = interaction_history[1];
+                    interaction_history[1] = interaction_history[0];
+                    interaction_history[0].Key = key;
+                    interaction_history[0].State = key_state;
+                    interaction_history[0].Time = DateTime.Now;
+                }
+
+                double speed_up = 1.0;
+
+                if (is_repetition)
+                {
+                    speed_up = 2.0;
+                }
+                else if (key_state == KeyState.Down &&
+                  interaction_history[1].Key == key &&
+                  interaction_history[2].Key == key)
+                {
+                    if ((DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.quadriple_speed_up_press_time_ms)
+                        speed_up = 4.0;
+                    else if ((DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.double_speedup_press_time_ms)
+                        speed_up = 2.0;
+                }
+
+                bool is_short_modifier_press =
+                    key_state == KeyState.Up &&
+                    interaction_history[1].Key == key &&
+                    (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.modifier_short_press_duration_ms;
+
+                return eye_tracking_mouse.OnKeyPressed(key, key_state, speed_up, is_short_modifier_press, is_repetition, is_modifier, input_provider);
+            }
+        }
+
+        public void ReadKey(Action<InputProvider.ReadKeyResult> callback)
+        {
+            lock (Helpers.locker)
+            {
+                input_provider.ReadKey(callback);
+            }
+        }
+
 
         // Enables keys interception with selected |interception_method|. Backs off to WinAPI if failed loading interception driver.
         public bool UpdateInterceptionMethod()
@@ -293,19 +372,15 @@ namespace eye_tracking_mouse
 
                 if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver)
                 {
-                    driver_input.OnKeyPressed += OnKeyPressedInterceptionDriver;
-                    driver_input.KeyboardFilterMode = Interceptor.KeyboardFilterMode.All;
+                    input_provider = new OblitaInterceptionInputProvider(this);
+                    input_provider.Load();
 
-                    if (driver_input.Load())
+                    if (input_provider.IsLoaded)
                         return true;
                 }
 
-                using (Process curProcess = Process.GetCurrentProcess())
-                using (ProcessModule curModule = curProcess.MainModule)
-                {
-                    win_api_hook_id = SetWindowsHookEx(WH_KEYBOARD_LL, win_api_callback,
-                        GetModuleHandle(curModule.ModuleName), 0);
-                }
+                input_provider = new WinApiInputProvider(this);
+                input_provider.Load();
 
                 return Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.WinApi;
             }
@@ -315,17 +390,16 @@ namespace eye_tracking_mouse
         {
             lock (Helpers.locker)
             {
-                return driver_input.IsLoaded;
+                return input_provider.IsLoaded && input_provider.GetType() == typeof(OblitaInterceptionInputProvider);
             }
         }
 
         public InputManager(EyeTrackingMouse eye_tracking_mouse)
         {
             this.eye_tracking_mouse = eye_tracking_mouse;
-            win_api_callback = OnKeyPressedWinApi;
             if (!UpdateInterceptionMethod())
             {
-                lock(Helpers.locker)
+                lock (Helpers.locker)
                 {
                     Options.Instance.key_bindings.interception_method = KeyBindings.InterceptionMethod.WinApi;
                     Options.Instance.SaveToFile();
