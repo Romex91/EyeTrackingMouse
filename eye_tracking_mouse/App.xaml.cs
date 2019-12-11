@@ -88,12 +88,6 @@ namespace eye_tracking_mouse
         [STAThread]
         public static void Main()
         {
-            if (System.Diagnostics.Process.GetProcessesByName(Helpers.application_name).Length > 1)
-            {
-                MessageBox.Show(Helpers.application_name + " is already running.");
-                return;
-            }
-
             application = new App();
             application.InitializeComponent();
             ToolTipService.ShowDurationProperty.OverrideMetadata(
