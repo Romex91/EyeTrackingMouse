@@ -8,7 +8,7 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("EyeTrackingMouse")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("EyeTrackingMouse. A computer mouse replacement with combination of Tobii Eye tracker 4c and hotkeys.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("EyeTrackingMouse")]
