@@ -39,6 +39,8 @@ namespace eye_tracking_mouse
 
         private DateTime freeze_until = DateTime.Now;
 
+        private DateTime last_gaze_point = DateTime.Now;
+
         private Statistics statistics = Statistics.LoadFromFile();
 
         public enum MouseState
@@ -65,7 +67,7 @@ namespace eye_tracking_mouse
                 if (!(head_position.X == 0 && head_position.Y == 0 && head_position.Z == 0))
                 {
                     this.head_position = head_position;
-                    this.head_direction = new Tobii.Interaction.Vector3(head_direction.X * 200, head_direction.Y * 200, head_direction.Z * 200); 
+                    this.head_direction = new Tobii.Interaction.Vector3(head_direction.X * 200, head_direction.Y * 200, head_direction.Z * 200);
                 }
             }
         }
@@ -91,6 +93,7 @@ namespace eye_tracking_mouse
         {
             lock (Helpers.locker)
             {
+                last_gaze_point = DateTime.Now;
                 if (mouse_state == MouseState.Controlling || mouse_state == MouseState.Calibrating)
                 {
                     if (DateTime.Now > freeze_until)
@@ -128,6 +131,20 @@ namespace eye_tracking_mouse
                 MouseButtons.LeftUp();
         }
 
+        private void StartControlling()
+        {
+            lock (Helpers.locker) {
+                mouse_state = MouseState.Controlling;
+                // TODO: remove this when issue resolved:
+                // https://developer.tobii.com/community/forums/topic/bug-tobii-interaction-gazepointdatastream-gazepoint-sometimes-has-no-effect/
+                if ((DateTime.Now - last_gaze_point).TotalSeconds > 1)
+                {
+                    gaze_point_data_stream.IsEnabled = false;
+                    gaze_point_data_stream.IsEnabled = true;
+                }
+            }
+        }
+
         private void StartCalibration()
         {
             if (mouse_state != MouseState.Calibrating)
@@ -151,7 +168,7 @@ namespace eye_tracking_mouse
             {
                 if (key_state == KeyState.Down)
                 {
-                    mouse_state = MouseState.Controlling;
+                    StartControlling();
                     return true;
                 }
 
@@ -173,7 +190,6 @@ namespace eye_tracking_mouse
                     return handled;
                 }
             }
-
 
             if (mouse_state == EyeTrackingMouse.MouseState.Idle)
             {
@@ -309,7 +325,6 @@ namespace eye_tracking_mouse
 
         public void UpdateTobiiStreams(object sender, EventArgs e)
         {
-
             MultidimensionCalibrationType type = Options.Instance.calibration_mode.multidimension_calibration_type;
             head_pose_stream.IsEnabled = (type & MultidimensionCalibrationType.HeadPosition) != MultidimensionCalibrationType.None ||
                 (type & MultidimensionCalibrationType.HeadDirection) != MultidimensionCalibrationType.None;
@@ -334,7 +349,8 @@ namespace eye_tracking_mouse
                 gaze_point_data_stream.GazePoint(OnGazePoint);
                 eye_position_stream.EyePosition(OnEyePosition);
                 head_pose_stream.HeadPose(OnHeadPose);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 MessageBox.Show(e.Message + ". Try reinstalling driver for Tobii Eye Tracker 4C.");
                 Environment.Exit(0);
