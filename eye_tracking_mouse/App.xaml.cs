@@ -125,14 +125,16 @@ namespace eye_tracking_mouse
             eye_tracking_mouse = new EyeTrackingMouse();
             input_manager = new InputManager(eye_tracking_mouse);
 
-            var update_manager = new UpdateManager("D:\\projects\\EyeTrackingMouse\\Releases");
 
             Task.Run(() =>
             {
                 if (Path.GetFullPath(Environment.CurrentDirectory).StartsWith(
                         Path.GetFullPath(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData))))
                 {
-                    update_manager.UpdateApp().Wait();
+                    using (var update_manager = UpdateManager.GitHubUpdateManager("https://github.com/Romex91/EyeTrackingMouse"))
+                    {
+                        update_manager.Result.UpdateApp().Wait();
+                    }
                 }
             });
 
@@ -140,7 +142,7 @@ namespace eye_tracking_mouse
                 onAppUninstall: v =>
                 {
                     Helpers.RemoveShortcuts();
-                    lock(Helpers.locker)
+                    lock (Helpers.locker)
                     {
                         if (Options.Instance.key_bindings.is_driver_installed)
                         {
@@ -166,7 +168,6 @@ namespace eye_tracking_mouse
             application.Run();
 
             eye_tracking_mouse.Dispose();
-            update_manager.Dispose();
             Helpers.tray_icon.Visible = false;
         }
 
