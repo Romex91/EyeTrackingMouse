@@ -4,6 +4,15 @@ Replaces computer mouse with combination of Tobii Eye tracker 4c and hotkeys.
 This is MVP. Please help me to find bugs.
 The app autoupdates using Squirrel.Windows.
 
+# Installation
+Download and run Setup.exe here https://github.com/Romex91/EyeTrackingMouse/releases/latest
+
+This will create an entry in [Apps & features] and schedule the app to run at Windows startup.
+
+The application requires elevated privilegies for controlling mouse when system windows are open.
+
+# Usage
+
 To start controlling cursor press Win. 
 
 The keys below work only when Win is pressed:
