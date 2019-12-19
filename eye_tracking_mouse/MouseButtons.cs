@@ -36,13 +36,13 @@ namespace eye_tracking_mouse
             mouse_event(dwFlags, 0, 0, cButtons, 0);
         }
 
-        private static Task save_to_file_task = null;
+        private static Task move_mouse_task = null;
 
         public static void Move(int x, int y)
         {
-            if (save_to_file_task == null || save_to_file_task.IsCompleted)
+            if (move_mouse_task == null || move_mouse_task.IsCompleted)
             {
-                save_to_file_task = Task.Factory.StartNew(() => {
+                move_mouse_task = Task.Factory.StartNew(() => {
                     mouse_event(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, (uint)(x * (65536 / GetSystemMetrics(SM_CXSCREEN))), (uint)(y * (65536 / GetSystemMetrics(SM_CYSCREEN))), 0, 0);
                 });
             }
