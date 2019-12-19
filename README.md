@@ -28,4 +28,6 @@ N - Scroll down
 
 To open Windows Start Menu press and release Win quickly. 
 
+![Default Key Bindings](https://github.com/Romex91/EyeTrackingMouse/blob/master/default_key_bindings.png)
+
 You can reassign key bindings in the settings window (click Tray icon)
