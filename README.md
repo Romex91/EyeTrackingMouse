@@ -1,5 +1,5 @@
 # EyeTrackingMouse
-Replaces computer mouse with combination of Tobii Eye tracker 4c and hotkeys. 
+Replaces computer mouse with combination of [Tobii Eye Tracker 4C](https://gaming.tobii.com/tobii-eye-tracker-4c/) and hotkeys. 
 
 This is MVP. Please help me to find bugs.
 The app autoupdates using Squirrel.Windows.
