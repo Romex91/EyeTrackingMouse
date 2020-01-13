@@ -136,9 +136,9 @@ namespace eye_tracking_mouse
                         {
                             update_manager.UpdateApp().Wait();
                         }
-                    } catch (Exception e)
+                    }
+                    catch (Exception)
                     {
-                        MessageBox.Show(e.Message);
                     }
                 }
             });
