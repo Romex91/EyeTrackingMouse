@@ -307,6 +307,8 @@ namespace eye_tracking_mouse
 
     public class InputManager : InputProvider.IInputReceiver
     {
+        private readonly AccessibilityHelperWindow accessibility_helper_window = new AccessibilityHelperWindow();
+
         private readonly EyeTrackingMouse eye_tracking_mouse;
 
         private readonly InteractionHistoryEntry[] interaction_history = new InteractionHistoryEntry[3];
@@ -480,6 +482,7 @@ namespace eye_tracking_mouse
         public InputManager(EyeTrackingMouse eye_tracking_mouse)
         {
             this.eye_tracking_mouse = eye_tracking_mouse;
+            accessibility_helper_window.Show();
             if (!UpdateInterceptionMethod())
             {
                 lock (Helpers.locker)

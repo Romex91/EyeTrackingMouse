@@ -165,6 +165,9 @@
       <DependentUpon>ui\Settings.xaml</DependentUpon>
     </Compile>
     <Compile Include="ShiftsStorage.cs" />
+    <Compile Include="ui\AccessibilityHelperWindow.xaml.cs">
+      <DependentUpon>AccessibilityHelperWindow.xaml</DependentUpon>
+    </Compile>
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -194,6 +197,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ui\Settings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ui\AccessibilityHelperWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
