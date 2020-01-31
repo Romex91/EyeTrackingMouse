@@ -1,0 +1,88 @@
+﻿<Window x:Class="eye_tracking_mouse.YoutubeIndicationsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:eye_tracking_mouse"
+        mc:Ignorable="d"
+        Title="CalibrationWindow"
+        WindowStyle="None" AllowsTransparency="True"
+        ResizeMode="NoResize"
+        WindowState="Maximized"
+        Deactivated="Window_Deactivated"
+        Topmost="True">
+    <Window.Background>
+        <SolidColorBrush Opacity="0.0" Color="Black"></SolidColorBrush>
+    </Window.Background>
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="LightGreen" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+    </Window.Resources>
+    <Canvas  x:Name="Canvas">
+        <Image Name="ImgMouse" Canvas.Right="50" Canvas.Bottom="50" Visibility="Hidden" Width="70">
+            <Image.Source>
+                <DrawingImage>
+                    <DrawingImage.Drawing>
+                        <DrawingGroup ClipGeometry="M0,0 V1500 H1000 V0 H0 Z">
+                            <DrawingGroup Opacity="1">
+                                <DrawingGroup Opacity="1">
+                                    <DrawingGroup Opacity="1">
+                                        <GeometryDrawing Brush="LightGray" Geometry="F0 M1000,1500z M0,0z M962.17,507.55L962.17,964.36C962.17,1216.65 757.65,1421.16 505.36,1421.16 253.07,1421.16 48.55,1216.65 48.55,964.36L48.55,507.55 962.17,507.55z M962.17,507.55L962.17,507.55 962.17,507.55z" />
+                                        <GeometryDrawing Geometry="F0 M1000,1500z M0,0z M962.17,507.55L962.17,964.36C962.17,1216.65 757.65,1421.16 505.36,1421.16 253.07,1421.16 48.55,1216.65 48.55,964.36L48.55,507.55 M962.17,507.55L962.17,507.55 962.17,507.55z">
+                                            <GeometryDrawing.Pen>
+                                                <Pen Brush="#FF595A5C" Thickness="25.23" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+                                            </GeometryDrawing.Pen>
+                                        </GeometryDrawing>
+                                    </DrawingGroup>
+                                    <GeometryDrawing x:Name="ImgRMB"  Brush="LightGray" Geometry="F0 M1000,1500z M0,0z M505.32,50.74L505.32,507.55 962.13,507.55C962.13,255.26,757.61,50.74,505.32,50.74z">
+                                        <GeometryDrawing.Pen>
+                                            <Pen Brush="#FF595A5C" Thickness="25.23" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+                                        </GeometryDrawing.Pen>
+                                    </GeometryDrawing>
+                                    <GeometryDrawing x:Name="ImgLMB" Brush="LightGray" Geometry="F0 M1000,1500z M0,0z M48.48,507.55L505.29,507.55 505.29,50.74C253,50.74,48.48,255.26,48.48,507.55z">
+                                        <GeometryDrawing.Pen>
+                                            <Pen Brush="#FF595A5C" Thickness="25.23" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+                                        </GeometryDrawing.Pen>
+                                    </GeometryDrawing>
+                                    <GeometryDrawing>
+                                        <GeometryDrawing.Pen>
+                                            <Pen Brush="#FF595A5C" Thickness="25.23" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+                                        </GeometryDrawing.Pen>
+                                        <GeometryDrawing.Geometry>
+                                            <LineGeometry StartPoint="48.48,507.55" EndPoint="962.17,507.55" />
+                                        </GeometryDrawing.Geometry>
+                                    </GeometryDrawing>
+                                    <GeometryDrawing x:Name="ImgScroll" Brush="LightGray" Geometry="F0 M1000,1500z M0,0z M505.32,433.43C468.25,433.43,438.2,403.38,438.2,366.31L438.2,232.07C438.2,195.01 468.25,164.96 505.32,164.96 542.38,164.96 572.44,195.01 572.44,232.07L572.44,366.31C572.44,403.38,542.38,433.43,505.32,433.43z">
+                                        <GeometryDrawing.Pen>
+                                            <Pen Brush="#FF595A5C" Thickness="25.23" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+                                        </GeometryDrawing.Pen>
+                                    </GeometryDrawing>
+                                </DrawingGroup>
+                            </DrawingGroup>
+                        </DrawingGroup>
+                    </DrawingImage.Drawing>
+                </DrawingImage>
+            </Image.Source>
+        </Image>
+
+        <Image Canvas.Left="50" Canvas.Bottom="50" Visibility="Visible" Width="75" >
+            <Image.Source>
+                <DrawingImage >
+                    <DrawingImage.Drawing>
+                        <DrawingGroup ClipGeometry="M0,0 V2645.82 H2645.82 V0 H0 Z">
+                            <DrawingGroup Opacity="1">
+                                <GeometryDrawing x:Name="ImgWinBtn" Brush="LightGray" Geometry="F0 M2645.82,2645.82z M0,0z M336.03,6.21L2312.63,6.21C2490.42,6.21,2633.54,134.23,2633.54,293.24L2633.54,2337.62C2633.54,2496.64,2490.42,2624.65,2312.63,2624.65L336.03,2624.66C158.24,2624.66,15.1200000000002,2496.66,15.1200000000002,2337.64L15.1200000000002,293.25C15.1200000000002,134.23,158.24,6.22999999999979,336.03,6.22999999999979L336.03,6.20999999999979z" />
+                                <GeometryDrawing Brush="White" Geometry="F0 M2645.82,2645.82z M0,0z M834.05,946.66L1237.54,891.71 1237.72,1280.92 834.41,1283.21 834.05,946.67 834.05,946.66z M1237.35,1325.76L1237.66,1715.3 834.36,1659.85 834.34,1323.15 1237.35,1325.76 1237.35,1325.76z M1286.26,884.52L1821.26,806.44 1821.26,1275.97 1286.26,1280.21 1286.26,884.52 1286.26,884.52z M1821.38,1329.42L1821.26,1796.83 1286.26,1721.32 1285.51,1328.55 1821.38,1329.42z" />
+                            </DrawingGroup>
+                        </DrawingGroup>
+                    </DrawingImage.Drawing>
+                </DrawingImage>
+            </Image.Source>
+        </Image>
+
+        <TextBlock Name="TxtPressedButtons" Foreground="Red" FontSize="40"></TextBlock>
+    </Canvas>
+</Window>

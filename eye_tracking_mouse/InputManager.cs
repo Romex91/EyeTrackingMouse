@@ -307,6 +307,8 @@ namespace eye_tracking_mouse
 
     public class InputManager : InputProvider.IInputReceiver
     {
+        private readonly YoutubeIndicationsWindow youtube_indications = new YoutubeIndicationsWindow();
+
         private readonly EyeTrackingMouse eye_tracking_mouse;
 
         private readonly InteractionHistoryEntry[] interaction_history = new InteractionHistoryEntry[3];
@@ -381,6 +383,7 @@ namespace eye_tracking_mouse
                     {
                         always_on = true;
                         eye_tracking_mouse.StartControlling();
+                        youtube_indications.OnKeyPressed(key, key_state, false);
                         return true;
                     }
                 }
@@ -422,7 +425,10 @@ namespace eye_tracking_mouse
                 if (always_on)
                 {
                     if (key == Key.Modifier && key_state == KeyState.Up)
+                    {
+                        youtube_indications.OnKeyPressed(key, key_state, false);
                         return true;
+                    }
 
                     if (key == Key.Unbound ||
                         (key == Key.Modifier && key_state == KeyState.Down))
@@ -433,7 +439,10 @@ namespace eye_tracking_mouse
                     }
                 }
 
-                return eye_tracking_mouse.OnKeyPressed(key, key_state, speed_up, is_repetition, is_modifier, input_provider);
+                bool handled = eye_tracking_mouse.OnKeyPressed(key, key_state, speed_up, is_repetition, is_modifier, input_provider);
+                if (handled)
+                    youtube_indications.OnKeyPressed(key, key_state, is_repetition);
+                return handled;
             }
         }
 
@@ -480,6 +489,7 @@ namespace eye_tracking_mouse
         public InputManager(EyeTrackingMouse eye_tracking_mouse)
         {
             this.eye_tracking_mouse = eye_tracking_mouse;
+            youtube_indications.Show();
             if (!UpdateInterceptionMethod())
             {
                 lock (Helpers.locker)
