@@ -74,19 +74,19 @@ namespace eye_tracking_mouse
 
         public static void WheelDown(int steps)
         {
-            MouseEvent(MOUSEEVENTF_WHEEL, -100 * steps);
+            MouseEvent(MOUSEEVENTF_WHEEL, -20 * steps);
         }
         public static void WheelUp(int steps)
         {
-            MouseEvent(MOUSEEVENTF_WHEEL, 100 * steps);
+            MouseEvent(MOUSEEVENTF_WHEEL, 20 * steps);
         }
         public static void WheelLeft(int steps)
         {
-            MouseEvent(MOUSEEVENTF_HWHEEL, -100 * steps);
+            MouseEvent(MOUSEEVENTF_HWHEEL, -20 * steps);
         }
         public static void WheelRight(int steps)
         {
-            MouseEvent(MOUSEEVENTF_HWHEEL, 100 * steps);
+            MouseEvent(MOUSEEVENTF_HWHEEL, 20 * steps);
         }
         
     }

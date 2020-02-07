@@ -141,8 +141,8 @@ namespace eye_tracking_mouse
 
         public int reset_calibration_zone_size = 400; // Not configurable since it is hard to explain what it means.
 
-        public int horizontal_scroll_step = 4;
-        public int vertical_scroll_step = 4;
+        public int horizontal_scroll_step = 8;
+        public int vertical_scroll_step = 8;
 
         public int calibrate_freeze_time_ms = 500;
         public int click_freeze_time_ms = 400;
