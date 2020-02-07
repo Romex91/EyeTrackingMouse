@@ -26,7 +26,8 @@
                     <CheckBox Grid.Row="0" Grid.Column="0" Name="CheckboxAutostart" Checked="CheckboxAutostart_Checked" Unchecked="CheckboxAutostart_Unchecked">Launch application at windows startup</CheckBox>
                     <TextBlock Grid.Row="1" Grid.Column="0">
                         <LineBreak/>
-                        Video tutorial: TODO: Add link <LineBreak/>
+                        Video Guide: <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://youtu.be/aKi3Qr7T764?t=74"> youtube.com </Hyperlink>
+                         <LineBreak/>
                         <LineBreak/>
                         This application is built on: <LineBreak/>
                         <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://github.com/oblitum/Interception"> Oblita Interception </Hyperlink><LineBreak/>
@@ -36,7 +37,7 @@
                     <TextBlock Grid.Row="2" Grid.Column="0" Name="TextBlockVersion"></TextBlock>
                     <TextBlock Grid.Row="3" Grid.Column="0">
                         <LineBreak/>
-                        Support me: TODO: Add link
+                        Support the project: <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://www.patreon.com/EyeTrackingMouse"> patreon.com </Hyperlink>
                     </TextBlock>
                 </Grid>
             </TabItem>
