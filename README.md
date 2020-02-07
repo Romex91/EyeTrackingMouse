@@ -13,6 +13,7 @@ The application requires elevated privilegies for controlling mouse when system 
 
 # Usage
 5-minute User Guide:
+
 [![User Guide](https://github.com/Romex91/EyeTrackingMouse/blob/master/user_guide_preview.png)](https://youtu.be/aKi3Qr7T764)
 
 To start controlling cursor press Win. 
