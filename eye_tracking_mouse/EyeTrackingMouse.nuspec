@@ -9,6 +9,9 @@
     <description>Replaces computer mouse with combination of Tobii Eye tracker 4c and hotkeys.</description>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <copyright>Copyright 2019 Roman Kuksin</copyright>
+    <iconUrl>
+      https://raw.githubusercontent.com/Romex91/EyeTrackingMouse/master/eye_tracking_mouse/eye_tracker_icon.ico
+    </iconUrl>
     <dependencies />
   </metadata>
   <files>
