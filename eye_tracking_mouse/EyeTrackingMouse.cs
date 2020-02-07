@@ -276,7 +276,6 @@ namespace eye_tracking_mouse
 
             // Mouse buttons
             if (mouse_state == MouseState.Calibrating &&
-                key_state == KeyState.Down &&
                 (key == Key.LeftMouseButton || key == Key.RightMouseButton))
             {
                 ShiftsStorage.Instance.AddShift(
