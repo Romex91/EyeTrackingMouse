@@ -42,14 +42,14 @@ namespace eye_tracking_mouse
 
                 CalibrationZoneSizeTooltip.ToolTip =
                     "Size of calibration zone on screen. There can be only one calibration per zone." +
-                    "Smaller zones mean more precise but longer calibration and higher CPU usage." +
+                    "Smaller zones result in a more precise but longer calibration and higher CPU usage." +
                     "You may want to increase zones count if you make zone size small." +
                     "Press " + modifier_key_string + " + " +
                     Options.Instance.key_bindings[Key.ShowCalibrationView] +
                     " to see your curent calibrations.";
 
                 CalibrationPointsCountTooltip.ToolTip =
-                    "Maximal number of calibration zones on screen. There can be only one calibration per zone. \n" +
+                    "Maximum number of calibration zones on screen. There can be only one calibration per zone. \n" +
                     "More zones mean more precise calibration and higher CPU usage.\n" +
                     "You may want to decrease zone size if you set large zones count.\n" +
                     "Press " + modifier_key_string + " + " +

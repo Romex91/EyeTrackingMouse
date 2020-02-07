@@ -268,12 +268,12 @@ namespace eye_tracking_mouse
                 }
                 else
                 {
-                    MessageBox.Show("Failed installing interception driver: installer returned non-zero exit code.", Helpers.application_name, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Couldn't install the interception driver: installer returned non-zero exit code.", Helpers.application_name, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception err)
             {
-                MessageBox.Show("Failed installing interception driver:" + err.Message, Helpers.application_name, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Couldn't install the interception driver:" + err.Message, Helpers.application_name, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
