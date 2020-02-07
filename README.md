@@ -12,6 +12,8 @@ This will create an entry in [Apps & features] and schedule the app to run at Wi
 The application requires elevated privilegies for controlling mouse when system windows are open.
 
 # Usage
+5-minute User Guide:
+[![User Guide](https://github.com/Romex91/EyeTrackingMouse/blob/master/user_guide_preview.png)](https://youtu.be/aKi3Qr7T764)
 
 To start controlling cursor press Win. 
 
@@ -31,3 +33,6 @@ To open Windows Start Menu press and release Win quickly.
 ![Default Key Bindings](https://github.com/Romex91/EyeTrackingMouse/blob/master/default_key_bindings.png)
 
 You can reassign key bindings in the settings window (click Tray icon)
+
+# Support the project
+https://www.patreon.com/EyeTrackingMouse
