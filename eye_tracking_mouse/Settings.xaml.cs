@@ -108,7 +108,7 @@ namespace eye_tracking_mouse
 
                 System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
                 FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
-                TextBlockVersion.Text = "Version: " + fileVersionInfo.ProductVersion;
+                TextBlockVersion.Text = "Version: " + fileVersionInfo.FileMajorPart + "." + fileVersionInfo.FileMinorPart + "." + fileVersionInfo.FileBuildPart;
             }
         }
 
