@@ -37,24 +37,41 @@ namespace eye_tracking_mouse
         {
             lock (Helpers.locker)
             {
+                var key_bindings = Options.Instance.key_bindings;
+                string calibration_buttons = key_bindings[Key.CalibrateUp].ToString() + "/"
+                    + key_bindings[Key.CalibrateLeft].ToString() + "/"
+                    + key_bindings[Key.CalibrateDown].ToString() + "/"
+                    + key_bindings[Key.CalibrateRight].ToString();
 
-                string modifier_key_string= Helpers.GetKeyString(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0);
+
+                TextDisclaimer.Text = "Toggle CALIBRATION VIEW before reading the description of options below: " + Helpers.GetModifierString() + " + " +
+                    Options.Instance.key_bindings[Key.ShowCalibrationView];
 
                 CalibrationZoneSizeTooltip.ToolTip =
-                    "Size of calibration zone on screen. There can be only one calibration per zone." +
-                    "Smaller zones mean more precise but longer calibration and higher CPU usage." +
-                    "You may want to increase zones count if you make zone size small." +
-                    "Press " + modifier_key_string + " + " +
-                    Options.Instance.key_bindings[Key.ShowCalibrationView] +
-                    " to see your curent calibrations.";
+                    "Size of a zone around each arrow. You cannot add an arrow inside another arrow's zone.\n" +
+                    "If you make a new correction too close to an existing arrow the new arrow will rewrite the old one.\n" +
+                    "Smaller zones mean more precise but longer calibration and higher CPU usage.\n" +
+                    "You may want to increase arrows count if you make zone size small.";
 
                 CalibrationPointsCountTooltip.ToolTip =
-                    "Maximal number of calibration zones on screen. There can be only one calibration per zone. \n" +
-                    "More zones mean more precise calibration and higher CPU usage.\n" +
-                    "You may want to decrease zone size if you set large zones count.\n" +
-                    "Press " + modifier_key_string + " + " +
-                    Options.Instance.key_bindings[Key.ShowCalibrationView].ToString() +
-                    " to see your curent calibrations.";
+                    "Maximal number of arrows. Each arrow represents a correction you make pressing \n" + calibration_buttons + ".\n" +
+                    "Arrow goes from the cursor position BEFORE correction to the position AFTER correction.\n" +
+                    "More arrows means more precise calibration and higher CPU usage.\n" +
+                    "You may want to decrease zone size if you set large arrows count.";
+
+                ConsideredZonesCountTooltip.ToolTip = 
+                    "Defines how many arrows will be used to calculate the resulting shift. \n" +
+                    "Closer arrows have more influence on the resulting shift than farther ones.";
+
+                UpdatePeriodMsTooltip.ToolTip =
+                    "Energy saving option. Calibration correction will be performed not more often than this time. \n" +
+                    "Bigger period means less CPU load, but the cursor may shake.";
+
+                MultidimensionalDetalizationTooltip.ToolTip = 
+                    "If you check any of the checkboxes below they will be represented as additional dimensions. \n" +
+                    "Each arrow will get a color and the algorithm will consider this color when calculating distance between arrows. \n" +
+                    "This slider determines how spacious these new dimensions are. \n\n" +
+                    "Don't create too many dimensions. It will produce a hyper black hole sucking all the data and giving nothing back.";
 
                 CalibrationZoneSize.Value = Options.Instance.calibration_mode.zone_size;
                 CalibrationPointsCount.Value = Options.Instance.calibration_mode.max_zones_count;

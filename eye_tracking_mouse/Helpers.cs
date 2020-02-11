@@ -103,6 +103,11 @@ namespace eye_tracking_mouse
             return retval;
         }
 
+        public static string GetModifierString()
+        {
+            return Helpers.GetKeyString(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0);
+        }
+
         public static void ShowBaloonNotification(String text)
         {
             tray_icon.BalloonTipText = text;

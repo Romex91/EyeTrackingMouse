@@ -69,7 +69,7 @@ namespace eye_tracking_mouse
 
                     Description.Text =
                         "CALIBRATIONS COUNT: " + ShiftsStorage.Instance.Shifts.Count + "/" + Options.Instance.calibration_mode.max_zones_count + " \n" +
-                        "HIDE CALIBRATION VIEW: " + Helpers.GetKeyString(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0).ToUpper() + 
+                        "HIDE CALIBRATION VIEW: " + Helpers.GetModifierString().ToUpper() + 
                             "+" + Options.Instance.key_bindings[Key.ShowCalibrationView] + "\n" +
                         "YOU CAN RESET CALIBRATIONS VIA TRAY ICON MENU";
                 }

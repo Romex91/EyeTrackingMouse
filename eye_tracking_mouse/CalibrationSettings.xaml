@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:eye_tracking_mouse"
         mc:Ignorable="d"
-        Title="Advance Calibration Settings" Height="356.51" Width="563.157"
+        Title="Advanced Calibration Settings" Height="356.51" Width="563.157"
         ResizeMode="NoResize">
     <Window.Resources>
         <local:IconToImageSourceConverter x:Key="IconToImageSourceConverter" />
@@ -37,7 +37,7 @@
         </Grid.RowDefinitions>
 
 
-        <TextBlock Grid.Row="1" Grid.Column="0">Max zones count</TextBlock>
+        <TextBlock Grid.Row="1" Grid.Column="0">Max arrows count</TextBlock>
         <Slider Grid.Row="1" Grid.Column="2" Name="CalibrationPointsCount" Minimum="1" Maximum="5000" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
         <TextBox Grid.Row="1" Grid.Column="3" Text="{Binding ElementName=CalibrationPointsCount, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
         <Image  Grid.Row="1" Grid.Column="1" Name="CalibrationPointsCountTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
@@ -47,12 +47,12 @@
         <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding ElementName=CalibrationZoneSize, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
         <Image  Grid.Row="2" Grid.Column="1" Name="CalibrationZoneSizeTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
-        <TextBlock Grid.Row="3" Grid.Column="0">Considered zones count</TextBlock>
+        <TextBlock Grid.Row="3" Grid.Column="0">Considered arrows count</TextBlock>
         <Slider Grid.Row="3" Grid.Column="2" Name="ConsideredZonesCount" Minimum="1" Maximum="50" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
         <TextBox Grid.Row="3" Grid.Column="3" Text="{Binding ElementName=ConsideredZonesCount, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
         <Image  Grid.Row="3" Grid.Column="1" Name="ConsideredZonesCountTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
-        <TextBlock Grid.Row="4" Grid.Column="0">Gaze reaction time (ms)</TextBlock>
+        <TextBlock Grid.Row="4" Grid.Column="0">Update period (ms)</TextBlock>
         <Slider Grid.Row="4" Grid.Column="2" Name="UpdatePeriodMs" Minimum="1" Maximum="500" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="Slider_ValueChanged"></Slider>
         <TextBox Grid.Row="4" Grid.Column="3" Text="{Binding ElementName=UpdatePeriodMs, Path=Value, UpdateSourceTrigger=PropertyChanged}" Width="40" TextAlignment="Right"></TextBox>
         <Image  Grid.Row="4" Grid.Column="1" Name="UpdatePeriodMsTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
@@ -83,6 +83,6 @@
             <ComboBoxItem Name="CustomCalibrationMode">Custom</ComboBoxItem>
         </ComboBox>
 
-        <TextBlock Grid.Row="14" Grid.Column="0" Grid.ColumnSpan="4" HorizontalAlignment="Left" Width="541">This tutorial may help understanding what's going on here: TODO: ADD LINK</TextBlock>
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" HorizontalAlignment="Left" Width="541" Name="TextDisclaimer"></TextBlock>
     </Grid>
 </Window>

@@ -70,41 +70,61 @@ namespace eye_tracking_mouse
                     + key_bindings[Key.CalibrateRight].ToString();
 
 
-                CalibrationStepTooltip.ToolTip = "How fast cursor moves when you press " + calibration_buttons;
+                CalibrationStepTooltip.ToolTip = "How fast the cursor moves when you press " + calibration_buttons;
 
                 ClickFreezeTimeMsTooltip.ToolTip =
-                    "How long cursor will stay still ignoring your gaze after you click something. " +
-                    "Longer the time easier to doubleclick but slower overall mouse control.";
+                    "How long the cursor will be frozen when you click stuff. \n" +
+                    "\n" +
+                    "The cursor may shake when controlled by eyes. This makes some problems.\n" +
+                    "Imagine you want to click something, but instead, you get a tiny Drag&Drop because the cursor moved during the click.\n" +
+                    "Freezing the cursor after click solves this problem.";
 
                 CalibrationFreezeTimeMsTooltip.ToolTip =
-                    "How long cursor will stay still ignoring your gaze after you calibrate (" + calibration_buttons + "). " +
-                    "Longer the time easier to click tiny areas but slightly worse long-term calibration.";
+                    "How long cursor will be frozen when you calibrate (" + calibration_buttons + "). \n" +
+                    "\n" +
+                    "Helps clicking little areas when cursor is shaking.";
 
                 DoubleSpeedUpTimeMsTooltip.ToolTip =
-                    "Frequent presses speed-up calibration and scrolling. " +
-                    "If you press " + calibration_buttons + " twice during this time then the second press will move cursor twice farther. " +
-                    "The same is true about scrolling.";
+                    "Frequent presses speed-up calibration and scrolling. \n" +
+                    "If you press " + calibration_buttons + " twice during this time then the second press will move cursor twice farther. \n";
 
                 QuadrupleSpeedUpTimeMsTooltip.ToolTip =
                     "Frequent presses speed-up calibration and scrolling. " +
-                    "If you press " + calibration_buttons + " twice during this time then the second press will move cursor four times farther. " +
-                    "The same is true about scrolling.";
+                    "If you press " + calibration_buttons + " twice during this time then the second press will move cursor four times farther. \n";
 
                 ModifierShortPressTimeMsTooltip.ToolTip =
-                    "If you press " + key_bindings[Key.Modifier] + " for short period of time this press will go to OS. " +
-                    "The reason this option exist is to make Windows Start Menu available." +
-                    "If you see Start Menu more often than you want then decrease this time." +
+                    "If you press " + key_bindings[Key.Modifier] + " for a short period of time this press will go to OS. \n" +
+                    "The reason this option exist is to make Windows Start Menu available.\n" +
+                    "If you see Start Menu more often than you want then decrease this time.\n" +
                     "If you cannot open Start Menu because " + Helpers.application_name + " intercepts your key presses then increase it.";
 
                 SmootheningPointsCountTooltip.ToolTip =
-                    "Number of gaze points used by " + Helpers.application_name + " to calculate cursor position. " +
-                    "More points means less cursor shaking but slower movement and higher CPU usage.";
+                    "Number of gaze points used by " + Helpers.application_name + " to smooth the cursor position. \n" +
+                    "The resulting cursor position is the arithmetic mean of these points.";
 
                 SmotheningZoneRadiusTooltip.ToolTip =
-                    Helpers.application_name + " considers only gaze points fitting to zone with this radius when calculating cursor position." +
-                    "Bigger the radius means less cursor shaking but slower movement when moving cursor to a huge distance." +
-                    "If you move your gaze farther than this radius cursor will move instantly. Otherwise it will move smoothly.";
+                    "A distance after which the cursor stop being smooth.\n" +
+                    "If you move your gaze quickly farther than this value the cursor will jump instantly to the new gaze point.";
 
+                string calibration_view_hotkeys = Helpers.GetModifierString() + " + " +
+                    Options.Instance.key_bindings[Key.ShowCalibrationView].ToString();
+                    
+                CalibrationModeTooltip.ToolTip = "When you use " + calibration_buttons + " " + Helpers.application_name + " slowly gathers data to increase accuracy.\n" +
+                    "The algorithm is a bit tricky. It can use different data and different amounts of data.\n" +
+                    "To be honest I don't know what parameters are optimal. Trying to figure it out. \n\n" +
+                    "Modes:\n" +
+                    "1.'Simple & Fast' uses as little data as reasonable. \n" +
+                    "   * Quick learning period. \n" +
+                    "   * Rough (but probably the best possible) precision. \n" +
+                    "   * Absolutely best when the Eye Tracker device has a poor fixation. \n" +
+                    "   * Recommended.\n" +
+                    "2.'Multidimensional' uses much more data than 'Simple & Fast'. \n" +
+                    "   * Tracks head position. \n" +
+                    "   * Long learning period (months of using). \n" +
+                    "   * Rough initial precision. \n" +
+                    "   * When learned it may provide precison better than 'Simple & Fast'. \n" +
+                    "   * This mode is experimental.\n" +
+                    "   * !!! DON'T use this mode if the Eye Tracker device has a poor fixation !!!";
 
                 System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
                 FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
