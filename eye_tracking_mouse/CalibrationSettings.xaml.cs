@@ -50,11 +50,11 @@ namespace eye_tracking_mouse
                 CalibrationZoneSizeTooltip.ToolTip =
                     "Size of a zone around each arrow. You cannot add an arrow inside another arrow's zone.\n" +
                     "If you make a new correction too close to an existing arrow the new arrow will rewrite the old one.\n" +
-                    "Smaller zones mean more precise but longer calibration and higher CPU usage.\n" +
+                    "Smaller zones result in more precise but longer calibration and higher CPU usage.\n" +
                     "You may want to increase arrows count if you make zone size small.";
 
                 CalibrationPointsCountTooltip.ToolTip =
-                    "Maximal number of arrows. Each arrow represents a correction you make pressing \n" + calibration_buttons + ".\n" +
+                    "Maximum number of arrows. Each arrow represents a correction you make pressing \n" + calibration_buttons + ".\n" +
                     "Arrow goes from the cursor position BEFORE correction to the position AFTER correction.\n" +
                     "More arrows means more precise calibration and higher CPU usage.\n" +
                     "You may want to decrease zone size if you set large arrows count.";

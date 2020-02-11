@@ -116,18 +116,18 @@
                     <Button Grid.Row="11" Grid.Column="1" Click="KeyBindingButtonClick" Name="CalibrationView">error</Button>
                     <Button Grid.Row="11" Grid.Column="2" Click="KeyBindingButtonClick" Name="CalibrationViewDefault">Default</Button>
 
-                    <Button Grid.Row="0" Grid.Column="4" Click="ResetEverything_Click" Name="ResetEverything" >Reset everything to default</Button>
-                    <TextBlock Grid.Row="2" Grid.Column="4">Interception method:</TextBlock>
+                    <Button Grid.Row="0" Grid.Column="4" Click="ResetEverything_Click" Name="ResetEverything" >Reset all bindings to defaults</Button>
+                    <TextBlock Grid.Row="2" Grid.Column="4">Key interception backend:</TextBlock>
                     <ComboBox Grid.Row="3" Grid.Column="4" SelectionChanged="InterceptionMethod_Selected" SelectedIndex="0" Name ="InterceptionMethod">
-                        <ComboBoxItem>WinAPI</ComboBoxItem>
+                        <ComboBoxItem>Raw WinAPI keyboard hooks</ComboBoxItem>
                         <ComboBoxItem>Oblita Interception Driver</ComboBoxItem>
                     </ComboBox>
 
                     <TextBlock Name="WinApiWarning" Grid.Row="5" Grid.RowSpan="4" Grid.Column="4" Grid.ColumnSpan="2">
                         Custom key bindings are not available <LineBreak></LineBreak>
-                        under WinAPI. Change interception <LineBreak></LineBreak>
-                        method to Oblita Interception Driver <LineBreak></LineBreak> 
-                        to enable key bindings.
+                        if using keyboard hooks backend.<LineBreak></LineBreak>
+                        Please use Oblita Interception Driver<LineBreak></LineBreak> 
+                        for key bindings to work.
                     </TextBlock>
 
                 </Grid>
@@ -219,7 +219,7 @@
                     <Button Grid.Row="11" Grid.Column="3" Grid.ColumnSpan="2" x:Name="AdvancedCalibrationSettings" Click="AdvancedCalibrationSettings_Click">Advanced calibration settings</Button>
                     <Image  Grid.Row="11" Grid.Column="1" Name="CalibrationModeTooltip" Height="14" Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={StaticResource IconToImageSourceConverter}, Mode=OneWay}" />
 
-                    <Button Grid.Row="13" Grid.Column="2" Grid.ColumnSpan="1" Name="ResetDefaults" Click="ResetDefaults_Click">Reset default options</Button>
+                    <Button Grid.Row="13" Grid.Column="2" Grid.ColumnSpan="1" Name="ResetDefaults" Click="ResetDefaults_Click">Reset to defaults</Button>
                 </Grid>
             </TabItem>
         </TabControl>
