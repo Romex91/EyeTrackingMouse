@@ -47,27 +47,27 @@ namespace eye_tracking_mouse
                 TextDisclaimer.Text = "Toggle CALIBRATION VIEW before reading the description of options below: " + Helpers.GetModifierString() + " + " +
                     Options.Instance.key_bindings[Key.ShowCalibrationView];
 
-                CalibrationZoneSizeTooltip.ToolTip =
+                CalibrationZoneSize.ToolTip =
                     "Size of a zone around each arrow. You cannot add an arrow inside another arrow's zone.\n" +
                     "If you make a new correction too close to an existing arrow the new arrow will rewrite the old one.\n" +
                     "Smaller zones result in more precise but longer calibration and higher CPU usage.\n" +
                     "You may want to increase arrows count if you make zone size small.";
 
-                CalibrationPointsCountTooltip.ToolTip =
+                CalibrationPointsCount.ToolTip =
                     "Maximum number of arrows. Each arrow represents a correction you make pressing \n" + calibration_buttons + ".\n" +
                     "Arrow goes from the cursor position BEFORE correction to the position AFTER correction.\n" +
                     "More arrows means more precise calibration and higher CPU usage.\n" +
                     "You may want to decrease zone size if you set large arrows count.";
 
-                ConsideredZonesCountTooltip.ToolTip = 
+                ConsideredZonesCount.ToolTip = 
                     "Defines how many arrows will be used to calculate the resulting shift. \n" +
                     "Closer arrows have more influence on the resulting shift than farther ones.";
 
-                UpdatePeriodMsTooltip.ToolTip =
+                UpdatePeriodMs.ToolTip =
                     "Energy saving option. Calibration correction will be performed not more often than this time. \n" +
                     "Bigger period means less CPU load, but the cursor may shake.";
 
-                MultidimensionalDetalizationTooltip.ToolTip = 
+                MultidimensionalDetalization.ToolTip = 
                     "If you check any of the checkboxes below they will be represented as additional dimensions. \n" +
                     "Each arrow will get a color and the algorithm will consider this color when calculating distance between arrows. \n" +
                     "This slider determines how spacious these new dimensions are. \n\n" +

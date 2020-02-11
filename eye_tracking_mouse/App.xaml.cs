@@ -92,6 +92,8 @@ namespace eye_tracking_mouse
             application.InitializeComponent();
             ToolTipService.ShowDurationProperty.OverrideMetadata(
                 typeof(DependencyObject), new FrameworkPropertyMetadata(Int32.MaxValue));
+            ToolTipService.InitialShowDelayProperty.OverrideMetadata(
+                typeof(DependencyObject), new FrameworkPropertyMetadata(0));
 
             if (!Directory.Exists(Helpers.UserDataFolder))
             {

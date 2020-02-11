@@ -126,6 +126,9 @@
     <Compile Include="CalibrationWindow.xaml.cs">
       <DependentUpon>CalibrationWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="IntegerPropertyControl.xaml.cs">
+      <DependentUpon>IntegerPropertyControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Statistics.cs" />
     <Compile Include="DriverInstallationWindow.xaml.cs">
       <DependentUpon>DriverInstallationWindow.xaml</DependentUpon>
@@ -155,6 +158,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="DriverInstallationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="IntegerPropertyControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -39,13 +39,12 @@ namespace eye_tracking_mouse
 
             lock (Helpers.locker)
             {
-                UpdateSliders();
                 UpdateTexts();
                 UpdateKeyBindingControls();
 
                 CheckboxAutostart.IsChecked = Autostart.IsEnabled;
 
-                is_initialized = true;
+                UpdateSliders();
             }
         }
 
@@ -56,11 +55,11 @@ namespace eye_tracking_mouse
             {
 
                 var key_bindings = Options.Instance.key_bindings;
-                VerticalScrollStepTooltip.ToolTip = "How fast mouse wheel 'spins' when you press "
+                VerticalScrollStep.ToolTip = "How fast mouse wheel 'spins' when you press "
                     + key_bindings[Key.ScrollUp].ToString() + "/"
                     + key_bindings[Key.ScrollDown].ToString();
 
-                HorizontalScrollStepTooltip.ToolTip = "How fast mouse wheel 'spins' when you press "
+                HorizontalScrollStep.ToolTip = "How fast mouse wheel 'spins' when you press "
                     + key_bindings[Key.ScrollLeft].ToString() + "/"
                     + key_bindings[Key.ScrollRight].ToString();
 
@@ -70,46 +69,47 @@ namespace eye_tracking_mouse
                     + key_bindings[Key.CalibrateRight].ToString();
 
 
-                CalibrationStepTooltip.ToolTip = "How fast the cursor moves when you press " + calibration_buttons;
+                CalibrationStep.ToolTip = "How fast the cursor moves when you press " + calibration_buttons;
 
-                ClickFreezeTimeMsTooltip.ToolTip =
+                ClickFreezeTimeMs.ToolTip =
                     "How long the cursor will be frozen when you click stuff. \n" +
                     "\n" +
                     "The cursor may shake when controlled by eyes. This makes some problems.\n" +
                     "Imagine you want to click something, but instead, you get a tiny Drag&Drop because the cursor moved during the click.\n" +
                     "Freezing the cursor after click solves this problem.";
 
-                CalibrationFreezeTimeMsTooltip.ToolTip =
+                CalibrationFreezeTimeMs.ToolTip =
                     "How long cursor will be frozen when you calibrate (" + calibration_buttons + "). \n" +
                     "\n" +
                     "Helps clicking little areas when cursor is shaking.";
 
-                DoubleSpeedUpTimeMsTooltip.ToolTip =
+                DoubleSpeedUpTimeMs.ToolTip =
                     "Frequent presses speed-up calibration and scrolling. \n" +
                     "If you press " + calibration_buttons + " twice during this time then the second press will move cursor twice farther. \n";
 
-                QuadrupleSpeedUpTimeMsTooltip.ToolTip =
+                QuadrupleSpeedUpTimeMs.ToolTip =
                     "Frequent presses speed-up calibration and scrolling. " +
                     "If you press " + calibration_buttons + " twice during this time then the second press will move cursor four times farther. \n";
 
-                ModifierShortPressTimeMsTooltip.ToolTip =
+                ModifierShortPressTimeMs.ToolTip =
                     "If you press " + key_bindings[Key.Modifier] + " for a short period of time this press will go to OS. \n" +
                     "The reason this option exist is to make Windows Start Menu available.\n" +
                     "If you see Start Menu more often than you want then decrease this time.\n" +
                     "If you cannot open Start Menu because " + Helpers.application_name + " intercepts your key presses then increase it.";
 
-                SmootheningPointsCountTooltip.ToolTip =
+                SmootheningPointsCount.ToolTip =
                     "Number of gaze points used by " + Helpers.application_name + " to smooth the cursor position. \n" +
                     "The resulting cursor position is the arithmetic mean of these points.";
 
-                SmotheningZoneRadiusTooltip.ToolTip =
+                SmotheningZoneRadius.ToolTip =
                     "A distance after which the cursor stop being smooth.\n" +
                     "If you move your gaze quickly farther than this value the cursor will jump instantly to the new gaze point.";
 
                 string calibration_view_hotkeys = Helpers.GetModifierString() + " + " +
                     Options.Instance.key_bindings[Key.ShowCalibrationView].ToString();
-                    
-                CalibrationModeTooltip.ToolTip = "When you use " + calibration_buttons + " " + Helpers.application_name + " slowly gathers data to increase accuracy.\n" +
+
+                CalibrationModeLabel.ToolTip = CalibrationModeCombo.ToolTip =
+                "When you use " + calibration_buttons + " " + Helpers.application_name + " slowly gathers data to increase accuracy.\n" +
                     "The algorithm is a bit tricky. It can use different data and different amounts of data.\n" +
                     "To be honest I don't know what parameters are optimal. Trying to figure it out. \n\n" +
                     "Modes:\n" +
@@ -117,6 +117,7 @@ namespace eye_tracking_mouse
                     "   * Quick learning period. \n" +
                     "   * Rough (but probably the best possible) precision. \n" +
                     "   * Absolutely best when the Eye Tracker device has a poor fixation. \n" +
+                    "   * No extra CPU load.\n" +
                     "   * Recommended.\n" +
                     "2.'Multidimensional' uses much more data than 'Simple & Fast'. \n" +
                     "   * Tracks head position. \n" +
@@ -142,13 +143,16 @@ namespace eye_tracking_mouse
         {
             lock (Helpers.locker)
             {
-
+                is_initialized = false;
                 SmotheningZoneRadius.Value = Options.Instance.smothening_zone_radius;
                 SmootheningPointsCount.Value = Options.Instance.smothening_points_count;
                 ModifierShortPressTimeMs.Value = Options.Instance.modifier_short_press_duration_ms;
 
+                QuadrupleSpeedUpTimeMs.Maximum = 500;
+                DoubleSpeedUpTimeMs.Minimum = 0;
                 QuadrupleSpeedUpTimeMs.Value = Options.Instance.quadriple_speed_up_press_time_ms;
                 DoubleSpeedUpTimeMs.Value = Options.Instance.double_speedup_press_time_ms;
+                UpdateSpeedUpControllersMinMax();
 
                 CalibrationFreezeTimeMs.Value = Options.Instance.calibrate_freeze_time_ms;
                 ClickFreezeTimeMs.Value = Options.Instance.click_freeze_time_ms;
@@ -171,6 +175,7 @@ namespace eye_tracking_mouse
                     CustomCalibrationMode.Visibility = Visibility.Visible;
                     CalibrationModeCombo.SelectedIndex = 2;
                 }
+                is_initialized = true;
             }
         }
 
@@ -209,10 +214,12 @@ namespace eye_tracking_mouse
                 else if (sender == QuadrupleSpeedUpTimeMs)
                 {
                     Options.Instance.quadriple_speed_up_press_time_ms = (int)QuadrupleSpeedUpTimeMs.Value;
+                    UpdateSpeedUpControllersMinMax();
                 }
                 else if (sender == DoubleSpeedUpTimeMs)
                 {
                     Options.Instance.double_speedup_press_time_ms = (int)DoubleSpeedUpTimeMs.Value;
+                    UpdateSpeedUpControllersMinMax();
                 }
                 else if (sender == ModifierShortPressTimeMs)
                 {
@@ -225,6 +232,12 @@ namespace eye_tracking_mouse
                 OptionsChanged?.Invoke(this, new EventArgs());
                 Options.Instance.SaveToFile();
             }
+        }
+
+        private void UpdateSpeedUpControllersMinMax()
+        {
+            DoubleSpeedUpTimeMs.Minimum = (int)QuadrupleSpeedUpTimeMs.Value;
+            QuadrupleSpeedUpTimeMs.Maximum = (int)DoubleSpeedUpTimeMs.Value;
         }
 
         private void ResetDefaults_Click(object sender, RoutedEventArgs e)
@@ -461,30 +474,6 @@ namespace eye_tracking_mouse
         {
             if (is_initialized)
                 Autostart.Disable();
-        }
-
-    }
-    public class IconToImageSourceConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            var icon = value as Icon;
-            if (icon == null)
-            {
-                Trace.TraceWarning("Attempted to convert {0} instead of Icon object in IconToImageSourceConverter", value);
-                return null;
-            }
-
-            ImageSource imageSource = Imaging.CreateBitmapSourceFromHIcon(
-                icon.Handle,
-                Int32Rect.Empty,
-                BitmapSizeOptions.FromEmptyOptions());
-            return imageSource;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
         }
     }
 }
