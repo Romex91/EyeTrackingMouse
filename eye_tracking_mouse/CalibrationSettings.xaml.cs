@@ -43,33 +43,32 @@ namespace eye_tracking_mouse
                     + key_bindings[Key.CalibrateDown].ToString() + "/"
                     + key_bindings[Key.CalibrateRight].ToString();
 
-
-                TextDisclaimer.Text = "Toggle CALIBRATION VIEW before reading the description of options below: " + Helpers.GetModifierString() + " + " +
-                    Options.Instance.key_bindings[Key.ShowCalibrationView];
+                CalibrationPointsCount.ToolTip =
+                    "Maximum number of arrows in CALIBRATION VIEW. \n" +
+                    "Each arrow points from the cursor position BEFORE correction to the position AFTER correction.\n\n" +
+                    "Suppose you want to click point A, but because of imperfect precision the cursor is at point B.\n" +
+                    "You press " + calibration_buttons +" until the cursor reach point A and then you click it. \n" +
+                    "This action creates an arrow pointing from B (imprecise cursor position) to A(click point after correction).\n\n" +
+                    "More arrows result in better precision but longer algorithm learning and higher CPU usage.\n" +
+                    "You may want to decrease Min distance between arrows if you set large Max arrows count.";
 
                 CalibrationZoneSize.ToolTip =
-                    "Size of a zone around each arrow. You cannot add an arrow inside another arrow's zone.\n" +
-                    "If you make a new correction too close to an existing arrow the new arrow will rewrite the old one.\n" +
-                    "Smaller zones result in more precise but longer calibration and higher CPU usage.\n" +
-                    "You may want to increase arrows count if you make zone size small.";
-
-                CalibrationPointsCount.ToolTip =
-                    "Maximum number of arrows. Each arrow represents a correction you make pressing \n" + calibration_buttons + ".\n" +
-                    "Arrow goes from the cursor position BEFORE correction to the position AFTER correction.\n" +
-                    "More arrows means more precise calibration and higher CPU usage.\n" +
-                    "You may want to decrease zone size if you set large arrows count.";
+                    "Minimum distance between two arrows.\n" +
+                    "If you make a correction too close to an existing arrow this arrow will be rewritten.\n" +
+                    "Smaller distance result in better precision but longer algorithm learning and higher CPU usage.\n" +
+                    "You may want to increase Max arrows count if you make Min distance small.";
 
                 ConsideredZonesCount.ToolTip = 
                     "Defines how many arrows will be used to calculate the resulting shift. \n" +
                     "Closer arrows have more influence on the resulting shift than farther ones.";
 
                 UpdatePeriodMs.ToolTip =
-                    "Energy saving option. Calibration correction will be performed not more often than this time. \n" +
-                    "Bigger period means less CPU load, but the cursor may shake.";
+                    "Energy saving option. The calibration algorithm will iterate once per this period of time. \n" +
+                    "Bigger period results in less CPU load, but the cursor may shake.";
 
                 MultidimensionalDetalization.ToolTip = 
                     "If you check any of the checkboxes below they will be represented as additional dimensions. \n" +
-                    "Each arrow will get a color and the algorithm will consider this color when calculating distance between arrows. \n" +
+                    "Arrows in CALIBRATION VIEW will become colorful and the algorithm will consider color when calculating distance between arrows. \n" +
                     "This slider determines how spacious these new dimensions are. \n\n" +
                     "Don't create too many dimensions. It will produce a hyper black hole sucking all the data and giving nothing back.";
 
@@ -108,7 +107,6 @@ namespace eye_tracking_mouse
                 return;
             lock (Helpers.locker)
             {
-                // TODO: test sliders with dinamic minimum and maximum.
                 if (sender == CalibrationZoneSize)
                 {
                     Options.Instance.calibration_mode.zone_size = (int)CalibrationZoneSize.Value;
@@ -117,6 +115,18 @@ namespace eye_tracking_mouse
                 {
                     Options.Instance.calibration_mode.max_zones_count = (int)CalibrationPointsCount.Value;
                 }
+                else if (sender == ConsideredZonesCount)
+                {
+                    Options.Instance.calibration_mode.considered_zones_count = (int)ConsideredZonesCount.Value;
+                }
+                else if (sender == UpdatePeriodMs) {
+                    Options.Instance.calibration_mode.update_period_ms = (int)UpdatePeriodMs.Value;
+                }
+                else if (sender == MultidimensionalDetalization)
+                {
+                    Options.Instance.calibration_mode.multi_dimensions_detalization = (int)MultidimensionalDetalization.Value;
+                }
+
                 Settings.OptionsChanged?.Invoke(this, new EventArgs());
                 Options.Instance.SaveToFile();
 
@@ -189,5 +199,10 @@ namespace eye_tracking_mouse
         }
 
         private bool ignore_changes = true;
+
+        private void CalibrationViewButton_Click(object sender, RoutedEventArgs e)
+        {
+            App.ToggleCalibrationWindow();
+        }
     }
 }

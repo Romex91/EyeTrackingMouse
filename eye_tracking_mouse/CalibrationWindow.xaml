@@ -17,12 +17,19 @@
     <Window.Resources>
         <Style TargetType="TextBlock">
             <Setter Property="Foreground" Value="LightGreen" />
+            <Setter Property="Background">
+                <Setter.Value>
+                    <SolidColorBrush Color="Black" Opacity="0.5"/>
+                </Setter.Value>
+            </Setter>
             <Setter Property="FontSize" Value="20" />
             <Setter Property="FontWeight" Value="Bold" />
         </Style>
     </Window.Resources>
     <Canvas  x:Name="Canvas">
-        <TextBlock  Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType=Canvas}}" TextAlignment="Center" Canvas.Top="50"> CALIBRATION VIEW </TextBlock>
+        <Grid Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType=Canvas}}" Canvas.Top="50">
+            <TextBlock   HorizontalAlignment="Center" TextAlignment="Center" > CALIBRATION VIEW</TextBlock>
+        </Grid>
         <TextBlock Canvas.Right="100" Canvas.Bottom="100" Name ="Description"></TextBlock>
         <Grid Canvas.Right="100" Canvas.Top="100" Width="200" Height="100" Name="CurrentHeadPositionColor" Background="RED">
             <TextBlock TextAlignment="Center"  Background="Gray" VerticalAlignment="Top">CURRENT HEAD <LineBreak/> POSITION COLOR</TextBlock>

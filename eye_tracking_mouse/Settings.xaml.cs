@@ -76,7 +76,7 @@ namespace eye_tracking_mouse
                     "\n" +
                     "The cursor may shake when controlled by eyes. This makes some problems.\n" +
                     "Imagine you want to click something, but instead, you get a tiny Drag&Drop because the cursor moved during the click.\n" +
-                    "Freezing the cursor after click solves this problem.";
+                    "Freezing the cursor after clicks solves this problem.";
 
                 CalibrationFreezeTimeMs.ToolTip =
                     "How long cursor will be frozen when you calibrate (" + calibration_buttons + "). \n" +
@@ -85,20 +85,20 @@ namespace eye_tracking_mouse
 
                 DoubleSpeedUpTimeMs.ToolTip =
                     "Frequent presses speed-up calibration and scrolling. \n" +
-                    "If you press " + calibration_buttons + " twice during this time then the second press will move cursor twice farther. \n";
+                    "If you press " + calibration_buttons + " twice during this time then the second press will move cursor twice farther.";
 
                 QuadrupleSpeedUpTimeMs.ToolTip =
-                    "Frequent presses speed-up calibration and scrolling. " +
-                    "If you press " + calibration_buttons + " twice during this time then the second press will move cursor four times farther. \n";
+                    "Frequent presses speed-up calibration and scrolling. \n" +
+                    "If you press " + calibration_buttons + " twice during this time then the second press will move cursor four times farther.";
 
                 ModifierShortPressTimeMs.ToolTip =
                     "If you press " + key_bindings[Key.Modifier] + " for a short period of time this press will go to OS. \n" +
-                    "The reason this option exist is to make Windows Start Menu available.\n" +
+                    "The reason this option exists is to make Windows Start Menu available.\n" +
                     "If you see Start Menu more often than you want then decrease this time.\n" +
                     "If you cannot open Start Menu because " + Helpers.application_name + " intercepts your key presses then increase it.";
 
                 SmootheningPointsCount.ToolTip =
-                    "Number of gaze points used by " + Helpers.application_name + " to smooth the cursor position. \n" +
+                    "Number of gaze points used to smooth the cursor position. \n" +
                     "The resulting cursor position is the arithmetic mean of these points.";
 
                 SmotheningZoneRadius.ToolTip =
@@ -126,6 +126,11 @@ namespace eye_tracking_mouse
                     "   * When learned it may provide precison better than 'Simple & Fast'. \n" +
                     "   * This mode is experimental.\n" +
                     "   * !!! DON'T use this mode if the Eye Tracker device has a poor fixation !!!";
+
+                AdvancedCalibrationSettings.ToolTip = 
+                    "Understanding advanced calibration settings may be challenging.\n" +
+                    "It's easy to make things worse by changing this settings.\n" +
+                    "Proceed only if you understand exactly what you are doing.";
 
                 System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
                 FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);

@@ -98,22 +98,34 @@ namespace eye_tracking_mouse
 
                     if ((type & MultidimensionCalibrationType.HeadPosition) != MultidimensionCalibrationType.None)
                     {
-                        head_position_description += "Head position: \nX: " + last_position.HeadPosition.X + "\n" + "Y: " + last_position.HeadPosition.Y + "\n" + "Z: " + last_position.HeadPosition.Z;
+                        head_position_description += "Head position: \n" +
+                            "X: " + (int) last_position.HeadPosition.X + "\n" + 
+                            "Y: " + (int)last_position.HeadPosition.Y + "\n" + 
+                            "Z: " + (int)last_position.HeadPosition.Z;
                     }
 
                     if ((type & MultidimensionCalibrationType.HeadDirection) != MultidimensionCalibrationType.None)
                     {
-                        head_position_description += "\nHead direction: \n Pitch: " + last_position.HeadDirection.X + "\n" + "Yaw: " + last_position.HeadDirection.Y + "\n" + "Roll: " + last_position.HeadDirection.Z;
+                        head_position_description += "\nHead direction: \n" +
+                            "Pitch: " + (int)last_position.HeadDirection.X + "\n" + 
+                            "Yaw: " + (int)last_position.HeadDirection.Y + "\n" + 
+                            "Roll: " + (int)last_position.HeadDirection.Z;
                     }
 
                     if ((type & MultidimensionCalibrationType.LeftEye) != MultidimensionCalibrationType.None)
                     {
-                        head_position_description += "\nLeft eye: \nX: " + last_position.LeftEye.X + "\n" + "Y: " + last_position.LeftEye.Y + "\n" + "Z: " + last_position.LeftEye.Z;
+                        head_position_description += "\nLeft eye: \n" +
+                            "X: " + (int)last_position.LeftEye.X + "\n" + 
+                            "Y: " + (int)last_position.LeftEye.Y + "\n" + 
+                            "Z: " + (int)last_position.LeftEye.Z;
                     }
 
                     if ((type & MultidimensionCalibrationType.RightEye) != MultidimensionCalibrationType.None)
                     {
-                        head_position_description += "\nRight eye: \nX: " + last_position.LeftEye.X + "\n" + "Y: " + last_position.LeftEye.Y + "\n" + "Z: " + last_position.LeftEye.Z;
+                        head_position_description += "\nRight eye: \n" +
+                            "X: " + (int)last_position.LeftEye.X + "\n" + 
+                            "Y: " + (int)last_position.LeftEye.Y + "\n" + 
+                            "Z: " + (int)last_position.LeftEye.Z;
                     }
 
                     HeadPositionDescription.Text = head_position_description;

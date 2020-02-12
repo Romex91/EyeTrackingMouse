@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:eye_tracking_mouse"
         mc:Ignorable="d"
-        Title="Advanced Calibration Settings" Height="356.51" Width="563.157"
+        Title="Advanced Calibration Settings" Height="362.51" Width="579.657"
         ResizeMode="NoResize">
     <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
         <Grid.ColumnDefinitions>
@@ -16,7 +16,7 @@
             <ColumnDefinition ></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="20"></RowDefinition>
+            <RowDefinition Height="25"></RowDefinition>
             <RowDefinition Height="20"></RowDefinition>
             <RowDefinition Height="20"></RowDefinition>
             <RowDefinition Height="20"></RowDefinition>
@@ -33,8 +33,10 @@
             <RowDefinition Height="20"></RowDefinition>
         </Grid.RowDefinitions>
 
+        <Button Grid.Row="0" Grid.Column="2" VerticalAlignment="Top" Click="CalibrationViewButton_Click">CALIBRATION VIEW</Button>
+
         <local:IntegerPropertyControl Grid.Row="1" Grid.ColumnSpan="4" x:Name="CalibrationPointsCount" Label="Max arrows count" Maximum="5000" Minimum="1" ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
-        <local:IntegerPropertyControl Grid.Row="2" Grid.ColumnSpan="4" x:Name="CalibrationZoneSize" Label="Zone size in pixels" Maximum="500" Minimum="30" ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
+        <local:IntegerPropertyControl Grid.Row="2" Grid.ColumnSpan="4" x:Name="CalibrationZoneSize" Label="Min distance between arrows" Maximum="500" Minimum="30" ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
         <local:IntegerPropertyControl Grid.Row="3" Grid.ColumnSpan="4" x:Name="ConsideredZonesCount" Label="Considered arrows count" Maximum="50" Minimum="3" ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
         <local:IntegerPropertyControl Grid.Row="4" Grid.ColumnSpan="4" x:Name="UpdatePeriodMs" Label="Update period (ms)" Maximum="500" Minimum="0" ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
 
@@ -60,7 +62,5 @@
             <ComboBoxItem>Simple &amp; Fast</ComboBoxItem>
             <ComboBoxItem Name="CustomCalibrationMode">Custom</ComboBoxItem>
         </ComboBox>
-
-        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" HorizontalAlignment="Left" Width="541" Name="TextDisclaimer"></TextBlock>
     </Grid>
 </Window>
