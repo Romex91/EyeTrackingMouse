@@ -8,76 +8,41 @@ using System.Threading.Tasks;
 
 namespace eye_tracking_mouse
 {
-    class Statistics
+    public class Statistics
     {
-        public Statistics()
-        {
-            Settings.OptionsChanged += UpdateCurrentItemKey;
-            UpdateCurrentItemKey(null, null);
-        }
+        public Statistics() {}
 
         public void OnClick()
         {
-            items[current_item_key].clicks++;
+            clicks++;
             AsyncSaver.Save(Filepath, GetDeepCopy);
         }
 
         public void OnCalibrate()
         {
-            items[current_item_key].calibrations++;
+            calibrations++;
             AsyncSaver.Save(Filepath, GetDeepCopy);
         }
 
-        public static Statistics LoadFromFile()
+        public static Statistics LoadFromFile(string path)
         {
-            Statistics statistics = new Statistics();
-            if (File.Exists(Filepath))
+            if (File.Exists(path))
             {
-                statistics.items = JsonConvert.DeserializeObject<Dictionary<string, StatisticsItem>>(File.ReadAllText(Filepath));
-            }
-            if (!statistics.items.ContainsKey(current_item_key))
+                return JsonConvert.DeserializeObject<Statistics>(File.ReadAllText(path));
+            } else
             {
-                statistics.items.Add(current_item_key, new StatisticsItem());
-            }
-            return statistics;
-        }
-
-        private void UpdateCurrentItemKey(object sender, EventArgs e)
-        {
-            lock (Helpers.locker)
-            {
-                current_item_key = JsonConvert.SerializeObject(
-                    new Dictionary<string, object> { 
-                        { "mode", Options.Instance.calibration_mode } ,
-                        { "step", Options.Instance.calibration_step}},
-                    Formatting.None);
-
-                if (!items.ContainsKey(current_item_key))
-                {
-                    items.Add(current_item_key, new StatisticsItem());
-                }
+                return new Statistics();
             }
         }
 
-        private static string Filepath { get { return Path.Combine(Helpers.UserDataFolder, "statistics.json"); } }
+        public static string Filepath { get { return Path.Combine(Helpers.UserDataFolder, "statistics.json"); } }
 
         private object GetDeepCopy()
         {
-            return items.ToDictionary(entry => entry.Key, entry => entry.Value.Clone());
+            return new Statistics { clicks = this.clicks, calibrations = this.calibrations };
         }
 
-        private class StatisticsItem
-        {
-            public System.UInt64 clicks = 0;
-            public System.UInt64 calibrations = 0;
-
-            public StatisticsItem Clone()
-            {
-                return new StatisticsItem { calibrations = this.calibrations, clicks = this.clicks };
-            }
-        }
-
-        private static string current_item_key = "";
-        private Dictionary<string, StatisticsItem> items = new Dictionary<string, StatisticsItem>();
+        public System.UInt64 clicks = 0;
+        public System.UInt64 calibrations = 0;
     }
 }

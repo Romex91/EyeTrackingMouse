@@ -41,7 +41,7 @@ namespace eye_tracking_mouse
 
         private DateTime last_gaze_point = DateTime.Now;
 
-        private Statistics statistics = Statistics.LoadFromFile();
+        private Statistics statistics = Statistics.LoadFromFile(Statistics.Filepath);
 
         public enum MouseState
         {

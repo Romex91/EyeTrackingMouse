@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interceptor", "Interceptor.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eye_tracking_mouse", "eye_tracking_mouse\eye_tracking_mouse.csproj", "{24FC1943-EF73-4827-B471-5F43E3E2E1E0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlindConfigurationTester", "BlindConfigurationTester\BlindConfigurationTester.csproj", "{CF197621-369D-49BB-988D-45A23F8CCC3E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -21,6 +23,10 @@ Global
 		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Debug|x86.Build.0 = Debug|x86
 		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Release|x86.ActiveCfg = Release|x86
 		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Release|x86.Build.0 = Release|x86
+		{CF197621-369D-49BB-988D-45A23F8CCC3E}.Debug|x86.ActiveCfg = Debug|x86
+		{CF197621-369D-49BB-988D-45A23F8CCC3E}.Debug|x86.Build.0 = Debug|x86
+		{CF197621-369D-49BB-988D-45A23F8CCC3E}.Release|x86.ActiveCfg = Release|x86
+		{CF197621-369D-49BB-988D-45A23F8CCC3E}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

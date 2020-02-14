@@ -10,7 +10,7 @@ using IWshRuntimeLibrary;
 
 namespace eye_tracking_mouse
 {
-    class Helpers
+    public class Helpers
     {
         // The only synchronisation object. The thread model is simple.
         // Tobii and Interceptor has their own threads. These threads comunicate with the Application via callbacks |EyeTrackingMouse.OnGazePoint| and |InputManager.OnKeyPressed|. 
@@ -129,7 +129,14 @@ namespace eye_tracking_mouse
             {
                 return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), application_name);
             }
+        }
 
+        public static string ExePath
+        {
+            get
+            {
+                return Path.Combine(AppFolder, application_name + ".exe");
+            }
         }
 
         private static string StartMenuShortcatLocation
@@ -146,19 +153,17 @@ namespace eye_tracking_mouse
 
         public static void CreateShortcuts()
         {
-            string pathToExe = Path.Combine(AppFolder, application_name + ".exe");
-
             if (!Directory.Exists(Directory.GetParent(StartMenuShortcatLocation).FullName))
                 Directory.CreateDirectory(Directory.GetParent(StartMenuShortcatLocation).FullName);
 
             WshShell shell = new WshShell();
             IWshShortcut start_menu_shortcut = (IWshShortcut)shell.CreateShortcut(StartMenuShortcatLocation);
-            start_menu_shortcut.TargetPath = pathToExe;
+            start_menu_shortcut.TargetPath = ExePath;
             start_menu_shortcut.Save();
 
 
             IWshShortcut desktop_shotrcut = (IWshShortcut)shell.CreateShortcut(DesctopShortcatLocation);
-            desktop_shotrcut.TargetPath = pathToExe;
+            desktop_shotrcut.TargetPath = ExePath;
             desktop_shotrcut.Save();
         }
 
