@@ -10,7 +10,7 @@ namespace eye_tracking_mouse
 {
     public class Statistics
     {
-        public Statistics() {}
+        public Statistics() { }
 
         public void OnClick()
         {
@@ -26,13 +26,17 @@ namespace eye_tracking_mouse
 
         public static Statistics LoadFromFile(string path)
         {
-            if (File.Exists(path))
+            try
             {
-                return JsonConvert.DeserializeObject<Statistics>(File.ReadAllText(path));
-            } else
-            {
-                return new Statistics();
+                if (File.Exists(path))
+                {
+                    return JsonConvert.DeserializeObject<Statistics>(File.ReadAllText(path));
+                }
             }
+            catch (Exception)
+            {
+            }
+            return new Statistics();
         }
 
         public static string Filepath { get { return Path.Combine(Helpers.UserDataFolder, "statistics.json"); } }

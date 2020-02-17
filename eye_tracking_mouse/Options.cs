@@ -70,7 +70,7 @@ namespace eye_tracking_mouse
             {Key.CalibrateUp, Interceptor.Keys.W},
             {Key.CalibrateDown, Interceptor.Keys.S},
         };
-         
+
         [JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public Dictionary<Key, Interceptor.Keys> bindings = new Dictionary<Key, Interceptor.Keys>(default_bindings);
     };
@@ -90,14 +90,14 @@ namespace eye_tracking_mouse
 
             public MultidimensionCalibrationType multidimension_calibration_type;
             public int multi_dimensions_detalization;
-           
+
             public bool Equals(CalibrationMode other)
             {
-                return 
-                    zone_size == other.zone_size && 
-                    max_zones_count == other.max_zones_count && 
-                    considered_zones_count == other.considered_zones_count && 
-                    update_period_ms == other.update_period_ms && 
+                return
+                    zone_size == other.zone_size &&
+                    max_zones_count == other.max_zones_count &&
+                    considered_zones_count == other.considered_zones_count &&
+                    update_period_ms == other.update_period_ms &&
                     multidimension_calibration_type == other.multidimension_calibration_type &&
                     multi_dimensions_detalization == other.multi_dimensions_detalization;
             }
@@ -168,10 +168,17 @@ namespace eye_tracking_mouse
         public static Options LoadFromFile()
         {
             Options options = Default();
-            if (File.Exists(Filepath))
+            try
             {
-                options = JsonConvert.DeserializeObject<Options>(File.ReadAllText(Filepath));
+
+                if (File.Exists(Filepath))
+                {
+                    options = JsonConvert.DeserializeObject<Options>(File.ReadAllText(Filepath));
+                }
             }
+            catch(Exception)
+            { }
+
             return options;
         }
 
