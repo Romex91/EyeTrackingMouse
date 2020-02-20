@@ -25,14 +25,55 @@ namespace eye_tracking_mouse
         CalibrateDown,
     }
 
-    [Flags]
-    public enum MultidimensionCalibrationType
+    public struct Vector3Bool
     {
-        None = 0,
-        LeftEye = 1,
-        RightEye = 2,
-        HeadPosition = 4,
-        HeadDirection = 8
+        public bool X { get; set; }
+        public bool Y { get; set; }
+        public bool Z { get; set; }
+
+        public bool Equals(Vector3Bool other)
+        {
+            return X == other.X && Y == other.Y && Z == other.Z;
+        }
+
+        public static Vector3Bool Disabled
+        {
+            get
+            {
+                return new Vector3Bool { X = false, Y = false, Z = false };
+            }
+        }
+    }
+
+
+    public struct AdditionalDimensionsConfguration
+    {
+        public Vector3Bool LeftEye;
+        public Vector3Bool RightEye;
+        public Vector3Bool HeadPosition;
+        public Vector3Bool HeadDirection;
+
+        public bool Equals(AdditionalDimensionsConfguration other)
+        {
+            return
+                LeftEye.Equals(other.LeftEye) &&
+                RightEye.Equals(other.RightEye) &&
+                HeadDirection.Equals(other.HeadDirection) &&
+                HeadPosition.Equals(other.HeadPosition);
+        }
+
+        public static AdditionalDimensionsConfguration Disabled
+        {
+            get {
+                return new AdditionalDimensionsConfguration
+                {
+                    LeftEye = Vector3Bool.Disabled,
+                    RightEye = Vector3Bool.Disabled,
+                    HeadPosition = Vector3Bool.Disabled,
+                    HeadDirection = Vector3Bool.Disabled
+                };
+            }
+        }
     }
 
     class KeyBindings
@@ -88,7 +129,7 @@ namespace eye_tracking_mouse
             public int considered_zones_count;
             public int update_period_ms;
 
-            public MultidimensionCalibrationType multidimension_calibration_type;
+            public AdditionalDimensionsConfguration additional_dimensions_configuration;
             public int multi_dimensions_detalization;
 
             public bool Equals(CalibrationMode other)
@@ -98,7 +139,7 @@ namespace eye_tracking_mouse
                     max_zones_count == other.max_zones_count &&
                     considered_zones_count == other.considered_zones_count &&
                     update_period_ms == other.update_period_ms &&
-                    multidimension_calibration_type == other.multidimension_calibration_type &&
+                    additional_dimensions_configuration.Equals(other.additional_dimensions_configuration) &&
                     multi_dimensions_detalization == other.multi_dimensions_detalization;
             }
 
@@ -110,8 +151,8 @@ namespace eye_tracking_mouse
                     {
                         considered_zones_count = 5,
                         max_zones_count = 25,
-                        multidimension_calibration_type = MultidimensionCalibrationType.None,
-                        multi_dimensions_detalization = 1,
+                        additional_dimensions_configuration = AdditionalDimensionsConfguration.Disabled,
+                        multi_dimensions_detalization = 100,
                         update_period_ms = 20,
                         zone_size = 150
                     };
@@ -126,8 +167,15 @@ namespace eye_tracking_mouse
                     {
                         considered_zones_count = 7,
                         max_zones_count = 2000,
-                        multidimension_calibration_type = MultidimensionCalibrationType.HeadDirection | MultidimensionCalibrationType.HeadPosition,
-                        multi_dimensions_detalization = 7,
+                        additional_dimensions_configuration = new AdditionalDimensionsConfguration
+                        {
+                            LeftEye = new Vector3Bool { X = true, Y = true, Z = true },
+                            RightEye = new Vector3Bool { X = true, Y = true, Z = true },
+                            HeadPosition = Vector3Bool.Disabled,
+                            HeadDirection = Vector3Bool.Disabled
+                        },
+
+                        multi_dimensions_detalization = 70,
                         update_period_ms = 20,
                         zone_size = 150
                     };
@@ -176,7 +224,7 @@ namespace eye_tracking_mouse
                     options = JsonConvert.DeserializeObject<Options>(File.ReadAllText(Filepath));
                 }
             }
-            catch(Exception)
+            catch (Exception)
             { }
 
             return options;

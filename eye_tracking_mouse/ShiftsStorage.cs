@@ -13,6 +13,7 @@ namespace eye_tracking_mouse
 {
     class ShiftsStorage
     {
+
         public class Position
         {
             public Position(
@@ -26,26 +27,13 @@ namespace eye_tracking_mouse
                 X = x;
                 Y = y;
 
-                MultidimensionCalibrationType type = Options.Instance.calibration_mode.multidimension_calibration_type;
-                if ((type & MultidimensionCalibrationType.HeadPosition) != MultidimensionCalibrationType.None)
-                {
-                    HeadPosition = head_position;
-                }
 
-                if ((type & MultidimensionCalibrationType.HeadDirection) != MultidimensionCalibrationType.None)
-                {
-                    HeadDirection = head_direction;
-                }
+                var config = Options.Instance.calibration_mode.additional_dimensions_configuration;
 
-                if ((type & MultidimensionCalibrationType.LeftEye) != MultidimensionCalibrationType.None)
-                {
-                    LeftEye = left_eye;
-                }
-
-                if ((type & MultidimensionCalibrationType.RightEye) != MultidimensionCalibrationType.None)
-                {
-                    RightEye = right_eye;
-                }
+                HeadPosition = MaskVector(head_position, config.HeadPosition);
+                HeadDirection = MaskVector(head_direction, config.HeadDirection);
+                LeftEye = MaskVector(left_eye, config.LeftEye);
+                RightEye = MaskVector(right_eye, config.RightEye);
 
                 AdjustColorBoundaries();
             }
@@ -120,9 +108,20 @@ namespace eye_tracking_mouse
                 }
             }
 
+            private static Tobii.Interaction.Vector3 MaskVector(Tobii.Interaction.Vector3 vector, Vector3Bool mask)
+            {
+                return new Tobii.Interaction.Vector3
+                {
+                    X = mask.X ? vector.X : 0,
+                    Y = mask.Y ? vector.Y : 0,
+                    Z = mask.Z ? vector.Z : 0
+                };
+            }
+
             private static double SquaredDistance(Tobii.Interaction.Vector3 a, Tobii.Interaction.Vector3 b)
             {
-                return (Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2) + Math.Pow(a.Z - b.Z, 2)) * Math.Pow(Options.Instance.calibration_mode.multi_dimensions_detalization, 2);
+                return (Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2) + Math.Pow(a.Z - b.Z, 2)) * 
+                    Math.Pow(Options.Instance.calibration_mode.multi_dimensions_detalization / 10.0, 2);
             }
 
             public double GetDistance(Position other)
@@ -151,7 +150,25 @@ namespace eye_tracking_mouse
             public Position Position { get; private set; }
         }
 
-        private static string Filepath { get { return Path.Combine(Helpers.UserDataFolder, "calibration" + Options.Instance.calibration_mode.multidimension_calibration_type + ".json"); } }
+        private static string GetVector3PathPart(Vector3Bool vector)
+        {
+            return (vector.X ? "1" : "0") + (vector.Y ? "1" : "0") + (vector.Z ? "1" : "0");
+        }
+
+        private static string Filepath
+        {
+            get
+            {
+                var dimensions_config = Options.Instance.calibration_mode.additional_dimensions_configuration;
+
+                return Path.Combine(Helpers.UserDataFolder, "calibration" +
+                  GetVector3PathPart(dimensions_config.LeftEye) +
+                  GetVector3PathPart(dimensions_config.RightEye) +
+                  GetVector3PathPart(dimensions_config.HeadPosition) +
+                  GetVector3PathPart(dimensions_config.HeadDirection) +
+                  ".json");
+            }
+        }
 
         public List<ShiftItem> Shifts { private set; get; } = new List<ShiftItem>();
 
@@ -171,7 +188,8 @@ namespace eye_tracking_mouse
                 foreach (var shift in Shifts)
                     shift.Position.AdjustColorBoundaries();
             }
-            catch (Exception e) { 
+            catch (Exception e)
+            {
                 Shifts = new List<ShiftItem>();
                 System.Windows.MessageBox.Show("Failed reading shifts storage: " + e.Message, Helpers.application_name, System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }

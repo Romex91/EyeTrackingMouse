@@ -52,8 +52,8 @@ namespace BlindConfigurationTester
                 return;
             }
 
-            Circle.SetValue(Canvas.LeftProperty, points[current_index].Item1 % Canvas.ActualWidth);
-            Circle.SetValue(Canvas.TopProperty, points[current_index].Item2 % Canvas.ActualHeight);
+            Circle.SetValue(Canvas.LeftProperty, points[current_index].Item1 % (Canvas.ActualWidth - 20));
+            Circle.SetValue(Canvas.TopProperty, points[current_index].Item2 % (Canvas.ActualHeight - 20));
 
             TextBlock_PointsLeft.Text = ++current_index + "/" + points.Count;
         }

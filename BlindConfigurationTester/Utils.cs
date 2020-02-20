@@ -119,7 +119,7 @@ namespace BlindConfigurationTester
             before_start?.Invoke();
 
             if (!IsApplicationOpen())
-                Process.Start(eye_tracking_mouse.Helpers.ExePath);
+                Process.Start(@"D:\projects\EyeTrackingMouse\bin\x86\Release\EyeTrackingMouse.exe");
 
             after_start?.Invoke();
 
@@ -157,7 +157,7 @@ namespace BlindConfigurationTester
                 CopyDir(configuration_path, eye_tracking_mouse.Helpers.UserDataFolder);
 
             before_start?.Invoke();
-            Process.Start(eye_tracking_mouse.Helpers.ExePath);
+            Process.Start(@"D:\projects\EyeTrackingMouse\bin\x86\Release\EyeTrackingMouse.exe");
             after_start?.Invoke();
 
             while (!TryCloseApplication());

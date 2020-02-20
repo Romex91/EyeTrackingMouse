@@ -324,12 +324,10 @@ namespace eye_tracking_mouse
 
         public void UpdateTobiiStreams(object sender, EventArgs e)
         {
-            MultidimensionCalibrationType type = Options.Instance.calibration_mode.multidimension_calibration_type;
-            head_pose_stream.IsEnabled = (type & MultidimensionCalibrationType.HeadPosition) != MultidimensionCalibrationType.None ||
-                (type & MultidimensionCalibrationType.HeadDirection) != MultidimensionCalibrationType.None;
+            AdditionalDimensionsConfguration config = Options.Instance.calibration_mode.additional_dimensions_configuration;
+            head_pose_stream.IsEnabled = !config.HeadPosition.Equals(Vector3Bool.Disabled) || !config.HeadDirection.Equals(Vector3Bool.Disabled);
 
-            eye_position_stream.IsEnabled = (type & MultidimensionCalibrationType.LeftEye) != MultidimensionCalibrationType.None ||
-                (type & MultidimensionCalibrationType.RightEye) != MultidimensionCalibrationType.None;
+            eye_position_stream.IsEnabled = !config.LeftEye.Equals(Vector3Bool.Disabled) || !config.RightEye.Equals(Vector3Bool.Disabled); ;
         }
 
         public EyeTrackingMouse()

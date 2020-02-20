@@ -59,7 +59,7 @@ namespace eye_tracking_mouse
                         arrow.Y1 = shift.Position.Y;
                         arrow.X2 = shift.Position.X + shift.Shift.X;
                         arrow.Y2 = shift.Position.Y + shift.Shift.Y;
-                        arrow.Stroke = Options.Instance.calibration_mode.multidimension_calibration_type == MultidimensionCalibrationType.None ?
+                        arrow.Stroke = Options.Instance.calibration_mode.additional_dimensions_configuration.Equals(AdditionalDimensionsConfguration.Disabled)?
                             Brushes.Red : new SolidColorBrush(shift.Position.GetColor());
                         arrow.StrokeThickness = 3;
 
@@ -76,15 +76,34 @@ namespace eye_tracking_mouse
             }));
         }
 
+        private string GetVector3Text(Vector3Bool vector_bool, Tobii.Interaction.Vector3 vector)
+        {
+            string retval = "";
+            if (vector_bool.X)
+            {
+                retval += "X: " + (int)vector.X + "\n";
+            }
+            if (vector_bool.Y)
+            {
+                retval += "Y: " + (int)vector.Y + "\n";
+            }
+
+            if (vector_bool.Z)
+            {
+                retval += "Z: " + (int)vector.Z + "\n";
+            }
+            return retval;
+        }
+
         private void UpdateColor(object sender, EventArgs e)
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 lock (Helpers.locker)
                 {
-                    MultidimensionCalibrationType type = Options.Instance.calibration_mode.multidimension_calibration_type;
+                    AdditionalDimensionsConfguration configuration = Options.Instance.calibration_mode.additional_dimensions_configuration;
 
-                    if (type == MultidimensionCalibrationType.None)
+                    if (configuration.Equals( AdditionalDimensionsConfguration.Disabled))
                     {
                         HeadPositionDescription.Text = "";
                         CurrentHeadPositionColor.Background = Brushes.Red;
@@ -96,36 +115,29 @@ namespace eye_tracking_mouse
                     string head_position_description = "";
                     var last_position = ShiftsStorage.Instance.LastPosition;
 
-                    if ((type & MultidimensionCalibrationType.HeadPosition) != MultidimensionCalibrationType.None)
+                    if (!configuration.HeadPosition.Equals(Vector3Bool.Disabled))
                     {
                         head_position_description += "Head position: \n" +
-                            "X: " + (int) last_position.HeadPosition.X + "\n" + 
-                            "Y: " + (int)last_position.HeadPosition.Y + "\n" + 
-                            "Z: " + (int)last_position.HeadPosition.Z;
+                            GetVector3Text(configuration.HeadPosition, last_position.HeadPosition);
                     }
 
-                    if ((type & MultidimensionCalibrationType.HeadDirection) != MultidimensionCalibrationType.None)
+                    if (!configuration.HeadDirection.Equals(Vector3Bool.Disabled) )
                     {
-                        head_position_description += "\nHead direction: \n" +
-                            "Pitch: " + (int)last_position.HeadDirection.X + "\n" + 
-                            "Yaw: " + (int)last_position.HeadDirection.Y + "\n" + 
-                            "Roll: " + (int)last_position.HeadDirection.Z;
+                        head_position_description += "Head direction: \n" +
+                            GetVector3Text(configuration.HeadDirection, last_position.HeadDirection);
                     }
 
-                    if ((type & MultidimensionCalibrationType.LeftEye) != MultidimensionCalibrationType.None)
+                    
+                    if (!configuration.LeftEye.Equals(Vector3Bool.Disabled))
                     {
                         head_position_description += "\nLeft eye: \n" +
-                            "X: " + (int)last_position.LeftEye.X + "\n" + 
-                            "Y: " + (int)last_position.LeftEye.Y + "\n" + 
-                            "Z: " + (int)last_position.LeftEye.Z;
+                            GetVector3Text(configuration.LeftEye, last_position.LeftEye);
                     }
 
-                    if ((type & MultidimensionCalibrationType.RightEye) != MultidimensionCalibrationType.None)
+                    if(!configuration.RightEye.Equals(Vector3Bool.Disabled))
                     {
                         head_position_description += "\nRight eye: \n" +
-                            "X: " + (int)last_position.LeftEye.X + "\n" + 
-                            "Y: " + (int)last_position.LeftEye.Y + "\n" + 
-                            "Z: " + (int)last_position.LeftEye.Z;
+                            GetVector3Text(configuration.RightEye, last_position.RightEye);
                     }
 
                     HeadPositionDescription.Text = head_position_description;

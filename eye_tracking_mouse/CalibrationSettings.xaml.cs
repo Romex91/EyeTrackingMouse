@@ -22,12 +22,6 @@ namespace eye_tracking_mouse
         public CalibrationSettings()
         {
             InitializeComponent();
-            additional_dimensions_checkboxes = new Dictionary<MultidimensionCalibrationType, CheckBox> {
-                { MultidimensionCalibrationType.HeadDirection, HeadDirection},
-                { MultidimensionCalibrationType.HeadPosition, HeadPosition},
-                { MultidimensionCalibrationType.LeftEye, LeftEye},
-                { MultidimensionCalibrationType.RightEye, RightEye},
-            };
 
             UpdateControls();
             ignore_changes = false;
@@ -78,10 +72,11 @@ namespace eye_tracking_mouse
                 MultidimensionalDetalization.Value = Options.Instance.calibration_mode.multi_dimensions_detalization;
                 UpdatePeriodMs.Value = Options.Instance.calibration_mode.update_period_ms;
 
-                foreach (var item in additional_dimensions_checkboxes)
-                {
-                    item.Value.IsChecked = (Options.Instance.calibration_mode.multidimension_calibration_type & item.Key) == item.Key;
-                }
+
+                LeftEye.Value = Options.Instance.calibration_mode.additional_dimensions_configuration.LeftEye;
+                RightEye.Value = Options.Instance.calibration_mode.additional_dimensions_configuration.RightEye;
+                HeadPosition.Value = Options.Instance.calibration_mode.additional_dimensions_configuration.HeadPosition;
+                HeadDirection.Value = Options.Instance.calibration_mode.additional_dimensions_configuration.HeadDirection;
 
                 if (Options.Instance.calibration_mode.Equals(Options.CalibrationMode.MultiDimensionPreset))
                 {
@@ -137,8 +132,6 @@ namespace eye_tracking_mouse
             }
         }
 
-        private readonly Dictionary<MultidimensionCalibrationType, CheckBox> additional_dimensions_checkboxes;
-
         private void CheckBox_Changed(object sender, EventArgs e)
         {
             if (ignore_changes)
@@ -146,17 +139,24 @@ namespace eye_tracking_mouse
 
             lock (Helpers.locker)
             {
-
-                foreach (var item in additional_dimensions_checkboxes)
+                if (sender == LeftEye)
                 {
-                    if (sender == item.Value)
-                    {
-                        if (item.Value.IsChecked == true)
-                            Options.Instance.calibration_mode.multidimension_calibration_type |= item.Key;
-                        else
-                            Options.Instance.calibration_mode.multidimension_calibration_type &= ~item.Key;
-
-                    }
+                    Options.Instance.calibration_mode.additional_dimensions_configuration.LeftEye = LeftEye.Value;
+                }
+                else
+                if (sender == RightEye)
+                {
+                    Options.Instance.calibration_mode.additional_dimensions_configuration.RightEye = RightEye.Value;
+                }
+                else
+                if (sender == HeadDirection)
+                {
+                    Options.Instance.calibration_mode.additional_dimensions_configuration.HeadDirection = HeadDirection.Value;
+                }
+                else
+                if (sender == HeadPosition)
+                {
+                    Options.Instance.calibration_mode.additional_dimensions_configuration.HeadPosition = HeadPosition.Value;
                 }
 
                 Settings.CalibrationModeChanged?.Invoke(this, null);
