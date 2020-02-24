@@ -17,14 +17,14 @@ namespace BlindConfigurationTester
     /// <summary>
     /// Interaction logic for ConfigurationNameInput.xaml
     /// </summary>
-    public partial class ConfigurationNameInput : Window
+    public partial class NameInput : Window
     {
-        public ConfigurationNameInput()
+        public NameInput()
         {
             InitializeComponent();
         }
 
-        public string ConfigurationName
+        public string NameValue
         {
             get { return TextBox_Name.Text; }
         }

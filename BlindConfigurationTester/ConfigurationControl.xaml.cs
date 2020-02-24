@@ -60,17 +60,17 @@ namespace BlindConfigurationTester
 
         private void Button_Add_Click(object sender, RoutedEventArgs e)
         {
-            var name_input = new ConfigurationNameInput();
-            if( name_input.ShowDialog() == true)
+            var name_input = new NameInput();
+            if( name_input.ShowDialog() == true && name_input.NameValue.Length > 0)
             {
-                Utils.CreateConfiguration(name_input.ConfigurationName);
+                Utils.CreateConfiguration(name_input.NameValue);
             }
 
             on_configurations_changed.Invoke(this, null);
 
             for (int i = 1; i < Combo_Configuration.Items.Count; i++)
             {
-                if (Combo_Configuration.Items[i].ToString() == name_input.ConfigurationName)
+                if (Combo_Configuration.Items[i].ToString() == name_input.Name)
                     Combo_Configuration.SelectedIndex = i;
             }
         }

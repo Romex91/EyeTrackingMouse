@@ -5,18 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BlindConfigurationTester"
         mc:Ignorable="d"
-        Title="EyeTrackerMouse Test Tool" Height="481" Width="417" >
-    <Window.Resources>
-        <Style TargetType="FrameworkElement" x:Key="Style_B">
-            <Setter Property="IsEnabled" Value="False"></Setter>
-            <Style.Triggers>
-                <DataTrigger  
-                        Binding="{Binding ElementName=Combobox_Mode, Path=SelectedIndex}" Value="1">
-                    <Setter Property="IsEnabled" Value="True"></Setter>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-    </Window.Resources>
+        Title="EyeTrackerMouse Test Tool" Height="532" Width="588.325" >
+
     <Grid Name="Grid" VerticalAlignment="Center" HorizontalAlignment="Center">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="300" />
@@ -38,35 +28,15 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock  Grid.Column="0" >Number of points per sesssion</TextBlock>
-        <TextBox Grid.Column="1"  TextAlignment="Right" Name="TextBox_PointsPerSession" PreviewTextInput="TextBox_PreviewTextInput">100</TextBox>
-
-        <TextBlock Grid.Row="1"  Grid.Column="0">Number of sesssions</TextBlock>
-        <TextBox Grid.Row="1" Grid.Column="1" TextAlignment="Right" Name="TextBox_NumberOfSessions"  PreviewTextInput="TextBox_PreviewTextInput">3</TextBox>
-
-        <TextBlock Grid.Row="2"  Grid.Column="0">Size of circle</TextBlock>
-        <TextBox Grid.Row="2" Grid.Column="1" TextAlignment="Right" Name="TextBox_SizeOfCircle"  PreviewTextInput="TextBox_PreviewTextInput">30</TextBox>
-
-        <TextBox Grid.Row="3" Grid.ColumnSpan="2" TextAlignment="Left" Name="TextBox_Description" 
-            TextWrapping="Wrap" AcceptsReturn="True" MinHeight="100"
-            VerticalScrollBarVisibility="Visible">Study description</TextBox>
-
-        <TextBlock Grid.Row="4"  Grid.Column="0" >Mode</TextBlock>
-        <ComboBox Grid.Row="4" Grid.Column="1" Name="Combobox_Mode" SelectedIndex="0">
-            <ComboBoxItem>Training</ComboBoxItem>
-            <ComboBoxItem>A B testing</ComboBoxItem>
-        </ComboBox>
-
-        <TextBlock Grid.ColumnSpan="2" HorizontalAlignment="Center" Grid.Row="5">A:</TextBlock>
-        <Border BorderBrush="Black" BorderThickness="2" Grid.ColumnSpan="2" Grid.Row="6">
-            <local:ConfigurationControl HorizontalAlignment="Center" Padding="10" x:Name="Configuration_A"></local:ConfigurationControl>
+        <TextBlock Grid.ColumnSpan="2" HorizontalAlignment="Center" Grid.Row="0">Configuration setup:</TextBlock>
+        <Border BorderBrush="Black" BorderThickness="2" Grid.ColumnSpan="2" Grid.Row="1">
+            <local:ConfigurationControl HorizontalAlignment="Center" Padding="10" x:Name="Configuration"></local:ConfigurationControl>
         </Border>
 
-        <TextBlock Grid.ColumnSpan="2" HorizontalAlignment="Center" Style="{StaticResource Style_B}" Grid.Row="7">B:</TextBlock>
-        <Border BorderBrush="Black" BorderThickness="2" Grid.ColumnSpan="2" Grid.Row="8" Style="{StaticResource Style_B}">
-            <local:ConfigurationControl HorizontalAlignment="Center" Padding="10" x:Name="Configuration_B"></local:ConfigurationControl>
+        <TextBlock Grid.ColumnSpan="2" HorizontalAlignment="Center" Grid.Row="2">Study setup:</TextBlock>
+        <Border BorderBrush="Black" BorderThickness="2" Grid.ColumnSpan="2" Grid.Row="3">
+            <local:StudySetupControl HorizontalAlignment="Stretch" Padding="10" x:Name="Study"></local:StudySetupControl>
         </Border>
 
-        <Button Grid.Row="9" Grid.ColumnSpan="3" VerticalAlignment="Center" Padding="10" Click="Button_Run_Click">Start study!</Button>
     </Grid>
 </Window>

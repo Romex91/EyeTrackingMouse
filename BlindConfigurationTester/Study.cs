@@ -34,57 +34,133 @@ namespace BlindConfigurationTester
 
     public class Study
     {
-        public int points_per_session;
-        public int number_of_sessions;
-        public int number_of_completed_sessions;
-        public int size_of_circle;
-        public string description;
-        public List<Configuration> configurations = new List<Configuration>();
-        public int study_index;
-
-        public Study(
-            int points_per_session,
-            int number_of_sessions,
-            int size_of_circle,
-            string description,
-            List<Configuration> configurations)
+        [JsonIgnore]
+        public string name;
+        public int points_per_session = 100;
+        public int number_of_completed_sessions = 0;
+        public int size_of_circle = 10;
+        public string description = "";
+        public List<Configuration> configurations = new List<Configuration>() { new Configuration { name = null, save_changes=true } };
+        public static string StudiesFolder
         {
-            this.points_per_session = points_per_session;
-            this.number_of_sessions = number_of_sessions;
-            this.size_of_circle = size_of_circle;
-            this.description = description;
-            this.number_of_completed_sessions = 0;
-            this.configurations = configurations;
+            get { return Path.Combine(Utils.DataFolder, "Studies"); }
+        }
 
-            int largest_study_index = 0;
-            if (Directory.Exists(StudiesFolder))
-                foreach (var study_dir in Directory.GetDirectories(StudiesFolder))
+        [JsonIgnore]
+        public string StudyResultsFolder
+        {
+            get { return GetStudyFolder(name); }
+        }
+
+        public Study(string name)
+        {
+            this.name = name;
+        }
+
+        public void StartSession()
+        {
+            if (Directory.Exists(GetSessionResultsPath(number_of_completed_sessions))) {
+                MessageBox.Show("Session" + (number_of_completed_sessions  + 1) + 
+                    " already contains results. Remove them manualy to proceed.");
+                return;
+            }
+
+            var rand = new Random(unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId));
+
+            List<Tuple<int, int>> points = new List<Tuple<int, int>>();
+            for (int i = 0; i < points_per_session; i++)
+                points.Add(new Tuple<int, int>(rand.Next(0, int.MaxValue), rand.Next(0, int.MaxValue)));
+
+            List<int> configurations_indices = new List<int>();
+            for (int i = 0; i < configurations.Count; i++)
+                configurations_indices.Add(i);
+
+            configurations_indices.Shuffle(rand);
+
+            foreach (var configuration_index in configurations_indices)
+            {
+                var session = new SessionWindow(points, size_of_circle);
+                Utils.RunApp(configurations[configuration_index].name, configurations[configuration_index].save_changes, () =>
                 {
-                    int study_index = 0;
-                    if (int.TryParse(Path.GetFileName(study_dir), out study_index) && largest_study_index < study_index)
-                        largest_study_index = study_index;
-                }
-            study_index = largest_study_index + 1;
+                    TakeSnapshotBeforeSession(configurations[configuration_index].name);
+                }, () =>
+                {
+                    session.ShowDialog();
+                    TakeSnapshotAfterSession(configurations[configuration_index].name);
+                });
+            }
 
+            number_of_completed_sessions++;
             SaveToFile();
+
+            UpdateResultsJson();
         }
 
-        public bool IsFinished
+        public static string GetStudyFolder(string study_name)
         {
-            get { return number_of_completed_sessions >= number_of_sessions; }
+            return Path.Combine(StudiesFolder, study_name);
         }
 
-        private void Finish()
+        static public Study Load(string study_name)
+        {
+            string json_path = Path.Combine(GetStudyFolder(study_name), "study.json");
+            if (File.Exists(json_path))
+            {
+                while(true)
+                {
+                    try
+                    {
+                        var study = JsonConvert.DeserializeObject<Study>(File.ReadAllText(json_path));
+                        study.name = study_name;
+                        return study;
+                    } catch (IOException)
+                    {
+                    } catch
+                    {
+                        return null;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public string GetInfo()
+        {
+            string info =
+               "Study " + name + "\n" +
+               description + "\n" +
+               "Points per session: " + points_per_session + "\n" +
+               "Number of completed sessions: " + number_of_completed_sessions + "\n" +
+               "Configurations:\n";
+
+            foreach (var configuration in configurations)
+            {
+                info +=
+                     (configuration.name == null ? "User Data" : configuration.name) + ". Saving changes? " +
+                     (configuration.save_changes ? "Yes" : "No") + "\n";
+            }
+            return info;
+        }
+
+        public void SaveToFile()
+        {
+            if (!Directory.Exists(StudyResultsFolder))
+                Directory.CreateDirectory(StudyResultsFolder);
+            File.WriteAllText(Path.Combine(StudyResultsFolder, "study.json"), JsonConvert.SerializeObject(this, Formatting.Indented));
+        }
+
+        private void UpdateResultsJson()
         {
             var results = new Dictionary<string, List<eye_tracking_mouse.Statistics>>();
 
-            for (int i = 0; i < number_of_sessions; i++)
+            for (int i = 0; i < number_of_completed_sessions; i++)
             {
-                foreach(var configuration in configurations)
+                foreach (var configuration in configurations)
                 {
                     string configuration_string = configuration.name ?? "User Data";
-                    var statistics_before = eye_tracking_mouse.Statistics.LoadFromFile(Path.Combine(GetPathBefore(i), configuration_string, "statistics.json"));
-                    var statistics_after = eye_tracking_mouse.Statistics.LoadFromFile(Path.Combine(GetPathAfter(i), configuration_string, "statistics.json"));
+                    var statistics_before = eye_tracking_mouse.Statistics.LoadFromFile(Path.Combine(GetUserDataPathBeforeSession(i), configuration_string, "statistics.json"));
+                    var statistics_after = eye_tracking_mouse.Statistics.LoadFromFile(Path.Combine(GetUserDataPathAfterSession(i), configuration_string, "statistics.json"));
 
                     if (!results.ContainsKey(configuration_string))
                         results.Add(configuration_string, new List<eye_tracking_mouse.Statistics>());
@@ -98,65 +174,7 @@ namespace BlindConfigurationTester
                 }
             }
 
-            File.WriteAllText( Path.Combine(StudyResultsFolder, "results.json"), JsonConvert.SerializeObject(results));
-            File.Move(UnfinishedStudyPath, Path.Combine(StudyResultsFolder, "study_settings.json"));
-
-            MessageBox.Show("Will open explorer with results now.", "Study is over!", MessageBoxButton.OK);
-            Process.Start(StudyResultsFolder);
-        }
-
-        public void Abort()
-        {
-            File.Delete(UnfinishedStudyPath);
-        }
-
-        public void StartSession()
-        {
-            var rand = new Random(unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId));
-
-            List<Tuple<int, int>> points = new List<Tuple<int, int>>();
-            for (int i = 0; i < points_per_session; i++)
-                points.Add(new Tuple<int, int>(rand.Next(0, int.MaxValue), rand.Next(0, int.MaxValue)));
-
-            List<int> configurations_indices = new List<int>();
-            for (int i = 0; i < configurations.Count; i++)
-                configurations_indices.Add(i);
-
-            configurations_indices.Shuffle(rand);
-
-
-            foreach (var configuration_index in configurations_indices)
-            {
-                var session = new SessionWindow(points, size_of_circle);
-                Utils.RunApp(configurations[configuration_index].name, configurations[configuration_index].save_changes, () =>
-                {
-                    TakeSnapshotBeforeSession(configurations[configuration_index].name);
-                }, () => {
-                    session.ShowDialog();
-                    TakeSnapshotAfterSession(configurations[configuration_index].name);
-                });
-            }
-
-            number_of_completed_sessions++;
-            SaveToFile();
-
-            if (number_of_completed_sessions >= number_of_sessions)
-                Finish();
-        }
-
-        private static string StudiesFolder
-        {
-            get { return Path.Combine(eye_tracking_mouse.Helpers.AppFolder, "Studies"); }
-        }
-
-        private static string UnfinishedStudyPath
-        {
-            get { return Path.Combine(eye_tracking_mouse.Helpers.AppFolder, "unfinished_study.json"); }
-        }
-
-        private string StudyResultsFolder
-        {
-            get { return Path.Combine(StudiesFolder, study_index.ToString()); }
+            File.WriteAllText(Path.Combine(StudyResultsFolder, "results.json"), JsonConvert.SerializeObject(results));
         }
 
         private string GetSessionResultsPath(int session_index)
@@ -164,53 +182,38 @@ namespace BlindConfigurationTester
             return Path.Combine(StudyResultsFolder, session_index.ToString());
         }
 
-        private string GetPathBefore(int session_index)
+        private string GetUserDataPathBeforeSession(int session_index)
         {
             return Path.Combine(GetSessionResultsPath(session_index), "Before");
         }
 
-        private string GetPathAfter(int session_index)
+        private string GetUserDataPathAfterSession(int session_index)
         {
             return Path.Combine(GetSessionResultsPath(session_index), "After");
         }
 
         private void TakeSnapshotBeforeSession(string configuration_name)
         {
-            while (!Utils.TryCloseApplication());
-            string path_before = GetPathBefore(number_of_completed_sessions);
+            while (!Utils.TryCloseApplication()) ;
+            string path_before = GetUserDataPathBeforeSession(number_of_completed_sessions);
             if (!Directory.Exists(path_before))
                 Directory.CreateDirectory(path_before);
 
             Utils.CopyDir(
-                eye_tracking_mouse.Helpers.UserDataFolder, 
+                eye_tracking_mouse.Helpers.UserDataFolder,
                 Path.Combine(path_before, (configuration_name ?? "User Data")));
         }
 
         private void TakeSnapshotAfterSession(string configuration_name)
         {
             while (!Utils.TryCloseApplication()) ;
-            string path_after = GetPathAfter(number_of_completed_sessions);
+            string path_after = GetUserDataPathAfterSession(number_of_completed_sessions);
             if (!Directory.Exists(path_after))
                 Directory.CreateDirectory(path_after);
 
             Utils.CopyDir(
                 eye_tracking_mouse.Helpers.UserDataFolder,
                 Path.Combine(path_after, (configuration_name ?? "User Data")));
-        }
-        private void SaveToFile()
-        {
-            while (!Utils.TryCloseApplication());
-            File.WriteAllText(UnfinishedStudyPath, JsonConvert.SerializeObject(this, Formatting.Indented));
-        }
-
-        static public Study LoadUnfinished()
-        {
-            if (File.Exists(UnfinishedStudyPath))
-            {
-                return JsonConvert.DeserializeObject<Study>(File.ReadAllText(UnfinishedStudyPath));
-            }
-
-            return null;
         }
     }
 }

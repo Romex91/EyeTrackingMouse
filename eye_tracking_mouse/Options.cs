@@ -45,7 +45,6 @@ namespace eye_tracking_mouse
         }
     }
 
-
     public struct AdditionalDimensionsConfguration
     {
         public Vector3Bool LeftEye;

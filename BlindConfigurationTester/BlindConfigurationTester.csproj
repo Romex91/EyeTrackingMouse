@@ -67,22 +67,29 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ConfigurationNameInput.xaml.cs">
-      <DependentUpon>ConfigurationNameInput.xaml</DependentUpon>
+    <Compile Include="CloseAppDialog.xaml.cs">
+      <DependentUpon>CloseAppDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="NameInput.xaml.cs">
+      <DependentUpon>NameInput.xaml</DependentUpon>
     </Compile>
     <Compile Include="SessionWindow.xaml.cs">
       <DependentUpon>SessionWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Study.cs" />
-    <Compile Include="StudyWindow.xaml.cs">
-      <DependentUpon>StudyWindow.xaml</DependentUpon>
+    <Compile Include="StudySetupControl.xaml.cs">
+      <DependentUpon>StudySetupControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utils.cs" />
+    <Page Include="CloseAppDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ConfigurationControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ConfigurationNameInput.xaml">
+    <Page Include="NameInput.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -105,7 +112,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="StudyWindow.xaml">
+    <Page Include="StudySetupControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

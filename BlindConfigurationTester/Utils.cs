@@ -24,24 +24,17 @@ namespace BlindConfigurationTester
 
         public static bool TryCloseApplication()
         {
-            while (IsApplicationOpen())
-            {
-                var result = MessageBox.Show(
-                    "Close " + eye_tracking_mouse.Helpers.application_name + " to proceed.", 
-                    "EyeTrackerMouse is running!", 
-                    MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-                if (result == MessageBoxResult.Cancel)
-                    return false;
-            }
+            if (!IsApplicationOpen())
+                return true;
 
-            return true;
+            return (new CloseAppDialog()).ShowDialog()== true;
         }
 
         public static string[] GetConfigurationsList()
         {
             try
             {
-                string[] dirs = Directory.GetDirectories(Path.Combine(eye_tracking_mouse.Helpers.AppFolder, "Configurations"));
+                string[] dirs = Directory.GetDirectories(Path.Combine(DataFolder, "Configurations"));
                 for (int i = 0; i < dirs.Length; i++)
                 {
                     dirs[i] = Path.GetFileName(dirs[i]);
@@ -53,15 +46,6 @@ namespace BlindConfigurationTester
             }
         }
 
-
-        private  static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
-        {
-            foreach (DirectoryInfo dir in source.GetDirectories())
-                CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
-            foreach (FileInfo file in source.GetFiles())
-                file.CopyTo(Path.Combine(target.FullName, file.Name));
-        }
-
         public static void CopyDir(string source, string destination)
         {
             // C# is fucking great!
@@ -69,11 +53,16 @@ namespace BlindConfigurationTester
                 FileSystem.CopyDirectory(source, destination);
         }
 
+        public static string DataFolder
+        {
+            get { return Path.Combine( Environment.GetEnvironmentVariable("LocalAppData"), "BlindConfigurationTester"); }
+        }
+
         public static string GetConfigurationDir(string configuration)
         {
             if (configuration == null)
                 return eye_tracking_mouse.Helpers.UserDataFolder;
-            return Path.Combine(eye_tracking_mouse.Helpers.AppFolder, "Configurations", configuration);
+            return Path.Combine(DataFolder, "Configurations", configuration);
         }
 
         public static void SaveToUserData(string configuration)
@@ -119,7 +108,7 @@ namespace BlindConfigurationTester
             before_start?.Invoke();
 
             if (!IsApplicationOpen())
-                Process.Start(@"D:\projects\EyeTrackingMouse\bin\x86\Release\EyeTrackingMouse.exe");
+                Process.Start(eye_tracking_mouse.Helpers.ExePath);
 
             after_start?.Invoke();
 
@@ -157,7 +146,7 @@ namespace BlindConfigurationTester
                 CopyDir(configuration_path, eye_tracking_mouse.Helpers.UserDataFolder);
 
             before_start?.Invoke();
-            Process.Start(@"D:\projects\EyeTrackingMouse\bin\x86\Release\EyeTrackingMouse.exe");
+            Process.Start(eye_tracking_mouse.Helpers.ExePath);
             after_start?.Invoke();
 
             while (!TryCloseApplication());
