@@ -76,6 +76,9 @@
     <Compile Include="NameInput.xaml.cs">
       <DependentUpon>NameInput.xaml</DependentUpon>
     </Compile>
+    <Compile Include="SessionInstructionsWindow.xaml.cs">
+      <DependentUpon>SessionInstructionsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SessionWindow.xaml.cs">
       <DependentUpon>SessionWindow.xaml</DependentUpon>
     </Compile>
@@ -115,6 +118,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="SessionInstructionsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="SessionWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

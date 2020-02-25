@@ -1,0 +1,17 @@
+﻿<Window x:Class="BlindConfigurationTester.SessionInstructionsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BlindConfigurationTester"
+        mc:Ignorable="d"
+        Title="Read this carefully" Height="365.367" Width="595.642">
+    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Grid.RowDefinitions>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+        <TextBlock Name="Textblock_Instructions" HorizontalAlignment="Center">OBEY</TextBlock>
+        <Button Grid.Row="1" Click="Button_Click">I fully understand the instructions</Button>
+    </Grid>
+</Window>

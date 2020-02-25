@@ -32,15 +32,22 @@ namespace BlindConfigurationTester
         public string name;
     }
 
+    public struct Session
+    {
+        public int points_count;
+        public int size_of_circle;
+        public string instructions;
+    }
+
     public class Study
     {
         [JsonIgnore]
         public string name;
-        public int points_per_session = 100;
         public int number_of_completed_sessions = 0;
-        public int size_of_circle = 10;
-        public string description = "";
         public List<Configuration> configurations = new List<Configuration>() { new Configuration { name = null, save_changes=true } };
+
+        public List<Session> sessions = new List<Session> { new Session { points_count = 100, size_of_circle = 15, instructions = "This text will be shown to user before session." } };
+
         public static string StudiesFolder
         {
             get { return Path.Combine(Utils.DataFolder, "Studies"); }
@@ -65,13 +72,25 @@ namespace BlindConfigurationTester
                 return;
             }
 
+
+            if (number_of_completed_sessions >= sessions.Count)
+            {
+                MessageBox.Show("All sessions are finished");
+                return;
+            }
+            Session session = sessions[number_of_completed_sessions];
+
+            if ((new SessionInstructionsWindow(session.instructions)).ShowDialog() != true)
+                return;
+
             if (!InputInitWindow.input.IsLoaded)
                 (new InputInitWindow()).ShowDialog();
+
 
             var rand = new Random(unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId));
 
             List<Tuple<int, int>> points = new List<Tuple<int, int>>();
-            for (int i = 0; i < points_per_session; i++)
+            for (int i = 0; i < session.points_count; i++)
                 points.Add(new Tuple<int, int>(rand.Next(0, int.MaxValue), rand.Next(0, int.MaxValue)));
 
             List<int> configurations_indices = new List<int>();
@@ -89,8 +108,7 @@ namespace BlindConfigurationTester
                 {
                     Thread.Sleep(2000);
                     InputInitWindow.input.SendKey(Interceptor.Keys.WindowsKey, Interceptor.KeyState.E0);
-                    var session = new SessionWindow(points, size_of_circle);
-                    session.ShowDialog();
+                    (new SessionWindow(points, session.size_of_circle)).ShowDialog();
                     TakeSnapshotAfterSession(configurations[configuration_index].name);
                     InputInitWindow.input.SendKey(Interceptor.Keys.WindowsKey, Interceptor.KeyState.E0 | Interceptor.KeyState.Up);
                 });
@@ -135,8 +153,6 @@ namespace BlindConfigurationTester
         {
             string info =
                "Study " + name + "\n" +
-               description + "\n" +
-               "Points per session: " + points_per_session + "\n" +
                "Number of completed sessions: " + number_of_completed_sessions + "\n" +
                "Configurations:\n";
 
