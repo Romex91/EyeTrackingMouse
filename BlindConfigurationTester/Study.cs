@@ -65,6 +65,9 @@ namespace BlindConfigurationTester
                 return;
             }
 
+            if (!InputInitWindow.input.IsLoaded)
+                (new InputInitWindow()).ShowDialog();
+
             var rand = new Random(unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId));
 
             List<Tuple<int, int>> points = new List<Tuple<int, int>>();
@@ -79,14 +82,17 @@ namespace BlindConfigurationTester
 
             foreach (var configuration_index in configurations_indices)
             {
-                var session = new SessionWindow(points, size_of_circle);
                 Utils.RunApp(configurations[configuration_index].name, configurations[configuration_index].save_changes, () =>
                 {
                     TakeSnapshotBeforeSession(configurations[configuration_index].name);
                 }, () =>
                 {
+                    Thread.Sleep(2000);
+                    InputInitWindow.input.SendKey(Interceptor.Keys.WindowsKey, Interceptor.KeyState.E0);
+                    var session = new SessionWindow(points, size_of_circle);
                     session.ShowDialog();
                     TakeSnapshotAfterSession(configurations[configuration_index].name);
+                    InputInitWindow.input.SendKey(Interceptor.Keys.WindowsKey, Interceptor.KeyState.E0 | Interceptor.KeyState.Up);
                 });
             }
 

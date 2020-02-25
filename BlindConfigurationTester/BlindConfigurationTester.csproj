@@ -36,11 +36,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <PlatformTarget>x86</PlatformTarget>
-    <OutputPath>bin\x86\Debug\</OutputPath>
+    <OutputPath>..\bin\x86\Release\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <PlatformTarget>x86</PlatformTarget>
-    <OutputPath>bin\x86\Release\</OutputPath>
+    <OutputPath>..\bin\x86\Release\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
@@ -70,6 +70,9 @@
     <Compile Include="CloseAppDialog.xaml.cs">
       <DependentUpon>CloseAppDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="InputInitWindow.xaml.cs">
+      <DependentUpon>InputInitWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="NameInput.xaml.cs">
       <DependentUpon>NameInput.xaml</DependentUpon>
     </Compile>
@@ -86,6 +89,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ConfigurationControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="InputInitWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -148,6 +155,10 @@
     <ProjectReference Include="..\eye_tracking_mouse\eye_tracking_mouse.csproj">
       <Project>{24fc1943-ef73-4827-b471-5f43e3e2e1e0}</Project>
       <Name>eye_tracking_mouse</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Interceptor.csproj">
+      <Project>{c451a00e-77f1-4f3f-b7ee-27dc712ea316}</Project>
+      <Name>Interceptor</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

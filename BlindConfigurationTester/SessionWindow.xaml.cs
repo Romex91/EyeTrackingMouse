@@ -22,6 +22,7 @@ namespace BlindConfigurationTester
         List<Tuple<int, int>> points;
         int current_index = 0;
 
+
         public SessionWindow(List<Tuple<int,int>> points, int size_of_circle)
         {
             this.points = points;
