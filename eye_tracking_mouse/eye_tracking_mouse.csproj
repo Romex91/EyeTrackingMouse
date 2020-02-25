@@ -118,7 +118,7 @@
     <Compile Include="Arrowheads\ArrowEnds.cs" />
     <Compile Include="Arrowheads\ArrowLine.cs" />
     <Compile Include="Arrowheads\ArrowLineBase.cs" />
-    <Compile Include="AsyncSaver.cs" />
+    <Compile Include="FilesSavingQueue.cs" />
     <Compile Include="Autostart.cs" />
     <Compile Include="CalibrationSettings.xaml.cs">
       <DependentUpon>CalibrationSettings.xaml</DependentUpon>

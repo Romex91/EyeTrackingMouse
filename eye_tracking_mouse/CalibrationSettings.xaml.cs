@@ -202,7 +202,7 @@ namespace eye_tracking_mouse
 
         private void CalibrationViewButton_Click(object sender, RoutedEventArgs e)
         {
-            App.ToggleCalibrationWindow();
+            CalibrationManager.Instance.ToggleDebugWindow();
         }
     }
 }

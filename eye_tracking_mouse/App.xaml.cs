@@ -20,7 +20,7 @@ namespace eye_tracking_mouse
         private static InputManager input_manager;
 
         private static App application;
-        private static CalibrationWindow calibration_window = null;
+        
 
         private static Settings settings_window;
 
@@ -49,7 +49,7 @@ namespace eye_tracking_mouse
                 eye_tracking_mouse.StopControlling();
                 Helpers.tray_icon.Visible = false;
 
-                AsyncSaver.FlushSynchroniously();
+                FilesSavingQueue.FlushSynchroniously();
                 System.Windows.Application.Current.Shutdown();
             }
         }
@@ -63,26 +63,9 @@ namespace eye_tracking_mouse
             {
                 lock (Helpers.locker)
                 {
-                    ShiftsStorage.Instance.Reset();
+                    CalibrationManager.Instance.Reset();
                 }
             }
-        }
-
-        public static void ToggleCalibrationWindow()
-        {
-            application.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (calibration_window == null)
-                {
-                    calibration_window = new CalibrationWindow();
-                    calibration_window.Show();
-                }
-                else
-                {
-                    calibration_window.Close();
-                    calibration_window = null;
-                }
-            }));
         }
 
         [STAThread]

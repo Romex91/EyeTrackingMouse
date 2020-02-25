@@ -146,6 +146,7 @@ namespace eye_tracking_mouse
             public int max_zones_count;
             public int considered_zones_count;
             public int update_period_ms;
+            public bool enhanced_algorithm = false;
 
             public AdditionalDimensionsConfguration additional_dimensions_configuration;
             public int multi_dimensions_detalization;

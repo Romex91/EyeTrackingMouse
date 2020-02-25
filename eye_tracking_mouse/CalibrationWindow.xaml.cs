@@ -98,11 +98,26 @@ namespace eye_tracking_mouse
         private readonly List<Petzold.Media2D.ArrowLine> arrows = new List<Petzold.Media2D.ArrowLine>();
         private readonly ColorCalculator color_calculator = new ColorCalculator();
 
-        private void Update(object sender, EventArgs e)
+        private int shifts_count = 0;
+        public void UpdateText(object sender, EventArgs args)
         {
-            Dispatcher.BeginInvoke(new Action(() =>
+            lock (Helpers.locker)
             {
-                lock (Helpers.locker)
+                Description.Text =
+                        "CALIBRATIONS COUNT: " + shifts_count + "/" + Options.Instance.calibration_mode.max_zones_count + " \n" +
+                        "HIDE CALIBRATION VIEW: " + Helpers.GetModifierString().ToUpper() +
+                            "+" + Options.Instance.key_bindings[Key.ShowCalibrationView] + "\n" +
+                        "YOU CAN RESET CALIBRATIONS FROM THE TRAY ICON MENU";
+            }
+        }
+
+        public void UpdateShifts(List<ShiftItem> shifts)
+        {
+            lock (Helpers.locker)
+            {
+                shifts_count = shifts.Count;
+                UpdateText(null, null);
+                Dispatcher.Invoke(new Action(() =>
                 {
                     foreach (var arrow in arrows)
                     {
@@ -111,13 +126,12 @@ namespace eye_tracking_mouse
 
                     arrows.Clear();
 
-
-                    foreach (var shift in ShiftsStorage.Instance.Shifts)
+                    foreach (var shift in shifts)
                     {
                         color_calculator.AdjustColorBoundaries(shift.Position.coordinates);
                     }
 
-                    foreach (var shift in ShiftsStorage.Instance.Shifts)
+                    foreach (var shift in shifts)
                     {
                         var arrow = new Petzold.Media2D.ArrowLine();
                         arrow.X1 = shift.Position.X;
@@ -125,23 +139,17 @@ namespace eye_tracking_mouse
                         arrow.X2 = shift.Position.X + shift.Shift.X;
                         arrow.Y2 = shift.Position.Y + shift.Shift.Y;
                         arrow.Stroke = Options.Instance.calibration_mode.additional_dimensions_configuration.Equals(AdditionalDimensionsConfguration.Disabled) ?
-                            Brushes.Red : new SolidColorBrush(color_calculator.GetColor(shift.Position.coordinates));
+                        Brushes.Red : new SolidColorBrush(color_calculator.GetColor(shift.Position.coordinates));
                         arrow.StrokeThickness = 3;
 
                         Canvas.Children.Add(arrow);
                         arrows.Add(arrow);
                     }
-
-                    Description.Text =
-                        "CALIBRATIONS COUNT: " + ShiftsStorage.Instance.Shifts.Count + "/" + Options.Instance.calibration_mode.max_zones_count + " \n" +
-                        "HIDE CALIBRATION VIEW: " + Helpers.GetModifierString().ToUpper() +
-                            "+" + Options.Instance.key_bindings[Key.ShowCalibrationView] + "\n" +
-                        "YOU CAN RESET CALIBRATIONS FROM THE TRAY ICON MENU";
-                }
-            }));
+                }));
+            }
         }
 
-        private void UpdateColor(object sender, EventArgs e)
+        public void OnCursorPositionUpdate(ShiftPosition cursor_position)
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
@@ -156,10 +164,9 @@ namespace eye_tracking_mouse
                         return;
                     }
 
-                    CurrentHeadPositionColor.Background = new SolidColorBrush(color_calculator.GetColor(ShiftsStorage.Instance.LastPosition.coordinates));
+                    CurrentHeadPositionColor.Background = new SolidColorBrush(color_calculator.GetColor(cursor_position.coordinates));
 
                     string head_position_description = "";
-                    var last_position = ShiftsStorage.Instance.LastPosition;
 
                     int coordinate_index = 2;
                     foreach (var vector3 in new List<Tuple<string, Vector3Bool>> {
@@ -173,15 +180,15 @@ namespace eye_tracking_mouse
                             head_position_description += vector3.Item1 + " \n";
                         if (vector3.Item2.X)
                         {
-                            head_position_description += "X: " + (int)last_position.coordinates[coordinate_index++] + "\n";
+                            head_position_description += "X: " + (int)cursor_position.coordinates[coordinate_index++] + "\n";
                         }
                         if (vector3.Item2.Y)
                         {
-                            head_position_description += "Y: " + (int)last_position.coordinates[coordinate_index++] + "\n";
+                            head_position_description += "Y: " + (int)cursor_position.coordinates[coordinate_index++] + "\n";
                         }
                         if (vector3.Item2.Z)
                         {
-                            head_position_description += "Z: " + (int)last_position.coordinates[coordinate_index++] + "\n";
+                            head_position_description += "Z: " + (int)cursor_position.coordinates[coordinate_index++] + "\n";
                         }
                     }
 
@@ -193,10 +200,8 @@ namespace eye_tracking_mouse
         public CalibrationWindow()
         {
             InitializeComponent();
-            Update(null, null);
-            ShiftsStorage.Changed += Update;
-            Settings.KeyBindingsChanged += Update;
-            ShiftsStorage.CursorPositionUpdated += UpdateColor;
+            Settings.KeyBindingsChanged += UpdateText;
+            Settings.OptionsChanged += UpdateText;
         }
 
         private void Window_Deactivated(object sender, EventArgs e)
@@ -206,9 +211,8 @@ namespace eye_tracking_mouse
 
         protected override void OnClosed(EventArgs e)
         {
-            ShiftsStorage.Changed -= Update;
-            Settings.KeyBindingsChanged -= Update;
-            ShiftsStorage.CursorPositionUpdated -= UpdateColor;
+            Settings.KeyBindingsChanged -= UpdateText;
+            Settings.OptionsChanged -= UpdateText;
             base.OnClosed(e);
         }
         protected override void OnSourceInitialized(EventArgs e)

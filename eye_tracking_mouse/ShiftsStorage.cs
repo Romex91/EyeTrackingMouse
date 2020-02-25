@@ -11,74 +11,145 @@ using System.Threading;
 
 namespace eye_tracking_mouse
 {
-    class ShiftsStorage
+
+    public class ShiftPosition
     {
-
-        public class Position
+        public ShiftPosition(List<double> coordinates)
         {
-            public Position(List<double> coordinates)
+            this.coordinates = coordinates;
+        }
+
+        public List<double> coordinates;
+
+        [JsonIgnore]
+        public double X
+        {
+            get { return coordinates[0]; }
+        }
+
+        [JsonIgnore]
+        public double Y
+        {
+            get { return coordinates[1]; }
+        }
+
+        // To calculate points density we split the screen to sectors. This algprithm is not accurate but simple and fast
+        [JsonIgnore]
+        public int SectorX
+        {
+            get
             {
-                this.coordinates = coordinates;
-            }
-
-            public List<double> coordinates;
-
-            [JsonIgnore]
-            public double X
-            {
-                get { return coordinates[0]; }
-            }
-
-            [JsonIgnore]
-            public double Y
-            {
-                get { return coordinates[1]; }
-            }
-
-            // To calculate points density we split the screen to sectors. This algprithm is not accurate but simple and fast
-            [JsonIgnore]
-            public int SectorX
-            {
-                get
-                {
-                    return (int)(X / 500.0);
-                }
-            }
-
-            [JsonIgnore]
-            public int SectorY
-            {
-                get
-                {
-                    return (int)(Y / 500.0);
-                }
-            }
-
-            public double GetDistance(Position other)
-            {
-                double squared_distance = 0;
-
-                for (int i = 0; i < coordinates.Count; i++)
-                {
-                    double factor = i < 2 ? 1 : Math.Pow(Options.Instance.calibration_mode.multi_dimensions_detalization / 10.0, 2);
-                    squared_distance += Math.Pow(coordinates[i] - other.coordinates[i], 2) * factor;
-                }
-
-                return Math.Pow(squared_distance, 0.5);
+                return (int)(X / 500.0);
             }
         }
 
-        public class ShiftItem
+        [JsonIgnore]
+        public int SectorY
         {
-            public ShiftItem(Position position, Point shift)
+            get
             {
-                Position = position;
-                Shift = shift;
+                return (int)(Y / 500.0);
+            }
+        }
+
+        public double GetDistance(ShiftPosition other)
+        {
+            double squared_distance = 0;
+
+            for (int i = 0; i < coordinates.Count; i++)
+            {
+                double factor = i < 2 ? 1 : Math.Pow(Options.Instance.calibration_mode.multi_dimensions_detalization / 10.0, 2);
+                squared_distance += Math.Pow(coordinates[i] - other.coordinates[i], 2) * factor;
             }
 
-            public Point Shift { get; private set; }
+            return Math.Pow(squared_distance, 0.5);
+        }
+    }
 
-            public Position Position { get; private set; }
+    interface ICalibrationManager :  IDisposable
+    {
+        void ToggleDebugWindow();
+        void Reset();
+        void AddShift(ShiftPosition cursor_position, Point shift);
+        Point GetShift(ShiftPosition cursor_position);
+    }
+
+    static class CalibrationManager
+    {
+        static public ICalibrationManager Instance { 
+            get
+            {
+                if (instance == null)
+                {
+
+                    Settings.CalibrationModeChanged += ReloadInstance;
+                    ReloadInstance(null, null);
+                }
+                return instance;
+            }
+        }
+
+        static private ICalibrationManager instance;
+
+        static private void ReloadInstance(object sender, EventArgs args)
+        {
+            instance?.Dispose();
+            instance = new ShiftsStorage();
+        }
+    }
+
+    public class ShiftItem
+    {
+        public ShiftItem(ShiftPosition position, Point shift)
+        {
+            Position = position;
+            Shift = shift;
+        }
+
+        public Point Shift { get; private set; }
+
+        public ShiftPosition Position { get; private set; }
+    }
+
+    class ShiftsStorage : ICalibrationManager
+    {
+        private static CalibrationWindow calibration_window = null;
+
+        public ShiftsStorage()
+        {
+            Settings.OptionsChanged += OnSettingsChanged;
+            LoadFromFile();
+        }
+
+
+        public void Dispose()
+        {
+            Settings.OptionsChanged -= OnSettingsChanged;
+            FilesSavingQueue.FlushSynchroniously();
+            if (calibration_window != null)
+            {
+                calibration_window.Close();
+                calibration_window = null;
+            }
+        }
+
+
+        public void ToggleDebugWindow()
+        {
+            lock(Helpers.locker)
+            {
+                if (calibration_window == null)
+                {
+                    calibration_window = new CalibrationWindow();
+                    calibration_window.Show();
+                    calibration_window.UpdateShifts(Shifts);
+                }
+                else
+                {
+                    calibration_window.Close();
+                    calibration_window = null;
+                }
+            }
         }
 
         private static string GetVector3PathPart(Vector3Bool vector)
@@ -102,12 +173,6 @@ namespace eye_tracking_mouse
         }
 
         public List<ShiftItem> Shifts { private set; get; } = new List<ShiftItem>();
-
-        public Position LastPosition { private set; get; }
-
-        public static event EventHandler Changed;
-        public static event EventHandler CursorPositionUpdated;
-        public static ShiftsStorage Instance { get; set; } = new ShiftsStorage();
 
         private void LoadFromFile()
         {
@@ -142,64 +207,57 @@ namespace eye_tracking_mouse
             }
         }
 
-        public ShiftsStorage()
+        public Point GetShift(ShiftPosition cursor_position)
         {
-            Settings.OptionsChanged += OnSettingsChanged;
-            Settings.CalibrationModeChanged += OnCalibrationModeChanged;
-            LoadFromFile();
-        }
-
-        public Point GetShift(Position cursor_position)
-        {
-            LastPosition = cursor_position;
-            CursorPositionUpdated?.Invoke(this, new EventArgs());
-            var closest_indices = GetClosestShiftIndexes(cursor_position, Options.Instance.calibration_mode.considered_zones_count);
-            if (closest_indices == null)
+            lock(Helpers.locker)
             {
-                Debug.Assert(Shifts.Count() == 0);
-                return new Point(0, 0);
-            }
+                calibration_window?.OnCursorPositionUpdate(cursor_position);
 
-            double sum_of_reverse_distances = 0;
-            foreach (var index in closest_indices)
-            {
-                sum_of_reverse_distances += (1 / index.Item2);
-            }
+                var closest_indices = GetClosestShiftIndexes(cursor_position, Options.Instance.calibration_mode.considered_zones_count);
+                if (closest_indices == null)
+                {
+                    Debug.Assert(Shifts.Count() == 0);
+                    return new Point(0, 0);
+                }
 
-            Point resulting_shift = new Point(0, 0);
-            foreach (var index in closest_indices)
-            {
-                resulting_shift.X += (int)(Shifts[index.Item1].Shift.X / index.Item2 / sum_of_reverse_distances);
-                resulting_shift.Y += (int)(Shifts[index.Item1].Shift.Y / index.Item2 / sum_of_reverse_distances);
-            }
+                double sum_of_reverse_distances = 0;
+                foreach (var index in closest_indices)
+                {
+                    sum_of_reverse_distances += (1 / index.Item2);
+                }
 
-            return resulting_shift;
+                Point resulting_shift = new Point(0, 0);
+                foreach (var index in closest_indices)
+                {
+                    resulting_shift.X += (int)(Shifts[index.Item1].Shift.X / index.Item2 / sum_of_reverse_distances);
+                    resulting_shift.Y += (int)(Shifts[index.Item1].Shift.Y / index.Item2 / sum_of_reverse_distances);
+                }
+
+                return resulting_shift;
+            }
         }
 
         public void Reset()
         {
-            Shifts.Clear();
-            NotifyOnChange();
+            lock (Helpers.locker)
+            {
+                Shifts.Clear();
+                OnShiftsChanged();
+            }
         }
 
-        private static void OnCalibrationModeChanged(object sender, EventArgs e)
-        {
-            AsyncSaver.FlushSynchroniously();
-            Instance.LoadFromFile();
-        }
-
-        private static void OnSettingsChanged(object sender, EventArgs e)
+        private void OnSettingsChanged(object sender, EventArgs e)
         {
             // Adjust to new calibration zone size.
-            for (int i = 0; i < Instance.Shifts.Count - 1;)
+            for (int i = 0; i < Shifts.Count - 1;)
             {
                 bool did_remove = false;
-                for (int j = i + 1; j < Instance.Shifts.Count; j++)
+                for (int j = i + 1; j < Shifts.Count; j++)
                 {
-                    if (Instance.Shifts[j].Position.GetDistance(Instance.Shifts[i].Position) < Options.Instance.calibration_mode.zone_size)
+                    if (Shifts[j].Position.GetDistance(Shifts[i].Position) < Options.Instance.calibration_mode.zone_size)
                     {
                         did_remove = true;
-                        Instance.Shifts.RemoveAt(i);
+                        Shifts.RemoveAt(i);
                         break;
                     }
                 }
@@ -209,25 +267,21 @@ namespace eye_tracking_mouse
             }
 
             // Adjust to new calibration zones count.
-            while (Instance.Shifts.Count > Options.Instance.calibration_mode.max_zones_count)
-                Instance.Shifts.RemoveAt(0);
+            while (Shifts.Count > Options.Instance.calibration_mode.max_zones_count)
+                Shifts.RemoveAt(0);
 
-            AsyncSaver.Save(Filepath, Instance.GetDeepCopy);
-            Instance.NotifyOnChange();
+            OnShiftsChanged();
         }
 
-        private object GetDeepCopy()
+        private string GetDeepCopy()
         {
-            var deep_copy = new List<ShiftItem>();
-            foreach (var i in Shifts)
+            lock (Helpers.locker)
             {
-                deep_copy.Add(new ShiftItem(i.Position, i.Shift));
+                return JsonConvert.SerializeObject(Shifts);
             }
-
-            return deep_copy;
         }
 
-        public void AddShift(Position cursor_position, Point shift)
+        public void AddShift(ShiftPosition cursor_position, Point shift)
         {
             var indices = GetClosestShiftIndexes(cursor_position, 2);
             if (indices != null && indices[0].Item2 < Options.Instance.calibration_mode.zone_size)
@@ -245,13 +299,16 @@ namespace eye_tracking_mouse
                 Shifts[GetClosestPointOfHihestDensity(cursor_position)] = new ShiftItem(cursor_position, shift);
             }
 
-            AsyncSaver.Save(Filepath, GetDeepCopy);
-            NotifyOnChange();
+            OnShiftsChanged();
         }
 
-        private void NotifyOnChange()
+        private void OnShiftsChanged()
         {
-            Changed?.Invoke(this, new EventArgs());
+            lock (Helpers.locker)
+            {
+                FilesSavingQueue.Save(Filepath, GetDeepCopy);
+                calibration_window?.UpdateShifts(Shifts);
+            }
         }
 
         private int GetSectorNumber(ShiftItem shift, int max_sector_x)
@@ -259,7 +316,7 @@ namespace eye_tracking_mouse
             return shift.Position.SectorX + shift.Position.SectorY * (max_sector_x + 1);
         }
 
-        private int GetClosestPointOfHihestDensity(Position cursor_position)
+        private int GetClosestPointOfHihestDensity(ShiftPosition cursor_position)
         {
             Debug.Assert(Shifts.Count > 0);
 
@@ -304,7 +361,7 @@ namespace eye_tracking_mouse
             return index_of_closest_point;
         }
 
-        private List<Tuple<int /*index*/, double /*distance*/>> GetClosestShiftIndexes(Position cursor_position, int number)
+        private List<Tuple<int /*index*/, double /*distance*/>> GetClosestShiftIndexes(ShiftPosition cursor_position, int number)
         {
             if (Shifts.Count() == 0)
                 return null;

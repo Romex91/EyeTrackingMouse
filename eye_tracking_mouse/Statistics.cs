@@ -15,13 +15,13 @@ namespace eye_tracking_mouse
         public void OnClick()
         {
             clicks++;
-            AsyncSaver.Save(Filepath, GetDeepCopy);
+            FilesSavingQueue.Save(Filepath, GetDeepCopy);
         }
 
         public void OnCalibrate()
         {
             calibrations++;
-            AsyncSaver.Save(Filepath, GetDeepCopy);
+            FilesSavingQueue.Save(Filepath, GetDeepCopy);
         }
 
         public static Statistics LoadFromFile(string path)
@@ -41,9 +41,9 @@ namespace eye_tracking_mouse
 
         public static string Filepath { get { return Path.Combine(Helpers.UserDataFolder, "statistics.json"); } }
 
-        private object GetDeepCopy()
+        private string GetDeepCopy()
         {
-            return new Statistics { clicks = this.clicks, calibrations = this.calibrations };
+            return JsonConvert.SerializeObject(this);
         }
 
         public System.UInt64 clicks = 0;

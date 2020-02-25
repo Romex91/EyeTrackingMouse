@@ -139,7 +139,7 @@ namespace eye_tracking_mouse
                             (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration_mode.update_period_ms)
                         {
                             last_shift_update_time = DateTime.Now;
-                            calibration_shift = ShiftsStorage.Instance.GetShift(new ShiftsStorage.Position(CurrentCoordinates));
+                            calibration_shift = CalibrationManager.Instance.GetShift(new ShiftPosition(CurrentCoordinates));
                         }
                     }
 
@@ -306,7 +306,7 @@ namespace eye_tracking_mouse
             if (mouse_state == MouseState.Calibrating &&
                 (key == Key.LeftMouseButton || key == Key.RightMouseButton))
             {
-                ShiftsStorage.Instance.AddShift(new ShiftsStorage.Position(CurrentCoordinates), calibration_shift);
+                CalibrationManager.Instance.AddShift(new ShiftPosition(CurrentCoordinates), calibration_shift);
                 mouse_state = MouseState.Controlling;
             }
 
@@ -342,7 +342,7 @@ namespace eye_tracking_mouse
 
             if (key == Key.ShowCalibrationView && key_state == KeyState.Down)
             {
-                App.ToggleCalibrationWindow();
+                CalibrationManager.Instance.ToggleDebugWindow();
             }
 
             return true;
@@ -359,7 +359,7 @@ namespace eye_tracking_mouse
         public EyeTrackingMouse()
         {
             try
-            {
+            {               
                 host = new Tobii.Interaction.Host();
                 gaze_point_data_stream = host.Streams.CreateGazePointDataStream();
                 eye_position_stream = host.Streams.CreateEyePositionStream();
@@ -382,6 +382,7 @@ namespace eye_tracking_mouse
 
         public void Dispose()
         {
+            Settings.CalibrationModeChanged -= UpdateTobiiStreams;
             host.Dispose();
         }
     }
