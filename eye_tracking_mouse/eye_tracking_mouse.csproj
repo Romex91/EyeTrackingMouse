@@ -115,30 +115,30 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Arrowheads\ArrowEnds.cs" />
-    <Compile Include="Arrowheads\ArrowLine.cs" />
-    <Compile Include="Arrowheads\ArrowLineBase.cs" />
+    <Compile Include="ui\Arrowheads\ArrowEnds.cs" />
+    <Compile Include="ui\Arrowheads\ArrowLine.cs" />
+    <Compile Include="ui\Arrowheads\ArrowLineBase.cs" />
     <Compile Include="FilesSavingQueue.cs" />
     <Compile Include="Autostart.cs" />
-    <Compile Include="CalibrationSettings.xaml.cs">
-      <DependentUpon>CalibrationSettings.xaml</DependentUpon>
+    <Compile Include="ui\CalibrationSettings.xaml.cs">
+      <DependentUpon>ui\CalibrationSettings.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CalibrationWindow.xaml.cs">
-      <DependentUpon>CalibrationWindow.xaml</DependentUpon>
+    <Compile Include="ui\CalibrationWindow.xaml.cs">
+      <DependentUpon>ui\CalibrationWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="IntegerPropertyControl.xaml.cs">
-      <DependentUpon>IntegerPropertyControl.xaml</DependentUpon>
+    <Compile Include="ui\IntegerPropertyControl.xaml.cs">
+      <DependentUpon>ui\IntegerPropertyControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Statistics.cs" />
-    <Compile Include="DriverInstallationWindow.xaml.cs">
-      <DependentUpon>DriverInstallationWindow.xaml</DependentUpon>
+    <Compile Include="ui\DriverInstallationWindow.xaml.cs">
+      <DependentUpon>ui\DriverInstallationWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Settings.xaml.cs">
-      <DependentUpon>Settings.xaml</DependentUpon>
+    <Compile Include="ui\Settings.xaml.cs">
+      <DependentUpon>ui\Settings.xaml</DependentUpon>
     </Compile>
     <Compile Include="ShiftsStorage.cs" />
-    <Compile Include="Vector3BoolCheckboxControl.xaml.cs">
-      <DependentUpon>Vector3BoolCheckboxControl.xaml</DependentUpon>
+    <Compile Include="ui\Vector3BoolCheckboxControl.xaml.cs">
+      <DependentUpon>ui\Vector3BoolCheckboxControl.xaml</DependentUpon>
     </Compile>
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -152,27 +152,27 @@
     <Compile Include="GazeSmoother.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="InputManager.cs" />
-    <Page Include="CalibrationSettings.xaml">
+    <Page Include="ui\CalibrationSettings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="CalibrationWindow.xaml">
+    <Page Include="ui\CalibrationWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="DriverInstallationWindow.xaml">
+    <Page Include="ui\DriverInstallationWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="IntegerPropertyControl.xaml">
+    <Page Include="ui\IntegerPropertyControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Settings.xaml">
+    <Page Include="ui\Settings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Vector3BoolCheckboxControl.xaml">
+    <Page Include="ui\Vector3BoolCheckboxControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
