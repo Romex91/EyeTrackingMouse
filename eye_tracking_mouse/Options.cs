@@ -52,6 +52,25 @@ namespace eye_tracking_mouse
         public Vector3Bool HeadPosition;
         public Vector3Bool HeadDirection;
 
+        [JsonIgnore]
+        public int CoordinatesCount
+        {
+            get
+            {
+                // X and Y are always there.
+                int coordinates_count = 2;
+                foreach (var vector3 in new List<Vector3Bool> { LeftEye, RightEye, HeadDirection, HeadPosition})
+                {
+                    if (vector3.X)
+                        coordinates_count++;
+                    if (vector3.Y)
+                        coordinates_count++;
+                    if (vector3.Z)
+                        coordinates_count++;
+                }
+                return coordinates_count;
+            }
+        }
         public bool Equals(AdditionalDimensionsConfguration other)
         {
             return

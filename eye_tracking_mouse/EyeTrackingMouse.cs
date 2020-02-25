@@ -89,6 +89,35 @@ namespace eye_tracking_mouse
             }
         }
 
+        private List<double> CurrentCoordinates
+        {
+            get
+            {
+                List<double> coordinates = new List<double>();
+
+                coordinates.Add(gaze_point.X);
+                coordinates.Add(gaze_point.Y);
+
+                var config = Options.Instance.calibration_mode.additional_dimensions_configuration;
+                foreach (var vector3 in new List<Tuple<Tobii.Interaction.Vector3, Vector3Bool>> {
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (left_eye, config.LeftEye),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (right_eye, config.RightEye),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (head_direction, config.HeadDirection),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (head_position, config.HeadPosition)
+                   })
+                {
+                    if (vector3.Item2.X)
+                        coordinates.Add(vector3.Item1.X);
+                    if (vector3.Item2.Y)
+                        coordinates.Add(vector3.Item1.Y);
+                    if (vector3.Item2.Z)
+                        coordinates.Add(vector3.Item1.Z);
+                }
+
+                return coordinates;
+            }
+        }
+
         private void OnGazePoint(double x, double y, double ts)
         {
             lock (Helpers.locker)
@@ -110,8 +139,7 @@ namespace eye_tracking_mouse
                             (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration_mode.update_period_ms)
                         {
                             last_shift_update_time = DateTime.Now;
-                            calibration_shift = ShiftsStorage.Instance.GetShift(new ShiftsStorage.Position(
-                                gaze_point.X, gaze_point.Y, left_eye, right_eye, head_position, head_direction));
+                            calibration_shift = ShiftsStorage.Instance.GetShift(new ShiftsStorage.Position(CurrentCoordinates));
                         }
                     }
 
@@ -278,9 +306,7 @@ namespace eye_tracking_mouse
             if (mouse_state == MouseState.Calibrating &&
                 (key == Key.LeftMouseButton || key == Key.RightMouseButton))
             {
-                ShiftsStorage.Instance.AddShift(
-                    new ShiftsStorage.Position(gaze_point.X, gaze_point.Y, left_eye, right_eye, head_position, head_direction),
-                    calibration_shift);
+                ShiftsStorage.Instance.AddShift(new ShiftsStorage.Position(CurrentCoordinates), calibration_shift);
                 mouse_state = MouseState.Controlling;
             }
 

@@ -16,78 +16,24 @@ namespace eye_tracking_mouse
 
         public class Position
         {
-            public Position(
-                double x,
-                double y,
-                Tobii.Interaction.Vector3 left_eye,
-                Tobii.Interaction.Vector3 right_eye,
-                Tobii.Interaction.Vector3 head_position,
-                Tobii.Interaction.Vector3 head_direction)
+            public Position(List<double> coordinates)
             {
-                X = x;
-                Y = y;
-
-
-                var config = Options.Instance.calibration_mode.additional_dimensions_configuration;
-
-                HeadPosition = MaskVector(head_position, config.HeadPosition);
-                HeadDirection = MaskVector(head_direction, config.HeadDirection);
-                LeftEye = MaskVector(left_eye, config.LeftEye);
-                RightEye = MaskVector(right_eye, config.RightEye);
-
-                AdjustColorBoundaries();
+                this.coordinates = coordinates;
             }
 
-            public void AdjustColorBoundaries()
+            public List<double> coordinates;
+
+            [JsonIgnore]
+            public double X
             {
-                var color = GetColorComponents();
-                if (max_color.X < color.X)
-                    max_color.X = color.X;
-
-                if (max_color.Y < color.Y)
-                    max_color.Y = color.Y;
-
-                if (max_color.Z < color.Z)
-                    max_color.Z = color.Z;
-
-                if (min_color.X > color.X)
-                    min_color.X = color.X;
-
-                if (min_color.Y > color.Y)
-                    min_color.Y = color.Y;
-
-                if (min_color.Z > color.Z)
-                    min_color.Z = color.Z;
+                get { return coordinates[0]; }
             }
 
-            public System.Windows.Media.Color GetColor()
+            [JsonIgnore]
+            public double Y
             {
-                var color_components = GetColorComponents();
-
-                return System.Windows.Media.Color.FromArgb(
-                    255, (byte)((color_components.X - min_color.X) / (max_color.X - min_color.X) * 254),
-                    (byte)((color_components.Y - min_color.Y) / (max_color.Y - min_color.Y) * 254),
-                    (byte)((color_components.Z - min_color.Z) / (max_color.Z - min_color.Z) * 254));
+                get { return coordinates[1]; }
             }
-
-            private static Tobii.Interaction.Vector3 min_color = new Tobii.Interaction.Vector3(Double.MaxValue, Double.MaxValue, Double.MaxValue);
-            private static Tobii.Interaction.Vector3 max_color = new Tobii.Interaction.Vector3(Double.MinValue, Double.MinValue, Double.MinValue);
-
-            private Tobii.Interaction.Vector3 GetColorComponents()
-            {
-                return new Tobii.Interaction.Vector3(
-                    LeftEye.X + RightEye.X + HeadDirection.X + HeadPosition.X,
-                    LeftEye.Y + RightEye.Y + HeadDirection.Y + HeadPosition.Y,
-                    LeftEye.Z + RightEye.Z + HeadDirection.Z + HeadPosition.Z);
-            }
-
-            public double X = 0;
-            public double Y = 0;
-
-            public Tobii.Interaction.Vector3 LeftEye { get; set; }
-            public Tobii.Interaction.Vector3 RightEye { get; set; }
-            public Tobii.Interaction.Vector3 HeadPosition { get; set; }
-            public Tobii.Interaction.Vector3 HeadDirection { get; set; }
 
             // To calculate points density we split the screen to sectors. This algprithm is not accurate but simple and fast
             [JsonIgnore]
@@ -108,30 +54,15 @@ namespace eye_tracking_mouse
                 }
             }
 
-            private static Tobii.Interaction.Vector3 MaskVector(Tobii.Interaction.Vector3 vector, Vector3Bool mask)
-            {
-                return new Tobii.Interaction.Vector3
-                {
-                    X = mask.X ? vector.X : 0,
-                    Y = mask.Y ? vector.Y : 0,
-                    Z = mask.Z ? vector.Z : 0
-                };
-            }
-
-            private static double SquaredDistance(Tobii.Interaction.Vector3 a, Tobii.Interaction.Vector3 b)
-            {
-                return (Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2) + Math.Pow(a.Z - b.Z, 2)) * 
-                    Math.Pow(Options.Instance.calibration_mode.multi_dimensions_detalization / 10.0, 2);
-            }
-
             public double GetDistance(Position other)
             {
-                double squared_distance = Math.Pow(X - other.X, 2) + Math.Pow(Y - other.Y, 2);
+                double squared_distance = 0;
 
-                squared_distance += SquaredDistance(HeadPosition, other.HeadPosition);
-                squared_distance += SquaredDistance(HeadDirection, other.HeadDirection);
-                squared_distance += SquaredDistance(LeftEye, other.LeftEye);
-                squared_distance += SquaredDistance(RightEye, other.RightEye);
+                for (int i = 0; i < coordinates.Count; i++)
+                {
+                    double factor = i < 2 ? 1 : Math.Pow(Options.Instance.calibration_mode.multi_dimensions_detalization / 10.0, 2);
+                    squared_distance += Math.Pow(coordinates[i] - other.coordinates[i], 2) * factor;
+                }
 
                 return Math.Pow(squared_distance, 0.5);
             }
@@ -183,10 +114,26 @@ namespace eye_tracking_mouse
             try
             {
                 Shifts.Clear();
-                if (File.Exists(Filepath))
-                    Shifts = JsonConvert.DeserializeObject<List<ShiftItem>>(File.ReadAllText(Filepath));
-                foreach (var shift in Shifts)
-                    shift.Position.AdjustColorBoundaries();
+                if (!File.Exists(Filepath))
+                    return;
+
+                bool error_message_box_shown = false;
+
+                Shifts = JsonConvert.DeserializeObject<List<ShiftItem>>(File.ReadAllText(Filepath)).Where(x=> {
+                    if (x.Position.coordinates == null)
+                        return false;
+                    if (x.Position.coordinates.Count != Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesCount)
+                    {
+                        if (!error_message_box_shown)
+                        {
+                            error_message_box_shown = true;
+                            System.Windows.MessageBox.Show("Number of coordinates in the file doesn't fit options.");
+                        }
+                        return false;
+                    }
+                    return true; 
+                }).ToList();
+                
             }
             catch (Exception e)
             {
