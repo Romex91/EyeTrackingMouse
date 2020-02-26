@@ -115,6 +115,8 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CalibrationManager.cs" />
+    <Compile Include="CalibrationManagerV0.cs" />
     <Compile Include="ui\Arrowheads\ArrowEnds.cs" />
     <Compile Include="ui\Arrowheads\ArrowLine.cs" />
     <Compile Include="ui\Arrowheads\ArrowLineBase.cs" />

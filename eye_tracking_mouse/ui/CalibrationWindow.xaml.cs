@@ -111,7 +111,7 @@ namespace eye_tracking_mouse
             }
         }
 
-        public void UpdateShifts(List<ShiftItem> shifts)
+        public void UpdateCorrections(List<UserCorrection> shifts)
         {
             lock (Helpers.locker)
             {
