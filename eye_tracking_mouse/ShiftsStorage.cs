@@ -11,7 +11,6 @@ using System.Threading;
 
 namespace eye_tracking_mouse
 {
-
     // When users correct inacurate precision with W/A/S/D and then click stuff they create a |UserCorrection|.
     public class UserCorrection
     {
@@ -31,7 +30,7 @@ namespace eye_tracking_mouse
     // |ShiftsStorage| is responsible for storing user corrections (shifts).
     // * It supports even spreading of the corrections on display. If user makes two corrections in the same (or near) position the new correction overwrites the old one.
     // * It handles saving and loading corrections from file.
-    class ShiftsStorage : IDisposable
+    public class ShiftsStorage : IDisposable
     {
         public CalibrationWindow calibration_window = null;
         public List<UserCorrection> Corrections = new List<UserCorrection>();
@@ -80,15 +79,14 @@ namespace eye_tracking_mouse
             }
         }
 
-
         public void AddShift(ShiftPosition cursor_position, Point shift)
         {
-            var indices = GetClosestShiftIndexes(cursor_position, 2);
-            if (indices != null && indices[0].Item2 < Options.Instance.calibration_mode.zone_size)
+            var closest_shifts =  Helpers.CalculateClosestCorrectionsInfo(this, cursor_position, 2);
+            if (closest_shifts != null && closest_shifts[0].distance < Options.Instance.calibration_mode.zone_size)
             {
-                Corrections[indices[0].Item1] = new UserCorrection(cursor_position, shift);
-                if (indices.Count > 1 && indices[1].Item2 < Options.Instance.calibration_mode.zone_size)
-                    Corrections.RemoveAt(indices[1].Item1);
+                Corrections[closest_shifts[0].index] = new UserCorrection(cursor_position, shift);
+                if (closest_shifts.Count > 1 && closest_shifts[1].distance < Options.Instance.calibration_mode.zone_size)
+                    Corrections.RemoveAt(closest_shifts[1].index);
             }
             else if (Corrections.Count() < Options.Instance.calibration_mode.max_zones_count)
             {
@@ -100,42 +98,6 @@ namespace eye_tracking_mouse
             }
 
             OnShiftsChanged();
-        }
-
-        public List<Tuple<int /*index*/, double /*distance*/>> GetClosestShiftIndexes(ShiftPosition cursor_position, int number)
-        {
-            if (Corrections.Count() == 0)
-                return null;
-
-            var retval = new List<Tuple<int, double>>();
-            for (int i = 0; i < Corrections.Count(); i++)
-            {
-                double distance = Corrections[i].Position.GetDistance(cursor_position);
-                if (distance < 0.1)
-                    distance = 0.1;
-
-                if (retval.Count == 0)
-                {
-                    retval.Add(new Tuple<int, double>(i, distance));
-                    continue;
-                }
-
-                int j = 0;
-                for (; j < retval.Count; j++)
-                {
-                    if (distance < retval[j].Item2)
-                    {
-                        retval.Insert(j, new Tuple<int, double>(i, distance));
-                        break;
-                    }
-                }
-                if (j == retval.Count)
-                    retval.Add(new Tuple<int, double>(i, distance));
-
-                if (retval.Count > number)
-                    retval.RemoveAt(retval.Count - 1);
-            }
-            return retval;
         }
 
         private static string GetVector3PathPart(Vector3Bool vector)
@@ -169,9 +131,7 @@ namespace eye_tracking_mouse
                 bool error_message_box_shown = false;
 
                 Corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(File.ReadAllText(Filepath)).Where(x=> {
-                    if (x.Position.coordinates == null)
-                        return false;
-                    if (x.Position.coordinates.Count != Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesCount)
+                    if (x.Position.Count != Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesCount)
                     {
                         if (!error_message_box_shown)
                         {
@@ -199,7 +159,7 @@ namespace eye_tracking_mouse
                 bool did_remove = false;
                 for (int j = i + 1; j < Corrections.Count; j++)
                 {
-                    if (Corrections[j].Position.GetDistance(Corrections[i].Position) < Options.Instance.calibration_mode.zone_size)
+                    if (Helpers.GetVectorLength(Corrections[j].Position - Corrections[i].Position) < Options.Instance.calibration_mode.zone_size)
                     {
                         did_remove = true;
                         Corrections.RemoveAt(i);
@@ -273,7 +233,7 @@ namespace eye_tracking_mouse
             {
                 if (sectors[GetSectorNumber(Corrections[i], max_sector_x)] == max_points_count_in_sector)
                 {
-                    double distance = Corrections[i].Position.GetDistance(cursor_position);
+                    double distance = Helpers.GetVectorLength(Corrections[i].Position - cursor_position);
                     if (min_distance > distance)
                     {
                         min_distance = distance;
@@ -283,6 +243,92 @@ namespace eye_tracking_mouse
             }
 
             return index_of_closest_point;
+        }
+    }
+
+    public static partial class Helpers
+    {
+        public static void NormalizeWeights(List<CorrectionInfoRelatedToCursor> corrections)
+        {
+            double total_weight = 0;
+            foreach (var correction in corrections)
+                total_weight += correction.weight;
+
+            for (int i = 0; i < corrections.Count; i++)
+                corrections[i].weight = corrections[i].weight / total_weight;
+        }
+
+        public static Point GetWeightedAverage(ShiftsStorage shift_storage, List<CorrectionInfoRelatedToCursor> corrections)
+        {
+            Point resulting_shift = new Point(0, 0);
+            foreach (var correction in corrections)
+            {
+                resulting_shift.X += (int)(shift_storage.Corrections[correction.index].Shift.X * correction.weight);
+                resulting_shift.Y += (int)(shift_storage.Corrections[correction.index].Shift.Y * correction.weight);
+            }
+            return resulting_shift;
+        }
+
+        public class CorrectionInfoRelatedToCursor
+        {
+            public int index;
+            public ShiftPosition vector_from_cursor;
+            public double distance;
+            public double weight;
+        }
+
+        public static List<CorrectionInfoRelatedToCursor> CalculateClosestCorrectionsInfo(ShiftsStorage storage, ShiftPosition cursor_position, int number)
+        {
+            var Corrections = storage.Corrections;
+            if (Corrections.Count == 0)
+                return null;
+
+            var retval = new List<CorrectionInfoRelatedToCursor>();
+            for (int i = 0; i < Corrections.Count(); i++)
+            {
+                CorrectionInfoRelatedToCursor info = new CorrectionInfoRelatedToCursor { index = i, vector_from_cursor = Corrections[i].Position - cursor_position };
+                info.distance = Helpers.GetVectorLength(info.vector_from_cursor);
+                if (info.distance < 0.001)
+                    info.distance = 0.001;
+
+                int j = 0;
+                for (; j < retval.Count; j++)
+                {
+                    if (info.distance < retval[j].distance)
+                    {
+                        retval.Insert(j, info);
+                        break;
+                    }
+                }
+                if (j == retval.Count)
+                    retval.Add(info);
+
+                if (retval.Count > number)
+                    retval.RemoveAt(retval.Count - 1);
+            }
+            return retval;
+        }
+
+        public static double GetVectorLength(ShiftPosition vector)
+        {
+            double squared_distance = 0;
+            for (int i = 0; i < vector.Count; i++)
+            {
+                squared_distance += Math.Pow(vector[i], 2);
+            }
+
+            return Math.Pow(squared_distance, 0.5);
+        }
+
+        public static double GetAngleBetweenVectors(CorrectionInfoRelatedToCursor a, CorrectionInfoRelatedToCursor b)
+        {
+            Debug.Assert(a.vector_from_cursor.Count == b.vector_from_cursor.Count);
+            double dot_product = 0;
+
+            for (int i = 0; i < a.vector_from_cursor.Count; i++)
+                dot_product += a.vector_from_cursor[i] * b.vector_from_cursor[i];
+
+            return Math.Acos(dot_product / a.distance / b.distance);
         }
     }
 }

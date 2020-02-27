@@ -10,7 +10,7 @@ using IWshRuntimeLibrary;
 
 namespace eye_tracking_mouse
 {
-    public class Helpers
+    public static partial class Helpers
     {
         // The only synchronisation object. The thread model is simple.
         // Tobii and Interceptor has their own threads. These threads comunicate with the Application via callbacks |EyeTrackingMouse.OnGazePoint| and |InputManager.OnKeyPressed|. 

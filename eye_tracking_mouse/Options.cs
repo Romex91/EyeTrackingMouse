@@ -147,8 +147,12 @@ namespace eye_tracking_mouse
             public int considered_zones_count;
             public int update_period_ms;
 
+            public int size_of_opaque_sector_in_percents = 30;
+            public int size_of_transparent_sector_in_percents = 30;
+            public int shade_thickness_in_pixels = 50;
+
             // TODO: remove the option. There can be only one!
-            public string algorithm = "V0";
+            public string algorithm = "V1";
 
             public AdditionalDimensionsConfguration additional_dimensions_configuration;
             public int multi_dimensions_detalization;

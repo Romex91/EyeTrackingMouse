@@ -18,27 +18,33 @@ namespace eye_tracking_mouse
             {
                 shift_storage.calibration_window?.OnCursorPositionUpdate(cursor_position);
 
-                var closest_indices = shift_storage.GetClosestShiftIndexes(cursor_position, Options.Instance.calibration_mode.considered_zones_count);
-                if (closest_indices == null)
+                var closest_corrections = Helpers.CalculateClosestCorrectionsInfo(shift_storage, cursor_position, Options.Instance.calibration_mode.considered_zones_count);
+                if (closest_corrections == null)
                 {
                     Debug.Assert(shift_storage.Corrections.Count() == 0);
                     return new Point(0, 0);
                 }
 
                 double sum_of_reverse_distances = 0;
-                foreach (var index in closest_indices)
+                foreach (var index in closest_corrections)
                 {
-                    sum_of_reverse_distances += (1 / index.Item2);
+                    sum_of_reverse_distances += (1 / index.distance);
                 }
 
-                Point resulting_shift = new Point(0, 0);
-                foreach (var index in closest_indices)
+                foreach (var correction in closest_corrections)
                 {
-                    resulting_shift.X += (int)(shift_storage.Corrections[index.Item1].Shift.X / index.Item2 / sum_of_reverse_distances);
-                    resulting_shift.Y += (int)(shift_storage.Corrections[index.Item1].Shift.Y / index.Item2 / sum_of_reverse_distances);
+                    correction.weight = 1 / correction.distance / sum_of_reverse_distances;
                 }
 
-                return resulting_shift;
+                if (shift_storage.calibration_window != null)
+                {
+                    var lables = new List<Tuple<string /*text*/, int /*correction index*/>>();
+                    foreach (var correction in closest_corrections)
+                        lables.Add(new Tuple<string, int>((int)(correction.weight * 100) + "%", correction.index));
+                    shift_storage.calibration_window.UpdateCorrectionsLables(lables);
+                }
+
+                return Helpers.GetWeightedAverage(shift_storage, closest_corrections);
             }
         }
 

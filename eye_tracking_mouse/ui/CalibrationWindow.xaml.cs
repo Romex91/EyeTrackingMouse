@@ -20,7 +20,7 @@ namespace eye_tracking_mouse
 
     class ColorCalculator
     {
-        public void AdjustColorBoundaries(List<double> coordinates)
+        public void AdjustColorBoundaries(ShiftPosition coordinates)
         {
             var color = GetColorComponents(coordinates);
             if (max_color.X < color.X)
@@ -42,7 +42,7 @@ namespace eye_tracking_mouse
                 min_color.Z = color.Z;
         }
 
-        public System.Windows.Media.Color GetColor(List<double> coordinates)
+        public System.Windows.Media.Color GetColor(ShiftPosition coordinates)
         {
             var color_components = GetColorComponents(coordinates);
             AdjustColorBoundaries(coordinates);
@@ -55,7 +55,7 @@ namespace eye_tracking_mouse
         private Tobii.Interaction.Vector3 min_color = new Tobii.Interaction.Vector3(Double.MaxValue, Double.MaxValue, Double.MaxValue);
         private Tobii.Interaction.Vector3 max_color = new Tobii.Interaction.Vector3(Double.MinValue, Double.MinValue, Double.MinValue);
 
-        private Tobii.Interaction.Vector3 GetColorComponents(List<double> coordinates)
+        private Tobii.Interaction.Vector3 GetColorComponents(ShiftPosition coordinates)
         {
             var color_components = new Tobii.Interaction.Vector3(0,0,0);
             for (int i = 2; i < coordinates.Count; i++)
@@ -96,6 +96,7 @@ namespace eye_tracking_mouse
         }
 
         private readonly List<Petzold.Media2D.ArrowLine> arrows = new List<Petzold.Media2D.ArrowLine>();
+        private List<TextBlock> arrows_lables = new List<TextBlock>();
         private readonly ColorCalculator color_calculator = new ColorCalculator();
 
         private int shifts_count = 0;
@@ -109,6 +110,28 @@ namespace eye_tracking_mouse
                             "+" + Options.Instance.key_bindings[Key.ShowCalibrationView] + "\n" +
                         "YOU CAN RESET CALIBRATIONS FROM THE TRAY ICON MENU";
             }
+        }
+
+        public void UpdateCorrectionsLables(List<Tuple<string /*text*/, int /*correction index*/>> lables)
+        {
+            Dispatcher.BeginInvoke((Action)(() => {
+                foreach (var lable in arrows_lables)
+                    Canvas.Children.Remove(lable);
+                arrows_lables.Clear();
+
+                foreach (var lable in lables)
+                {
+                    if (lable.Item2 < arrows.Count())
+                    {
+                        var arrow_lable = new TextBlock { Text = lable.Item1, Visibility = Visibility.Visible };
+                        Canvas.Children.Add(arrow_lable);
+
+                        Canvas.SetTop(arrow_lable, arrows[lable.Item2].Y1);
+                        Canvas.SetLeft(arrow_lable, arrows[lable.Item2].X1);
+                        arrows_lables.Add(arrow_lable);
+                    }
+                }
+            }));
         }
 
         public void UpdateCorrections(List<UserCorrection> shifts)
@@ -128,7 +151,7 @@ namespace eye_tracking_mouse
 
                     foreach (var shift in shifts)
                     {
-                        color_calculator.AdjustColorBoundaries(shift.Position.coordinates);
+                        color_calculator.AdjustColorBoundaries(shift.Position);
                     }
 
                     foreach (var shift in shifts)
@@ -139,7 +162,7 @@ namespace eye_tracking_mouse
                         arrow.X2 = shift.Position.X + shift.Shift.X;
                         arrow.Y2 = shift.Position.Y + shift.Shift.Y;
                         arrow.Stroke = Options.Instance.calibration_mode.additional_dimensions_configuration.Equals(AdditionalDimensionsConfguration.Disabled) ?
-                        Brushes.Red : new SolidColorBrush(color_calculator.GetColor(shift.Position.coordinates));
+                        Brushes.Red : new SolidColorBrush(color_calculator.GetColor(shift.Position));
                         arrow.StrokeThickness = 3;
 
                         Canvas.Children.Add(arrow);
@@ -151,23 +174,15 @@ namespace eye_tracking_mouse
 
         public void OnCursorPositionUpdate(ShiftPosition cursor_position)
         {
-            Dispatcher.BeginInvoke(new Action(() =>
+            string head_position_description = "";
+            Color color = Colors.Red;
+
+            lock (Helpers.locker)
             {
-                lock (Helpers.locker)
+                AdditionalDimensionsConfguration configuration = Options.Instance.calibration_mode.additional_dimensions_configuration;
+                if (!configuration.Equals(AdditionalDimensionsConfguration.Disabled))
                 {
-                    AdditionalDimensionsConfguration configuration = Options.Instance.calibration_mode.additional_dimensions_configuration;
-
-                    if (configuration.Equals(AdditionalDimensionsConfguration.Disabled))
-                    {
-                        HeadPositionDescription.Text = "";
-                        CurrentHeadPositionColor.Background = Brushes.Red;
-                        return;
-                    }
-
-                    CurrentHeadPositionColor.Background = new SolidColorBrush(color_calculator.GetColor(cursor_position.coordinates));
-
-                    string head_position_description = "";
-
+                    color = color_calculator.GetColor(cursor_position);
                     int coordinate_index = 2;
                     foreach (var vector3 in new List<Tuple<string, Vector3Bool>> {
                         new Tuple<string, Vector3Bool> ("Left eye", configuration.LeftEye),
@@ -180,20 +195,24 @@ namespace eye_tracking_mouse
                             head_position_description += vector3.Item1 + " \n";
                         if (vector3.Item2.X)
                         {
-                            head_position_description += "X: " + (int)cursor_position.coordinates[coordinate_index++] + "\n";
+                            head_position_description += "X: " + (int)cursor_position[coordinate_index++] + "\n";
                         }
                         if (vector3.Item2.Y)
                         {
-                            head_position_description += "Y: " + (int)cursor_position.coordinates[coordinate_index++] + "\n";
+                            head_position_description += "Y: " + (int)cursor_position[coordinate_index++] + "\n";
                         }
                         if (vector3.Item2.Z)
                         {
-                            head_position_description += "Z: " + (int)cursor_position.coordinates[coordinate_index++] + "\n";
+                            head_position_description += "Z: " + (int)cursor_position[coordinate_index++] + "\n";
                         }
                     }
-
-                    HeadPositionDescription.Text = head_position_description;
                 }
+            }
+
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                CurrentHeadPositionColor.Background = new SolidColorBrush(color);
+                HeadPositionDescription.Text = head_position_description;
             }));
         }
 
