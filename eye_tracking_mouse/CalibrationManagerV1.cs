@@ -80,18 +80,15 @@ namespace eye_tracking_mouse
             if (distance_from_shade_shell_to_shaded_correction < mode.shade_thickness_in_pixels)
                 opacity *= distance_from_shade_shell_to_shaded_correction / mode.shade_thickness_in_pixels;
 
-            return opacity;
+            return opacity * source_of_shade.weight;
         }
 
         private void ApplyShades(List<Helpers.CorrectionInfoRelatedToCursor> corrections)
         {
-            foreach (var correction in corrections)
-            {
-                correction.weight = 1;
-            }
-
             for (int i = 0; i < corrections.Count;)
             {
+                corrections[i].weight = 1;
+
                 for (int j = 0; j < i; j++)
                 {
                     corrections[i].weight -= GetShadeOpacity(corrections[j], corrections[i]);
