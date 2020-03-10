@@ -119,6 +119,7 @@
     <Compile Include="CalibrationManagerV0.cs" />
     <Compile Include="CalibrationManagerV1.cs" />
     <Compile Include="ShiftPosition.cs" />
+    <Compile Include="TobiiCoordinatesProvider.cs" />
     <Compile Include="ui\Arrowheads\ArrowEnds.cs" />
     <Compile Include="ui\Arrowheads\ArrowLine.cs" />
     <Compile Include="ui\Arrowheads\ArrowLineBase.cs" />
@@ -153,7 +154,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="EyeTrackingMouse.cs" />
-    <Compile Include="GazeSmoother.cs" />
+    <Compile Include="CoordinateSmoother.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="InputManager.cs" />
     <Page Include="ui\CalibrationSettings.xaml">
