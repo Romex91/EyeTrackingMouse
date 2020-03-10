@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Windows;
 using System.Diagnostics;
+using System.Dynamic;
 
 namespace BlindConfigurationTester
 {
@@ -44,9 +45,9 @@ namespace BlindConfigurationTester
         [JsonIgnore]
         public string name;
         public int number_of_completed_sessions = 0;
-        public List<Configuration> configurations = new List<Configuration>() { new Configuration { name = null, save_changes=true } };
+        public List<Configuration> configurations = new List<Configuration>() { new Configuration { name = null, save_changes = true } };
 
-        public List<Session> sessions = new List<Session> { new Session { points_count = 100, size_of_circle = 15, instructions = "This text will be shown to user before session." } };
+        public List<Session> sessions = new List<Session> { new Session { points_count = 50, size_of_circle = 6, instructions = "This text will be shown to user before session." } };
 
         public static string StudiesFolder
         {
@@ -66,8 +67,9 @@ namespace BlindConfigurationTester
 
         public void StartSession()
         {
-            if (Directory.Exists(GetSessionResultsPath(number_of_completed_sessions))) {
-                MessageBox.Show("Session" + (number_of_completed_sessions  + 1) + 
+            if (Directory.Exists(GetSessionResultsPath(number_of_completed_sessions)))
+            {
+                MessageBox.Show("Session" + (number_of_completed_sessions + 1) +
                     " already contains results. Remove them manualy to proceed.");
                 return;
             }
@@ -130,16 +132,18 @@ namespace BlindConfigurationTester
             string json_path = Path.Combine(GetStudyFolder(study_name), "study.json");
             if (File.Exists(json_path))
             {
-                while(true)
+                while (true)
                 {
                     try
                     {
                         var study = JsonConvert.DeserializeObject<Study>(File.ReadAllText(json_path));
                         study.name = study_name;
                         return study;
-                    } catch (IOException)
+                    }
+                    catch (IOException)
                     {
-                    } catch
+                    }
+                    catch
                     {
                         return null;
                     }
@@ -176,27 +180,49 @@ namespace BlindConfigurationTester
         {
             var results = new Dictionary<string, List<eye_tracking_mouse.Statistics>>();
 
-            for (int i = 0; i < number_of_completed_sessions; i++)
+            using (var calibrations_writer = new StreamWriter(Path.Combine(StudyResultsFolder, "calibrations.csv")))
+            using (var calibrations_csv = new CsvHelper.CsvWriter(calibrations_writer, System.Globalization.CultureInfo.InvariantCulture))
+            using (var clicks_writer = new StreamWriter(Path.Combine(StudyResultsFolder, "clicks.csv")))
+            using (var clicks_csv = new CsvHelper.CsvWriter(clicks_writer, System.Globalization.CultureInfo.InvariantCulture))
             {
+                clicks_csv.Configuration.HasHeaderRecord = false;
+                calibrations_csv.Configuration.HasHeaderRecord = false;
+
                 foreach (var configuration in configurations)
                 {
-                    string configuration_string = configuration.name ?? "User Data";
-                    var statistics_before = eye_tracking_mouse.Statistics.LoadFromFile(Path.Combine(GetUserDataPathBeforeSession(i), configuration_string, "statistics.json"));
-                    var statistics_after = eye_tracking_mouse.Statistics.LoadFromFile(Path.Combine(GetUserDataPathAfterSession(i), configuration_string, "statistics.json"));
-
-                    if (!results.ContainsKey(configuration_string))
-                        results.Add(configuration_string, new List<eye_tracking_mouse.Statistics>());
-
-                    results[configuration_string].Add(
-                        new eye_tracking_mouse.Statistics
-                        {
-                            calibrations = statistics_after.calibrations - statistics_before.calibrations,
-                            clicks = statistics_after.clicks - statistics_before.clicks
-                        });
+                    calibrations_csv.WriteField(configuration.name ?? "User Data");
+                    clicks_csv.WriteField(configuration.name ?? "User Data");
                 }
-            }
 
-            File.WriteAllText(Path.Combine(StudyResultsFolder, "results.json"), JsonConvert.SerializeObject(results));
+                for (int i = 0; i < number_of_completed_sessions; i++)
+                {
+                    calibrations_csv.NextRecord();
+                    clicks_csv.NextRecord();
+
+                    foreach (var configuration in configurations)
+                    {
+                        string configuration_string = configuration.name ?? "User Data";
+                        var statistics_before = eye_tracking_mouse.Statistics.LoadFromFile(Path.Combine(GetUserDataPathBeforeSession(i), configuration_string, "statistics.json"));
+                        var statistics_after = eye_tracking_mouse.Statistics.LoadFromFile(Path.Combine(GetUserDataPathAfterSession(i), configuration_string, "statistics.json"));
+
+                        if (!results.ContainsKey(configuration_string))
+                            results.Add(configuration_string, new List<eye_tracking_mouse.Statistics>());
+
+                        results[configuration_string].Add(
+                            new eye_tracking_mouse.Statistics
+                            {
+                                calibrations = statistics_after.calibrations - statistics_before.calibrations,
+                                clicks = statistics_after.clicks - statistics_before.clicks
+                            });
+
+
+                        calibrations_csv.WriteField((statistics_after.calibrations - statistics_before.calibrations).ToString());
+                        clicks_csv.WriteField((statistics_after.clicks - statistics_before.clicks).ToString());
+                    }
+
+                }
+                File.WriteAllText(Path.Combine(StudyResultsFolder, "results.json"), JsonConvert.SerializeObject(results));
+            }
         }
 
         private string GetSessionResultsPath(int session_index)
