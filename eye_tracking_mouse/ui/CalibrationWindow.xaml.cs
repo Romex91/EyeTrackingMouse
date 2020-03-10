@@ -187,6 +187,7 @@ namespace eye_tracking_mouse
                     foreach (var vector3 in new List<Tuple<string, Vector3Bool>> {
                         new Tuple<string, Vector3Bool> ("Left eye", configuration.LeftEye),
                         new Tuple<string, Vector3Bool> ("Right eye", configuration.RightEye),
+                        new Tuple<string, Vector3Bool> ("Angle between eyes", configuration.AngleBetweenEyes),
                         new Tuple<string, Vector3Bool> ("Head direction", configuration.HeadDirection),
                         new Tuple<string, Vector3Bool> ("Head position", configuration.HeadPosition)
                     })

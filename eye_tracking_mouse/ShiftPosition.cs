@@ -28,7 +28,6 @@ namespace eye_tracking_mouse
                     adjusted_coordinates.Add(coordinates[i]);
                 else
                     adjusted_coordinates.Add(coordinates[i] * Options.Instance.calibration_mode.multi_dimensions_detalization / 10.0);
-
             }
         }
 

@@ -50,14 +50,17 @@
         <TextBlock Grid.Row="8" Grid.Column="0" HorizontalAlignment="Right">Right eye:</TextBlock>
         <local:Vector3BoolCheckboxControl Grid.Row="8" Grid.Column="2" x:Name="RightEye" ValueChanged="CheckBox_Changed" />
 
-        <TextBlock Grid.Row="9" Grid.Column="0" HorizontalAlignment="Right">Head position:</TextBlock>
-        <local:Vector3BoolCheckboxControl Grid.Row="9" Grid.Column="2" x:Name="HeadPosition" ValueChanged="CheckBox_Changed" />
+        <TextBlock Grid.Row="9" Grid.Column="0" HorizontalAlignment="Right">Angle between eyes:</TextBlock>
+        <local:Vector3BoolCheckboxControl Grid.Row="9" Grid.Column="2" x:Name="AngleBetweenEyes" ValueChanged="CheckBox_Changed"/>
 
-        <TextBlock Grid.Row="10" Grid.Column="0" HorizontalAlignment="Right">Head direction:</TextBlock>
-        <local:Vector3BoolCheckboxControl Grid.Row="10" Grid.Column="2" x:Name="HeadDirection" ValueChanged="CheckBox_Changed" />
+        <TextBlock Grid.Row="10" Grid.Column="0" HorizontalAlignment="Right">Head position:</TextBlock>
+        <local:Vector3BoolCheckboxControl Grid.Row="10" Grid.Column="2" x:Name="HeadPosition" ValueChanged="CheckBox_Changed" />
 
-        <TextBlock Grid.Row="12" Grid.Column="0" HorizontalAlignment="Right">Preset:</TextBlock>
-        <ComboBox Grid.Row="12" Grid.Column="2" x:Name="CalibrationModeCombo" SelectionChanged="CalibrationModeCombo_SelectionChanged">
+        <TextBlock Grid.Row="11" Grid.Column="0" HorizontalAlignment="Right">Head direction:</TextBlock>
+        <local:Vector3BoolCheckboxControl Grid.Row="11" Grid.Column="2" x:Name="HeadDirection" ValueChanged="CheckBox_Changed" />
+
+        <TextBlock Grid.Row="13" Grid.Column="0" HorizontalAlignment="Right">Preset:</TextBlock>
+        <ComboBox Grid.Row="13" Grid.Column="2" x:Name="CalibrationModeCombo" SelectionChanged="CalibrationModeCombo_SelectionChanged">
             <ComboBoxItem>Multidimensional</ComboBoxItem>
             <ComboBoxItem>Simple &amp; Fast</ComboBoxItem>
             <ComboBoxItem Name="CustomCalibrationMode">Custom</ComboBoxItem>

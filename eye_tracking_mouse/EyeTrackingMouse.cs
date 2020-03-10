@@ -21,10 +21,11 @@ namespace eye_tracking_mouse
         private Point gaze_point = new Point(0, 0);
         private readonly GazeSmoother gaze_smoother = new GazeSmoother();
 
-        private Tobii.Interaction.Vector3 left_eye;
-        private Tobii.Interaction.Vector3 right_eye;
-        private Tobii.Interaction.Vector3 head_position;
-        private Tobii.Interaction.Vector3 head_direction;
+        private Tobii.Interaction.Vector3 left_eye = new Tobii.Interaction.Vector3();
+        private Tobii.Interaction.Vector3 right_eye = new Tobii.Interaction.Vector3();
+        private Tobii.Interaction.Vector3 angle_between_eyes = new Tobii.Interaction.Vector3();
+        private Tobii.Interaction.Vector3 head_position = new Tobii.Interaction.Vector3();
+        private Tobii.Interaction.Vector3 head_direction = new Tobii.Interaction.Vector3();
 
         // |gaze_point| is not accurate. To enable precise cursor control the application supports calibration by W/A/S/D.
         // |calibration_shift| is result of such calibration. Application sets cursor position to |gaze_point| + |calibration_shift| when in |Controlling| state.
@@ -72,6 +73,11 @@ namespace eye_tracking_mouse
             }
         }
 
+        private double GetAngleBetweenVectorAndXAxis(double x, double y)
+        {
+            return Math.Acos(x / Math.Sqrt(x * x + y * y));
+        }
+
         private void OnEyePosition(Tobii.Interaction.EyePositionData obj)
         {
             lock (Helpers.locker)
@@ -85,6 +91,17 @@ namespace eye_tracking_mouse
                 {
                     var v = obj.RightEyeNormalized;
                     this.right_eye = new Tobii.Interaction.Vector3(v.X * 200, v.Y * 100, v.Z * 500);
+                }
+
+
+                if (obj.HasRightEyePosition && obj.HasLeftEyePosition)
+                {
+                    var vector = new Tobii.Interaction.Vector3(
+                        obj.LeftEyeNormalized.X - obj.RightEyeNormalized.X,
+                        obj.LeftEyeNormalized.Y - obj.RightEyeNormalized.Y,
+                        (obj.LeftEyeNormalized.Z - obj.RightEyeNormalized.Z) * 50);
+                    this.angle_between_eyes.X = GetAngleBetweenVectorAndXAxis(vector.Y, vector.X) * 180 / Math.PI;
+                    this.angle_between_eyes.Y = GetAngleBetweenVectorAndXAxis(vector.Z, vector.X) * 180 / Math.PI;
                 }
             }
         }
@@ -102,6 +119,7 @@ namespace eye_tracking_mouse
                 foreach (var vector3 in new List<Tuple<Tobii.Interaction.Vector3, Vector3Bool>> {
                     new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (left_eye, config.LeftEye),
                     new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (right_eye, config.RightEye),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (angle_between_eyes, config.AngleBetweenEyes),
                     new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (head_direction, config.HeadDirection),
                     new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (head_position, config.HeadPosition)
                    })
@@ -351,9 +369,16 @@ namespace eye_tracking_mouse
         public void UpdateTobiiStreams(object sender, EventArgs e)
         {
             AdditionalDimensionsConfguration config = Options.Instance.calibration_mode.additional_dimensions_configuration;
-            head_pose_stream.IsEnabled = !config.HeadPosition.Equals(Vector3Bool.Disabled) || !config.HeadDirection.Equals(Vector3Bool.Disabled);
+            head_pose_stream.IsEnabled = 
+                !config.HeadPosition.Equals(Vector3Bool.Disabled) ||
+                !config.HeadDirection.Equals(Vector3Bool.Disabled);
 
-            eye_position_stream.IsEnabled = !config.LeftEye.Equals(Vector3Bool.Disabled) || !config.RightEye.Equals(Vector3Bool.Disabled); ;
+            eye_position_stream.IsEnabled = 
+                !config.LeftEye.Equals(Vector3Bool.Disabled) || 
+                !config.RightEye.Equals(Vector3Bool.Disabled) || 
+                !config.AngleBetweenEyes.Equals(Vector3Bool.Disabled);
+
+            Debug.Assert(config.AngleBetweenEyes.Z == false);
         }
 
         public EyeTrackingMouse()

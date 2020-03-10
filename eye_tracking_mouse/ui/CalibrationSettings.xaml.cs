@@ -75,8 +75,10 @@ namespace eye_tracking_mouse
 
                 LeftEye.Value = Options.Instance.calibration_mode.additional_dimensions_configuration.LeftEye;
                 RightEye.Value = Options.Instance.calibration_mode.additional_dimensions_configuration.RightEye;
+                AngleBetweenEyes.Value = Options.Instance.calibration_mode.additional_dimensions_configuration.AngleBetweenEyes;
                 HeadPosition.Value = Options.Instance.calibration_mode.additional_dimensions_configuration.HeadPosition;
                 HeadDirection.Value = Options.Instance.calibration_mode.additional_dimensions_configuration.HeadDirection;
+                AngleBetweenEyes.Z.Visibility = Visibility.Hidden;
 
                 if (Options.Instance.calibration_mode.Equals(Options.CalibrationMode.MultiDimensionPreset))
                 {
@@ -147,6 +149,11 @@ namespace eye_tracking_mouse
                 if (sender == RightEye)
                 {
                     Options.Instance.calibration_mode.additional_dimensions_configuration.RightEye = RightEye.Value;
+                } 
+                else
+                if (sender == AngleBetweenEyes)
+                {
+                    Options.Instance.calibration_mode.additional_dimensions_configuration.AngleBetweenEyes = AngleBetweenEyes.Value;
                 }
                 else
                 if (sender == HeadDirection)

@@ -49,6 +49,7 @@ namespace eye_tracking_mouse
     {
         public Vector3Bool LeftEye;
         public Vector3Bool RightEye;
+        public Vector3Bool AngleBetweenEyes; // Z is always false!
         public Vector3Bool HeadPosition;
         public Vector3Bool HeadDirection;
 
@@ -59,7 +60,7 @@ namespace eye_tracking_mouse
             {
                 // X and Y are always there.
                 int coordinates_count = 2;
-                foreach (var vector3 in new List<Vector3Bool> { LeftEye, RightEye, HeadDirection, HeadPosition})
+                foreach (var vector3 in new List<Vector3Bool> { LeftEye, RightEye, AngleBetweenEyes, HeadDirection, HeadPosition})
                 {
                     if (vector3.X)
                         coordinates_count++;
@@ -76,6 +77,7 @@ namespace eye_tracking_mouse
             return
                 LeftEye.Equals(other.LeftEye) &&
                 RightEye.Equals(other.RightEye) &&
+                AngleBetweenEyes.Equals(other.AngleBetweenEyes) &&
                 HeadDirection.Equals(other.HeadDirection) &&
                 HeadPosition.Equals(other.HeadPosition);
         }
@@ -87,6 +89,7 @@ namespace eye_tracking_mouse
                 {
                     LeftEye = Vector3Bool.Disabled,
                     RightEye = Vector3Bool.Disabled,
+                    AngleBetweenEyes = Vector3Bool.Disabled,
                     HeadPosition = Vector3Bool.Disabled,
                     HeadDirection = Vector3Bool.Disabled
                 };
@@ -196,6 +199,7 @@ namespace eye_tracking_mouse
                         {
                             LeftEye = new Vector3Bool { X = true, Y = true, Z = true },
                             RightEye = new Vector3Bool { X = true, Y = true, Z = true },
+                            AngleBetweenEyes = Vector3Bool.Disabled,
                             HeadPosition = Vector3Bool.Disabled,
                             HeadDirection = Vector3Bool.Disabled
                         },

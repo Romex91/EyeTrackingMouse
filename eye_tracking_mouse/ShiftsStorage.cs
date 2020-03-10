@@ -114,6 +114,7 @@ namespace eye_tracking_mouse
                 return Path.Combine(Helpers.UserDataFolder, "calibration" +
                   GetVector3PathPart(dimensions_config.LeftEye) +
                   GetVector3PathPart(dimensions_config.RightEye) +
+                  GetVector3PathPart(dimensions_config.AngleBetweenEyes) +
                   GetVector3PathPart(dimensions_config.HeadPosition) +
                   GetVector3PathPart(dimensions_config.HeadDirection) +
                   ".json");
