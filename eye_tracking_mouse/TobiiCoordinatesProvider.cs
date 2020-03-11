@@ -10,9 +10,44 @@ using System.Windows.Forms;
 
 namespace eye_tracking_mouse
 {
+    public struct TobiiCoordinates
+    {
+        public Point gaze_point;
+        public Tobii.Interaction.Vector3 left_eye;
+        public Tobii.Interaction.Vector3 right_eye;
+        public Tobii.Interaction.Vector3 angle_between_eyes;
+        public Tobii.Interaction.Vector3 head_position;
+        public Tobii.Interaction.Vector3 head_direction;
+
+        public List<double> GetEnabledCoordinates()
+        {
+            var config = Options.Instance.calibration_mode.additional_dimensions_configuration;
+            List<double> coordinates = new List<double>(config.CoordinatesCount);
+
+            coordinates.Add(gaze_point.X);
+            coordinates.Add(gaze_point.Y);
+
+            foreach (var vector3 in new List<Tuple<Tobii.Interaction.Vector3, Vector3Bool>> {
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (left_eye, config.LeftEye),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (right_eye, config.RightEye),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (angle_between_eyes, config.AngleBetweenEyes),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (head_direction, config.HeadDirection),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (head_position, config.HeadPosition)})
+            {
+                if (vector3.Item2.X)
+                    coordinates.Add(vector3.Item1.X);
+                if (vector3.Item2.Y)
+                    coordinates.Add(vector3.Item1.Y);
+                if (vector3.Item2.Z)
+                    coordinates.Add(vector3.Item1.Z);
+            }
+            return coordinates;
+        }
+    }
+
     // Handles all interaction with the Eye Tracking Device. 
     // Provides as much coordinates as specified in |Options.Instance|.
-    class TobiiCoordinatesProvider : IDisposable
+    public class TobiiCoordinatesProvider : IDisposable
     {
         private readonly Tobii.Interaction.Host host;
         private readonly Tobii.Interaction.GazePointDataStream gaze_point_data_stream;
@@ -20,16 +55,23 @@ namespace eye_tracking_mouse
         private readonly Tobii.Interaction.EyePositionStream eye_position_stream;
         private readonly Tobii.Interaction.HeadPoseStream head_pose_stream;
 
-        private Point gaze_point = new Point(0, 0);
+        private Action<TobiiCoordinates> on_coordinates_callback;
+        TobiiCoordinates coordinates = new TobiiCoordinates
+        {
+            gaze_point = new Point(),
+            left_eye = new Tobii.Interaction.Vector3(),
+            right_eye = new Tobii.Interaction.Vector3(),
+            angle_between_eyes = new Tobii.Interaction.Vector3(),
+            head_position = new Tobii.Interaction.Vector3(),
+            head_direction = new Tobii.Interaction.Vector3()
+        };
 
-        private Tobii.Interaction.Vector3 left_eye = new Tobii.Interaction.Vector3();
-        private Tobii.Interaction.Vector3 right_eye = new Tobii.Interaction.Vector3();
-        private Tobii.Interaction.Vector3 angle_between_eyes = new Tobii.Interaction.Vector3();
-        private Tobii.Interaction.Vector3 head_position = new Tobii.Interaction.Vector3();
-        private Tobii.Interaction.Vector3 head_direction = new Tobii.Interaction.Vector3();
-
-        CoordinateSmoother[] smoothers;
-        private Action<List<double>> on_coordinates_callback;
+        PointSmoother gaze_point_smoother = new PointSmoother();
+        Vector3Smoother left_eye_smoother = new Vector3Smoother();
+        Vector3Smoother right_eye_smoother = new Vector3Smoother();
+        Vector3Smoother angle_between_eyes_smoother = new Vector3Smoother();
+        Vector3Smoother head_position_smoother = new Vector3Smoother();
+        Vector3Smoother head_direction_smoother = new Vector3Smoother();
 
         private DateTime last_gaze_point = DateTime.Now;
 
@@ -39,8 +81,9 @@ namespace eye_tracking_mouse
             {
                 if (!(head_position.X == 0 && head_position.Y == 0 && head_position.Z == 0))
                 {
-                    this.head_position = head_position;
-                    this.head_direction = new Tobii.Interaction.Vector3(head_direction.X * 200, head_direction.Y * 200, head_direction.Z * 200);
+                    coordinates.head_position = head_position_smoother.SmoothPoint(head_position);
+                    coordinates.head_direction = head_direction_smoother.SmoothPoint(
+                        new Tobii.Interaction.Vector3(head_direction.X * 200, head_direction.Y * 200, head_direction.Z * 200));
                 }
             }
         }
@@ -58,12 +101,12 @@ namespace eye_tracking_mouse
                 if (obj.HasLeftEyePosition)
                 {
                     var v = obj.LeftEyeNormalized;
-                    this.left_eye = new Tobii.Interaction.Vector3(v.X * 200, v.Y * 100, v.Z * 500);
+                    coordinates.left_eye = left_eye_smoother.SmoothPoint(new Tobii.Interaction.Vector3(v.X * 200, v.Y * 100, v.Z * 500));
                 }
                 if (obj.HasRightEyePosition)
                 {
                     var v = obj.RightEyeNormalized;
-                    this.right_eye = new Tobii.Interaction.Vector3(v.X * 200, v.Y * 100, v.Z * 500);
+                    coordinates.right_eye = right_eye_smoother.SmoothPoint(new Tobii.Interaction.Vector3(v.X * 200, v.Y * 100, v.Z * 500));
                 }
 
 
@@ -73,8 +116,12 @@ namespace eye_tracking_mouse
                         obj.LeftEyeNormalized.X - obj.RightEyeNormalized.X,
                         obj.LeftEyeNormalized.Y - obj.RightEyeNormalized.Y,
                         (obj.LeftEyeNormalized.Z - obj.RightEyeNormalized.Z) * 50);
-                    this.angle_between_eyes.X = GetAngleBetweenVectorAndXAxis(vector.Y, vector.X) * 180 / Math.PI;
-                    this.angle_between_eyes.Y = GetAngleBetweenVectorAndXAxis(vector.Z, vector.X) * 180 / Math.PI;
+                    coordinates.angle_between_eyes =
+                        angle_between_eyes_smoother.SmoothPoint(
+                            new Tobii.Interaction.Vector3(
+                                GetAngleBetweenVectorAndXAxis(vector.Y, vector.X) * 180 / Math.PI,
+                                GetAngleBetweenVectorAndXAxis(vector.Z, vector.X) * 180 / Math.PI,
+                                0));
                 }
             }
         }
@@ -84,37 +131,7 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 last_gaze_point = DateTime.Now;
-                gaze_point = new Point((int)x, (int)y);
-
-                List<double> coordinates = new List<double>();
-
-                coordinates.Add(x);
-                coordinates.Add(y);
-
-                var config = Options.Instance.calibration_mode.additional_dimensions_configuration;
-                foreach (var vector3 in new List<Tuple<Tobii.Interaction.Vector3, Vector3Bool>> {
-                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (left_eye, config.LeftEye),
-                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (right_eye, config.RightEye),
-                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (angle_between_eyes, config.AngleBetweenEyes),
-                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (head_direction, config.HeadDirection),
-                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (head_position, config.HeadPosition)
-                   })
-                {
-                    if (vector3.Item2.X)
-                        coordinates.Add(vector3.Item1.X);
-                    if (vector3.Item2.Y)
-                        coordinates.Add(vector3.Item1.Y);
-                    if (vector3.Item2.Z)
-                        coordinates.Add(vector3.Item1.Z);
-                }
-
-                Debug.Assert(smoothers.Length == coordinates.Count);
-                for (int i = 0; i < coordinates.Count; i++)
-                {
-                    smoothers[i].AddPoint(coordinates[i]);
-                    coordinates[i] = smoothers[i].GetSmoothenedPoint();
-                }
-
+                coordinates.gaze_point = gaze_point_smoother.SmoothPoint(new Point((int)x, (int)y));
                 on_coordinates_callback?.Invoke(coordinates);
             }
         }
@@ -124,12 +141,6 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 AdditionalDimensionsConfguration config = Options.Instance.calibration_mode.additional_dimensions_configuration;
-                smoothers = new CoordinateSmoother[config.CoordinatesCount];
-                for (int i = 0; i < config.CoordinatesCount; i++)
-                {
-                    smoothers[i] = new CoordinateSmoother();
-                }
-
                 head_pose_stream.IsEnabled =
                     !config.HeadPosition.Equals(Vector3Bool.Disabled) ||
                     !config.HeadDirection.Equals(Vector3Bool.Disabled);
@@ -144,7 +155,7 @@ namespace eye_tracking_mouse
             }
         }
 
-        public TobiiCoordinatesProvider(Action<List<double>> on_coordinates_callback)
+        public TobiiCoordinatesProvider(Action<TobiiCoordinates> on_coordinates_callback)
         {
             this.on_coordinates_callback = on_coordinates_callback;
             try
@@ -182,9 +193,12 @@ namespace eye_tracking_mouse
 
         public void Dispose()
         {
-            on_coordinates_callback = null;
-            Settings.CalibrationModeChanged -= UpdateTobiiStreams;
-            host.Dispose();
+            lock (Helpers.locker)
+            {
+                on_coordinates_callback = null;
+                Settings.CalibrationModeChanged -= UpdateTobiiStreams;
+                host.Dispose();
+            }
         }
     }
 }

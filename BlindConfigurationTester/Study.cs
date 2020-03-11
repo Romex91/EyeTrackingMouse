@@ -33,13 +33,6 @@ namespace BlindConfigurationTester
         public string name;
     }
 
-    public struct Session
-    {
-        public int points_count;
-        public int size_of_circle;
-        public string instructions;
-    }
-
     public class Study
     {
         [JsonIgnore]
@@ -74,7 +67,6 @@ namespace BlindConfigurationTester
                 return;
             }
 
-
             if (number_of_completed_sessions >= sessions.Count)
             {
                 MessageBox.Show("All sessions are finished");
@@ -82,24 +74,13 @@ namespace BlindConfigurationTester
             }
             Session session = sessions[number_of_completed_sessions];
 
-            if ((new SessionInstructionsWindow(session.instructions)).ShowDialog() != true)
-                return;
-
-            if (!InputInitWindow.input.IsLoaded)
-                (new InputInitWindow()).ShowDialog();
-
-
-            var rand = new Random(unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId));
-
-            List<Tuple<int, int>> points = new List<Tuple<int, int>>();
-            for (int i = 0; i < session.points_count; i++)
-                points.Add(new Tuple<int, int>(rand.Next(0, int.MaxValue), rand.Next(0, int.MaxValue)));
-
             List<int> configurations_indices = new List<int>();
             for (int i = 0; i < configurations.Count; i++)
                 configurations_indices.Add(i);
 
+            var rand = new Random(unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId));
             configurations_indices.Shuffle(rand);
+            int session_seed = unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId);
 
             foreach (var configuration_index in configurations_indices)
             {
@@ -110,7 +91,7 @@ namespace BlindConfigurationTester
                 {
                     Thread.Sleep(2000);
                     InputInitWindow.input.SendKey(Interceptor.Keys.WindowsKey, Interceptor.KeyState.E0);
-                    (new SessionWindow(points, session.size_of_circle)).ShowDialog();
+                    session.Start(false, session_seed);
                     TakeSnapshotAfterSession(configurations[configuration_index].name);
                     InputInitWindow.input.SendKey(Interceptor.Keys.WindowsKey, Interceptor.KeyState.E0 | Interceptor.KeyState.Up);
                 });
@@ -202,8 +183,10 @@ namespace BlindConfigurationTester
                     foreach (var configuration in configurations)
                     {
                         string configuration_string = configuration.name ?? "User Data";
-                        var statistics_before = eye_tracking_mouse.Statistics.LoadFromFile(Path.Combine(GetUserDataPathBeforeSession(i), configuration_string, "statistics.json"));
-                        var statistics_after = eye_tracking_mouse.Statistics.LoadFromFile(Path.Combine(GetUserDataPathAfterSession(i), configuration_string, "statistics.json"));
+                        var statistics_before = eye_tracking_mouse.Statistics.LoadFromFile(
+                            Path.Combine(GetUserDataPathBeforeSession(i), configuration_string, "statistics.json"));
+                        var statistics_after = eye_tracking_mouse.Statistics.LoadFromFile(
+                            Path.Combine(GetUserDataPathAfterSession(i), configuration_string, "statistics.json"));
 
                         if (!results.ContainsKey(configuration_string))
                             results.Add(configuration_string, new List<eye_tracking_mouse.Statistics>());

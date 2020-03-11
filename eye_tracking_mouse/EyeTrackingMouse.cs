@@ -48,7 +48,7 @@ namespace eye_tracking_mouse
             MouseButtons.Move(gaze_point.X + calibration_shift.X, gaze_point.Y + calibration_shift.Y);
         }
 
-        private void OnNewCoordinates(List<double> coordinates)
+        private void OnNewCoordinates(TobiiCoordinates coordinates)
         {
             lock (Helpers.locker)
             {
@@ -56,8 +56,8 @@ namespace eye_tracking_mouse
                 {
                     if (DateTime.Now > freeze_until)
                     {
-                        this.current_coordinates = coordinates;
-                        gaze_point = new Point((int)coordinates[0], (int)coordinates[1]);
+                        this.current_coordinates = coordinates.GetEnabledCoordinates();
+                        gaze_point = coordinates.gaze_point;
 
                         if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.reset_calibration_zone_size)
                         {
@@ -68,7 +68,7 @@ namespace eye_tracking_mouse
                             (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration_mode.update_period_ms)
                         {
                             last_shift_update_time = DateTime.Now;
-                            calibration_shift = CalibrationManager.Instance.GetShift(new ShiftPosition(coordinates));
+                            calibration_shift = CalibrationManager.Instance.GetShift(new ShiftPosition(current_coordinates));
                         }
                     }
 

@@ -97,7 +97,7 @@ namespace eye_tracking_mouse
         }
     }
 
-    class KeyBindings
+    public class KeyBindings
     {
         // Some modifiers have different Up and Down states depending on whether it is right or left.
         // Humanity has messy keyboard scancodes.
@@ -139,7 +139,7 @@ namespace eye_tracking_mouse
 
 
     // TODO: check all accesses to this and other shared classes are in critical section.
-    class Options
+    public class Options
     {
         public KeyBindings key_bindings = new KeyBindings();
 

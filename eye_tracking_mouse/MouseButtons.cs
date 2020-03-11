@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace eye_tracking_mouse
 {
-    class MouseButtons
+    public class MouseButtons
     {
         [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         public static extern void mouse_event(uint dwFlags, uint dx, uint dy, int cButtons, uint dwExtraInfo);
@@ -43,7 +43,9 @@ namespace eye_tracking_mouse
             if (move_mouse_task == null || move_mouse_task.IsCompleted)
             {
                 move_mouse_task = Task.Factory.StartNew(() => {
-                    mouse_event(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, (uint)(x * (65536 / GetSystemMetrics(SM_CXSCREEN))), (uint)(y * (65536 / GetSystemMetrics(SM_CYSCREEN))), 0, 0);
+                    mouse_event(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, 
+                        (uint)(x * (65536.0 / GetSystemMetrics(SM_CXSCREEN))), 
+                        (uint)(y * (65536.0 / GetSystemMetrics(SM_CYSCREEN))), 0, 0);
                 });
             }
         }
