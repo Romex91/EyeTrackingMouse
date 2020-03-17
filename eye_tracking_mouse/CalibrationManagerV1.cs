@@ -61,7 +61,7 @@ namespace eye_tracking_mouse
             Helpers.CorrectionInfoRelatedToCursor source_of_shade,
             Helpers.CorrectionInfoRelatedToCursor shaded_correction)
         {
-            Debug.Assert(source_of_shade.distance < shaded_correction.distance);
+            Debug.Assert(source_of_shade.distance <= shaded_correction.distance);
 
             var mode = Options.Instance.calibration_mode;
 
