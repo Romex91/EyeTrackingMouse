@@ -19,6 +19,7 @@ namespace BlindConfigurationTester
         public List<Session> sessions = new List<Session> { new Session {
             points_sequences = new Session.PointsSequence[1]{ new Session.PointsSequence { points_count = 50, seed = 0 } },
             size_of_circle = 6,
+            tag = "",
             instructions = "This text will be shown to user before session." } };
 
         [JsonIgnore]

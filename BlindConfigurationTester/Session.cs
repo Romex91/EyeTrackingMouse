@@ -22,6 +22,7 @@ namespace BlindConfigurationTester
         }
         public int size_of_circle;
         public string instructions;
+        public string tag;
 
         public PointsSequence[] points_sequences;
 
