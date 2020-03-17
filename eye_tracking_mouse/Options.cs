@@ -25,33 +25,62 @@ namespace eye_tracking_mouse
         CalibrateDown,
     }
 
-    public struct Vector3Bool
+    // Determines how spatial each new dimension will be.
+    // 0 percents means dimension is disabled.
+    public struct Vector3Percents
     {
-        public bool X { get; set; }
-        public bool Y { get; set; }
-        public bool Z { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Z { get; set; }
 
-        public bool Equals(Vector3Bool other)
+        public bool Equals(Vector3Percents other)
         {
             return X == other.X && Y == other.Y && Z == other.Z;
         }
 
-        public static Vector3Bool Disabled
+        public static Vector3Percents Disabled
         {
             get
             {
-                return new Vector3Bool { X = false, Y = false, Z = false };
+                return new Vector3Percents { X = 0, Y = 0, Z = 0};
             }
         }
     }
 
     public struct AdditionalDimensionsConfguration
     {
-        public Vector3Bool LeftEye;
-        public Vector3Bool RightEye;
-        public Vector3Bool AngleBetweenEyes; // Z is always false!
-        public Vector3Bool HeadPosition;
-        public Vector3Bool HeadDirection;
+        public Vector3Percents LeftEye;
+        public Vector3Percents RightEye;
+        public Vector3Percents AngleBetweenEyes; // Z is always false!
+        public Vector3Percents HeadPosition;
+        public Vector3Percents HeadDirection;
+
+        private List<Vector3Percents> Vectors {
+            get { return new List<Vector3Percents> { LeftEye, RightEye, AngleBetweenEyes, HeadDirection, HeadPosition }; }
+        }
+
+        [JsonIgnore]
+        public int[] CoordinatesScalesInPercents
+        {
+            get
+            {
+                int[] results = new int[CoordinatesCount];
+                results[0] = 100;
+                results[1] = 100;
+                int coordinates_count = 2;
+                foreach (var vector3 in Vectors)
+                {
+                    if (vector3.X > 0)
+                        results[coordinates_count++] = vector3.X;
+                    if (vector3.Y > 0)
+                        results[coordinates_count++] = vector3.Y;
+                    if (vector3.Z > 0)
+                        results[coordinates_count++] = vector3.Z;
+                }
+
+                return results;
+            }
+        }
 
         [JsonIgnore]
         public int CoordinatesCount
@@ -60,13 +89,13 @@ namespace eye_tracking_mouse
             {
                 // X and Y are always there.
                 int coordinates_count = 2;
-                foreach (var vector3 in new List<Vector3Bool> { LeftEye, RightEye, AngleBetweenEyes, HeadDirection, HeadPosition})
+                foreach (var vector3 in Vectors)
                 {
-                    if (vector3.X)
+                    if (vector3.X > 0)
                         coordinates_count++;
-                    if (vector3.Y)
+                    if (vector3.Y > 0)
                         coordinates_count++;
-                    if (vector3.Z)
+                    if (vector3.Z > 0)
                         coordinates_count++;
                 }
                 return coordinates_count;
@@ -87,11 +116,11 @@ namespace eye_tracking_mouse
             get {
                 return new AdditionalDimensionsConfguration
                 {
-                    LeftEye = Vector3Bool.Disabled,
-                    RightEye = Vector3Bool.Disabled,
-                    AngleBetweenEyes = Vector3Bool.Disabled,
-                    HeadPosition = Vector3Bool.Disabled,
-                    HeadDirection = Vector3Bool.Disabled
+                    LeftEye = Vector3Percents.Disabled,
+                    RightEye = Vector3Percents.Disabled,
+                    AngleBetweenEyes = Vector3Percents.Disabled,
+                    HeadPosition = Vector3Percents.Disabled,
+                    HeadDirection = Vector3Percents.Disabled
                 };
             }
         }
@@ -161,8 +190,6 @@ namespace eye_tracking_mouse
             public string algorithm = "V1";
 
             public AdditionalDimensionsConfguration additional_dimensions_configuration;
-            public int multi_dimensions_detalization;
-
             public bool Equals(CalibrationMode other)
             {
                 return
@@ -170,8 +197,7 @@ namespace eye_tracking_mouse
                     max_zones_count == other.max_zones_count &&
                     considered_zones_count == other.considered_zones_count &&
                     update_period_ms == other.update_period_ms &&
-                    additional_dimensions_configuration.Equals(other.additional_dimensions_configuration) &&
-                    multi_dimensions_detalization == other.multi_dimensions_detalization;
+                    additional_dimensions_configuration.Equals(other.additional_dimensions_configuration);
             }
 
             public static CalibrationMode SingleDimensionPreset
@@ -183,7 +209,6 @@ namespace eye_tracking_mouse
                         considered_zones_count = 5,
                         max_zones_count = 25,
                         additional_dimensions_configuration = AdditionalDimensionsConfguration.Disabled,
-                        multi_dimensions_detalization = 100,
                         update_period_ms = 20,
                         zone_size = 150
                     };
@@ -200,14 +225,13 @@ namespace eye_tracking_mouse
                         max_zones_count = 2000,
                         additional_dimensions_configuration = new AdditionalDimensionsConfguration
                         {
-                            LeftEye = new Vector3Bool { X = true, Y = true, Z = true },
-                            RightEye = new Vector3Bool { X = true, Y = true, Z = true },
-                            AngleBetweenEyes = Vector3Bool.Disabled,
-                            HeadPosition = Vector3Bool.Disabled,
-                            HeadDirection = Vector3Bool.Disabled
+                            LeftEye = new Vector3Percents { X = 700, Y = 700, Z = 700 },
+                            RightEye = Vector3Percents.Disabled,
+                            AngleBetweenEyes = new Vector3Percents { X = 700, Y = 700, Z = 0 },
+                            HeadPosition = Vector3Percents.Disabled,
+                            HeadDirection = Vector3Percents.Disabled
                         },
 
-                        multi_dimensions_detalization = 70,
                         update_period_ms = 20,
                         zone_size = 150
                     };

@@ -40,7 +40,6 @@
         <local:IntegerPropertyControl Grid.Row="3" Grid.ColumnSpan="4" x:Name="ConsideredZonesCount" Label="Considered arrows count" Maximum="50" Minimum="3" ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
         <local:IntegerPropertyControl Grid.Row="4" Grid.ColumnSpan="4" x:Name="UpdatePeriodMs" Label="Update period (ms)" Maximum="500" Minimum="0" ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
 
-        <local:IntegerPropertyControl Grid.Row="5" Grid.ColumnSpan="4" x:Name="MultidimensionalDetalization" Label="Additional dimensions detalization %" Maximum="1000" Minimum="1" ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
 
         <TextBlock Grid.Row="6" Grid.Column="0">Additional dimensions</TextBlock>
 

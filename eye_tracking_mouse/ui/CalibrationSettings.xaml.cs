@@ -60,16 +60,9 @@ namespace eye_tracking_mouse
                     "Energy saving option. The calibration algorithm will iterate once per this period of time. \n" +
                     "Bigger period results in less CPU load, but the cursor may shake.";
 
-                MultidimensionalDetalization.ToolTip = 
-                    "If you check any of the checkboxes below they will be represented as additional dimensions. \n" +
-                    "Arrows in CALIBRATION VIEW will become colorful and the algorithm will consider color when calculating distance between arrows. \n" +
-                    "This slider determines how spacious these new dimensions are. \n\n" +
-                    "Don't create too many dimensions. It will produce a hyper black hole sucking all the data and giving nothing back.";
-
                 CalibrationZoneSize.Value = Options.Instance.calibration_mode.zone_size;
                 CalibrationPointsCount.Value = Options.Instance.calibration_mode.max_zones_count;
                 ConsideredZonesCount.Value = Options.Instance.calibration_mode.considered_zones_count;
-                MultidimensionalDetalization.Value = Options.Instance.calibration_mode.multi_dimensions_detalization;
                 UpdatePeriodMs.Value = Options.Instance.calibration_mode.update_period_ms;
 
 
@@ -118,10 +111,6 @@ namespace eye_tracking_mouse
                 }
                 else if (sender == UpdatePeriodMs) {
                     Options.Instance.calibration_mode.update_period_ms = (int)UpdatePeriodMs.Value;
-                }
-                else if (sender == MultidimensionalDetalization)
-                {
-                    Options.Instance.calibration_mode.multi_dimensions_detalization = (int)MultidimensionalDetalization.Value;
                 }
 
                 Options.Changed?.Invoke(this, new EventArgs());

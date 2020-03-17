@@ -22,12 +22,10 @@ namespace eye_tracking_mouse
         {
             this.coordinates = coordinates;
             adjusted_coordinates = new List<double>(coordinates.Count);
+            var coordinates_scales_in_percents = Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
             for (int i = 0; i < coordinates.Count; i++)
             {
-                if (i < 2)
-                    adjusted_coordinates.Add(coordinates[i]);
-                else
-                    adjusted_coordinates.Add(coordinates[i] * Options.Instance.calibration_mode.multi_dimensions_detalization / 10.0);
+                adjusted_coordinates.Add(coordinates_scales_in_percents[i] / 100.0 * coordinates[i]);
             }
         }
 

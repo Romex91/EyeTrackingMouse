@@ -110,9 +110,9 @@ namespace eye_tracking_mouse
             File.WriteAllText(GetFilepath(directory_path), GetSerializedContent());
         }
 
-        private static string GetVector3PathPart(Vector3Bool vector)
+        private static string GetVector3PathPart(Vector3Percents vector)
         {
-            return (vector.X ? "1" : "0") + (vector.Y ? "1" : "0") + (vector.Z ? "1" : "0");
+            return (vector.X > 0 ? "1" : "0") + (vector.Y > 0 ? "1" : "0") + (vector.Z > 0 ? "1" : "0");
         }
 
         private static string GetFilepath(string directory_path)

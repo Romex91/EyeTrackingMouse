@@ -35,11 +35,11 @@ namespace BlindConfigurationTester
         {
             eye_tracking_mouse.Options.Instance.calibration_mode.additional_dimensions_configuration = new eye_tracking_mouse.AdditionalDimensionsConfguration
             {
-                HeadDirection = new eye_tracking_mouse.Vector3Bool { X = true, Y = true, Z = true },
-                HeadPosition = new eye_tracking_mouse.Vector3Bool { X = true, Y = true, Z = true },
-                LeftEye = new eye_tracking_mouse.Vector3Bool { X = true, Y = true, Z = true },
-                RightEye = new eye_tracking_mouse.Vector3Bool { X = true, Y = true, Z = true },
-                AngleBetweenEyes = new eye_tracking_mouse.Vector3Bool { X = true, Y = true, Z = false }
+                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 70, Y = 70, Z = 70 },
+                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 70, Y = 70, Z = 70 },
+                LeftEye = new eye_tracking_mouse.Vector3Percents { X = 70, Y = 70, Z = 70 },
+                RightEye = new eye_tracking_mouse.Vector3Percents { X = 70, Y = 70, Z = 70 },
+                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 70, Y = 70, Z = 70 }
             };
 
             this.points = points;

@@ -207,25 +207,25 @@ namespace eye_tracking_mouse
                 {
                     color = color_calculator.GetColor(cursor_position);
                     int coordinate_index = 2;
-                    foreach (var vector3 in new List<Tuple<string, Vector3Bool>> {
-                        new Tuple<string, Vector3Bool> ("Left eye", configuration.LeftEye),
-                        new Tuple<string, Vector3Bool> ("Right eye", configuration.RightEye),
-                        new Tuple<string, Vector3Bool> ("Angle between eyes", configuration.AngleBetweenEyes),
-                        new Tuple<string, Vector3Bool> ("Head direction", configuration.HeadDirection),
-                        new Tuple<string, Vector3Bool> ("Head position", configuration.HeadPosition)
+                    foreach (var vector3 in new List<Tuple<string, Vector3Percents>> {
+                        new Tuple<string, Vector3Percents> ("Left eye", configuration.LeftEye),
+                        new Tuple<string, Vector3Percents> ("Right eye", configuration.RightEye),
+                        new Tuple<string, Vector3Percents> ("Angle between eyes", configuration.AngleBetweenEyes),
+                        new Tuple<string, Vector3Percents> ("Head direction", configuration.HeadDirection),
+                        new Tuple<string, Vector3Percents> ("Head position", configuration.HeadPosition)
                     })
                     {
-                        if (!vector3.Item2.Equals(Vector3Bool.Disabled))
+                        if (!vector3.Item2.Equals(Vector3Percents.Disabled))
                             head_position_description += vector3.Item1 + " \n";
-                        if (vector3.Item2.X)
+                        if (vector3.Item2.X > 0)
                         {
                             head_position_description += "X: " + (int)cursor_position[coordinate_index++] + "\n";
                         }
-                        if (vector3.Item2.Y)
+                        if (vector3.Item2.Y > 0)
                         {
                             head_position_description += "Y: " + (int)cursor_position[coordinate_index++] + "\n";
                         }
-                        if (vector3.Item2.Z)
+                        if (vector3.Item2.Z > 0)
                         {
                             head_position_description += "Z: " + (int)cursor_position[coordinate_index++] + "\n";
                         }

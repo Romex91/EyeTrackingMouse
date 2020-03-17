@@ -32,17 +32,22 @@ namespace eye_tracking_mouse
             ValueChanged?.Invoke(this, e);
         }
 
-        public Vector3Bool Value
+        public Vector3Percents Value
         {
             get
             {
-                return new Vector3Bool { X = X.IsChecked == true, Y = Y.IsChecked == true, Z = Z.IsChecked == true };
+                return new Vector3Percents
+                {
+                    X = (X.IsChecked == true ? 700 : 0),
+                    Y = (Y.IsChecked == true ? 700 : 0),
+                    Z = (Z.IsChecked == true ? 700 : 0)
+                };
             }
             set
             {
-                X.IsChecked = value.X;
-                Y.IsChecked = value.Y;
-                Z.IsChecked = value.Z;
+                X.IsChecked = value.X > 0;
+                Y.IsChecked = value.Y > 0;
+                Z.IsChecked = value.Z > 0;
             }
         }
     }

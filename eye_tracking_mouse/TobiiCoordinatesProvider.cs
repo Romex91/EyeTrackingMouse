@@ -27,18 +27,18 @@ namespace eye_tracking_mouse
             coordinates.Add(gaze_point.X);
             coordinates.Add(gaze_point.Y);
 
-            foreach (var vector3 in new List<Tuple<Tobii.Interaction.Vector3, Vector3Bool>> {
-                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (left_eye, config.LeftEye),
-                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (right_eye, config.RightEye),
-                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (angle_between_eyes, config.AngleBetweenEyes),
-                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (head_direction, config.HeadDirection),
-                    new Tuple<Tobii.Interaction.Vector3, Vector3Bool> (head_position, config.HeadPosition)})
+            foreach (var vector3 in new List<Tuple<Tobii.Interaction.Vector3, Vector3Percents>> {
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (left_eye, config.LeftEye),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (right_eye, config.RightEye),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (angle_between_eyes, config.AngleBetweenEyes),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (head_direction, config.HeadDirection),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (head_position, config.HeadPosition)})
             {
-                if (vector3.Item2.X)
+                if (vector3.Item2.X > 0)
                     coordinates.Add(vector3.Item1.X);
-                if (vector3.Item2.Y)
+                if (vector3.Item2.Y > 0)
                     coordinates.Add(vector3.Item1.Y);
-                if (vector3.Item2.Z)
+                if (vector3.Item2.Z > 0)
                     coordinates.Add(vector3.Item1.Z);
             }
             return coordinates;
@@ -142,16 +142,15 @@ namespace eye_tracking_mouse
             {
                 AdditionalDimensionsConfguration config = Options.Instance.calibration_mode.additional_dimensions_configuration;
                 head_pose_stream.IsEnabled =
-                    !config.HeadPosition.Equals(Vector3Bool.Disabled) ||
-                    !config.HeadDirection.Equals(Vector3Bool.Disabled);
+                    !config.HeadPosition.Equals(Vector3Percents.Disabled) ||
+                    !config.HeadDirection.Equals(Vector3Percents.Disabled);
 
                 eye_position_stream.IsEnabled =
-                    !config.LeftEye.Equals(Vector3Bool.Disabled) ||
-                    !config.RightEye.Equals(Vector3Bool.Disabled) ||
-                    !config.AngleBetweenEyes.Equals(Vector3Bool.Disabled);
+                    !config.LeftEye.Equals(Vector3Percents.Disabled) ||
+                    !config.RightEye.Equals(Vector3Percents.Disabled) ||
+                    !config.AngleBetweenEyes.Equals(Vector3Percents.Disabled);
 
-                Debug.Assert(config.AngleBetweenEyes.Z == false);
-
+                Debug.Assert(config.AngleBetweenEyes.Z == 0);
             }
         }
 
