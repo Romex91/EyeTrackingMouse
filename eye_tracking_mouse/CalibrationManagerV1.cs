@@ -42,20 +42,23 @@ namespace eye_tracking_mouse
 
                 Helpers.NormalizeWeights(closest_corrections);
 
+                var result = Helpers.GetWeightedAverage(shift_storage, closest_corrections);
+
                 if (shift_storage.calibration_window != null)
                 {
                     var lables = new List<Tuple<string /*text*/, int /*correction index*/>>();
-                    foreach(var correction in closest_corrections)
+                    foreach (var correction in closest_corrections)
                         lables.Add(new Tuple<string, int>((int)(correction.weight * 100) + "%", correction.index));
                     shift_storage.calibration_window.UpdateCorrectionsLables(lables);
+                    shift_storage.calibration_window.UpdateCurrentCorrection(new UserCorrection(cursor_position, result));
                 }
 
-                return Helpers.GetWeightedAverage(shift_storage, closest_corrections);
+                return result;
             }
         }
 
         private double GetShadeOpacity(
-            Helpers.CorrectionInfoRelatedToCursor source_of_shade, 
+            Helpers.CorrectionInfoRelatedToCursor source_of_shade,
             Helpers.CorrectionInfoRelatedToCursor shaded_correction)
         {
             Debug.Assert(source_of_shade.distance < shaded_correction.distance);
@@ -73,7 +76,7 @@ namespace eye_tracking_mouse
             else if (angle_in_percents > 100 - mode.size_of_transparent_sector_in_percents)
                 opacity = 0;
             else
-                opacity = (angle_in_percents + mode.size_of_transparent_sector_in_percents - 100) / 
+                opacity = (angle_in_percents + mode.size_of_transparent_sector_in_percents - 100) /
                     (mode.size_of_opaque_sector_in_percents + mode.size_of_transparent_sector_in_percents - 100);
 
             double distance_from_shade_shell_to_shaded_correction = shaded_correction.distance - source_of_shade.distance;
@@ -115,11 +118,21 @@ namespace eye_tracking_mouse
             shift_storage.Reset();
         }
 
-        public void ToggleDebugWindow()
+        public void SaveInDirectory(string directory_path)
         {
-            shift_storage.ToggleDebugWindow();
+            shift_storage.SaveInDirectory(directory_path);
         }
 
+
         private readonly ShiftsStorage shift_storage = new ShiftsStorage();
+
+        public bool IsDebugWindowEnabled
+        {
+            get => shift_storage.IsDebugWindowEnabled;
+            set
+            {
+                shift_storage.IsDebugWindowEnabled = value;
+            }
+        }
     }
 }

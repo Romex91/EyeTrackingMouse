@@ -20,7 +20,7 @@ namespace BlindConfigurationTester
             points_count = 50, size_of_circle = 6, instructions = "This text will be shown to user before session." } };
 
         [JsonIgnore]
-        List<DataPoint> data_points = new List<DataPoint>();
+        public List<DataPoint> data_points = new List<DataPoint>();
 
         public DataSet(string name_value)
         {
@@ -83,7 +83,7 @@ namespace BlindConfigurationTester
             File.WriteAllText(Path.Combine(DataSetResultsFolder, "data_set.json"), JsonConvert.SerializeObject(data_points, Formatting.None));
         }
 
-        internal void StartTrainingSession()
+        public void StartTrainingSession()
         {
             if (number_of_completed_sessions >= sessions.Count)
             {
@@ -97,6 +97,78 @@ namespace BlindConfigurationTester
             data_points.InsertRange(data_points.Count, new_data_points);
             number_of_completed_sessions++;
             SaveToFile();
+        }
+
+    }
+
+    public static partial class Helpers
+    {
+        public class TestResult
+        {
+            public struct Error
+            {
+                public double before_correction { get; set; }
+                public double after_correction { get; set; }
+            }
+
+            public List<Error> errors = new List<Error>();
+            public long time_ms;
+        }
+
+        public static eye_tracking_mouse.ICalibrationManager SetupCalibrationManager(string configuration)
+        {
+            eye_tracking_mouse.Options.Instance = eye_tracking_mouse.Options.LoadFromFile(
+                Path.Combine(Utils.GetConfigurationDir(configuration), "options.json"));
+            eye_tracking_mouse.Options.CalibrationMode.Changed?.Invoke(null, null);
+
+            eye_tracking_mouse.FilesSavingQueue.DisabledForTesting = true;
+            var calibration_manager = eye_tracking_mouse.CalibrationManager.Instance;
+            calibration_manager.Reset();
+            return calibration_manager;
+        }
+
+        public static TestResult TestConfiguration(string configuration, List<DataPoint> data_points)
+        {
+            var calibration_manager = SetupCalibrationManager(configuration);
+            var watch = new System.Diagnostics.Stopwatch();
+            watch.Start();
+
+            TestResult result = new TestResult();
+            foreach (var data_point in data_points)
+            {
+                result.errors.Add(AddDataPoint(calibration_manager, data_point));
+            }
+
+            watch.Stop();
+            result.time_ms = watch.ElapsedMilliseconds;
+
+            return result;
+        }
+
+        public static TestResult.Error AddDataPoint(eye_tracking_mouse.ICalibrationManager calibration_manager, DataPoint data_point)
+        {
+            var shift_position = new eye_tracking_mouse.ShiftPosition(data_point.tobii_coordinates.GetEnabledCoordinates());
+            var tobii_gaze_point = new Point(
+                        data_point.tobii_coordinates.gaze_point.X,
+                        data_point.tobii_coordinates.gaze_point.Y);
+            var shift = calibration_manager.GetShift(shift_position);
+            var corrected_gaze_point = new Point(
+                tobii_gaze_point.X + shift.X,
+                tobii_gaze_point.Y + shift.Y);
+
+            TestResult.Error error =  new TestResult.Error
+            {
+                before_correction = Point.Subtract(
+                    data_point.true_location_on_screen,
+                    tobii_gaze_point).Length,
+                after_correction = Point.Subtract(
+                    data_point.true_location_on_screen,
+                    corrected_gaze_point).Length,
+            };
+
+            var correction = Point.Subtract(data_point.true_location_on_screen, tobii_gaze_point);
+            calibration_manager.AddShift(shift_position, new System.Drawing.Point((int)correction.X, (int)correction.Y));
+            return error;
         }
     }
 }

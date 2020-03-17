@@ -86,6 +86,12 @@
     <Compile Include="CloseAppDialog.xaml.cs">
       <DependentUpon>CloseAppDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ConfigurationSelectionDialog.xaml.cs">
+      <DependentUpon>ConfigurationSelectionDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigurationTestVisualisationWindow.xaml.cs">
+      <DependentUpon>ConfigurationTestVisualisationWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DataSet.cs" />
     <Compile Include="DataSetSetupControl.xaml.cs">
       <DependentUpon>DataSetSetupControl.xaml</DependentUpon>
@@ -113,6 +119,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ConfigurationControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfigurationSelectionDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfigurationTestVisualisationWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

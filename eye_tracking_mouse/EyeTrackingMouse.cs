@@ -265,7 +265,7 @@ namespace eye_tracking_mouse
 
             if (key == Key.ShowCalibrationView && key_state == KeyState.Down)
             {
-                CalibrationManager.Instance.ToggleDebugWindow();
+                CalibrationManager.Instance.IsDebugWindowEnabled = !CalibrationManager.Instance.IsDebugWindowEnabled;
             }
 
             return true;

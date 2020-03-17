@@ -99,6 +99,8 @@ namespace eye_tracking_mouse
 
     public class KeyBindings
     {
+        public static EventHandler Changed;
+
         // Some modifiers have different Up and Down states depending on whether it is right or left.
         // Humanity has messy keyboard scancodes.
         public bool is_modifier_e0 = true;
@@ -141,10 +143,11 @@ namespace eye_tracking_mouse
     // TODO: check all accesses to this and other shared classes are in critical section.
     public class Options
     {
+        public static EventHandler Changed;
         public KeyBindings key_bindings = new KeyBindings();
-
         public class CalibrationMode
         {
+            public static EventHandler Changed;
             public int zone_size;
             public int max_zones_count;
             public int considered_zones_count;
@@ -240,16 +243,16 @@ namespace eye_tracking_mouse
             File.WriteAllText(Filepath, JsonConvert.SerializeObject(this, Formatting.Indented));
         }
 
-        public static Options Instance { get; set; } = LoadFromFile();
+        public static Options Instance { get; set; } = LoadFromFile(Filepath);
 
-        public static Options LoadFromFile()
+        public static Options LoadFromFile(string file_path)
         {
             Options options = Default();
             try
             {
-                if (File.Exists(Filepath))
+                if (File.Exists(file_path))
                 {
-                    options = JsonConvert.DeserializeObject<Options>(File.ReadAllText(Filepath));
+                    options = JsonConvert.DeserializeObject<Options>(File.ReadAllText(file_path));
                 }
             }
             catch (Exception)

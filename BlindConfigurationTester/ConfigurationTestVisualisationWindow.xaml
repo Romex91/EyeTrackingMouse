@@ -1,0 +1,30 @@
+﻿<Window x:Class="BlindConfigurationTester.ConfigurationTestVisualisationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BlindConfigurationTester"
+        mc:Ignorable="d"
+        Title="Configuration Test"  Background="LightGray" WindowState="Maximized">
+    <Canvas Name="Canvas">
+        <Grid Canvas.Top="50">
+            <Grid.RowDefinitions>
+                <RowDefinition></RowDefinition>
+                <RowDefinition></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Ellipse Width="10" Height="10" Fill="Red"></Ellipse>
+            <TextBlock Grid.Column="1">True Location On Screen</TextBlock>
+            <Ellipse Grid.Row="1" Width="10" Height="10" Fill="Green"></Ellipse>
+            <TextBlock Grid.Row="1" Grid.Column="1">Tobii Eye Tracker Gaze Point</TextBlock>
+            <TextBlock Grid.Row="2" x:Name="TextBlock_Info"/>
+        </Grid>
+        <Ellipse Width="10" Height="10" Fill="Red" Name="Circle_Red"></Ellipse>
+        <Ellipse Width="10" Height="10" Fill="Green" Name="Circle_Green"></Ellipse>
+    </Canvas>
+</Window>
+

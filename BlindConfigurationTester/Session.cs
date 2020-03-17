@@ -11,7 +11,7 @@ namespace BlindConfigurationTester
     public struct DataPoint
     {
         public eye_tracking_mouse.TobiiCoordinates tobii_coordinates;
-        public Point error;
+        public Point true_location_on_screen;
     }
     public struct Session
     {

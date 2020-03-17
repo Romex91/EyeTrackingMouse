@@ -111,6 +111,42 @@ namespace BlindConfigurationTester
             TextBlock_Info.Text = SelectedDataSet.GetInfo();
             Button_StartSession.Content = "Start Session " + (SelectedDataSet.number_of_completed_sessions + 1);
         }
+        
+        private void Button_TestConfigurationVisually_Click(object sender, RoutedEventArgs e)
+        {
+            var configuration_selection_dialog = new ConfigurationSelectionDialog();
+
+            if (configuration_selection_dialog.ShowDialog() != true || SelectedDataSet == null)
+                return;
+
+            ConfigurationTestVisualisationWindow data_visualisation_window = 
+                new ConfigurationTestVisualisationWindow(
+                    configuration_selection_dialog.GetSelectedConfiguration(), 
+                    SelectedDataSet.data_points);
+
+            data_visualisation_window.ShowDialog();
+        }
+
+        private void Button_TestConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new ConfigurationSelectionDialog();
+
+            if (dialog.ShowDialog() != true || SelectedDataSet == null)
+                return;
+            
+            var result = Helpers.TestConfiguration(dialog.GetSelectedConfiguration(), SelectedDataSet.data_points);
+            eye_tracking_mouse.CalibrationManager.Instance.SaveInDirectory(Utils.DataFolder);
+
+            using (var writer = new StreamWriter(
+                System.IO.Path.Combine(SelectedDataSet.DataSetResultsFolder, 
+                (dialog.GetSelectedConfiguration() ?? "User Data") + ".csv")))
+            {
+                using (var csv = new CsvHelper.CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture))
+                {
+                    csv.WriteRecords(result.errors);
+                }
+            }
+        }
 
         private void Button_RunExplorer_Click(object sender, RoutedEventArgs e)
         {

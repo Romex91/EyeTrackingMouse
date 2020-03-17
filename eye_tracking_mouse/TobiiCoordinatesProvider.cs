@@ -167,7 +167,7 @@ namespace eye_tracking_mouse
 
                 UpdateTobiiStreams(null, null);
 
-                Settings.CalibrationModeChanged += UpdateTobiiStreams;
+                Options.CalibrationMode.Changed += UpdateTobiiStreams;
 
                 gaze_point_data_stream.GazePoint(OnGazePoint);
                 eye_position_stream.EyePosition(OnEyePosition);
@@ -196,7 +196,7 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 on_coordinates_callback = null;
-                Settings.CalibrationModeChanged -= UpdateTobiiStreams;
+                Options.CalibrationMode.Changed -= UpdateTobiiStreams;
                 host.Dispose();
             }
         }

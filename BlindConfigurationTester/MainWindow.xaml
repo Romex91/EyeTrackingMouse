@@ -38,10 +38,9 @@
             <local:StudySetupControl HorizontalAlignment="Stretch" Padding="10" x:Name="Study"></local:StudySetupControl>
         </Border>
         
-        <TextBlock Grid.ColumnSpan="2" HorizontalAlignment="Center" Grid.Row="4">Study setup:</TextBlock>
+        <TextBlock Grid.ColumnSpan="2" HorizontalAlignment="Center" Grid.Row="4">Data Set setup:</TextBlock>
         <Border BorderBrush="Black" BorderThickness="2" Grid.ColumnSpan="2" Grid.Row="5">
             <local:DataSetSetupControl HorizontalAlignment="Stretch" Padding="10" x:Name="DataSet"></local:DataSetSetupControl>
         </Border>
-
     </Grid>
 </Window>

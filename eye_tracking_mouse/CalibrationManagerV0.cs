@@ -36,15 +36,18 @@ namespace eye_tracking_mouse
                     correction.weight = 1 / correction.distance / sum_of_reverse_distances;
                 }
 
+                var result = Helpers.GetWeightedAverage(shift_storage, closest_corrections);
+
                 if (shift_storage.calibration_window != null)
                 {
                     var lables = new List<Tuple<string /*text*/, int /*correction index*/>>();
                     foreach (var correction in closest_corrections)
                         lables.Add(new Tuple<string, int>((int)(correction.weight * 100) + "%", correction.index));
                     shift_storage.calibration_window.UpdateCorrectionsLables(lables);
+                    shift_storage.calibration_window.UpdateCurrentCorrection(new UserCorrection(cursor_position, result));
                 }
 
-                return Helpers.GetWeightedAverage(shift_storage, closest_corrections);
+                return result;
             }
         }
 
@@ -63,9 +66,16 @@ namespace eye_tracking_mouse
             shift_storage.Reset();
         }
 
-        public void ToggleDebugWindow()
+        public bool IsDebugWindowEnabled
         {
-            shift_storage.ToggleDebugWindow();
+            get => shift_storage.IsDebugWindowEnabled;
+            set => shift_storage.IsDebugWindowEnabled = value;
+        }
+
+        public void SaveInDirectory(string directory_path)
+        {
+
+            shift_storage.SaveInDirectory(directory_path);
         }
 
         private readonly ShiftsStorage shift_storage = new ShiftsStorage();

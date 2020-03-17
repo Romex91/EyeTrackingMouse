@@ -36,7 +36,9 @@
         <Button Grid.Row="0" Grid.Column="3" Click="Button_Remove_Click">Remove</Button>
 
         <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="Button_StartSession"  Click="Button_StartSession_Click">Start Training Session</Button>
-        <Button Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Click="Button_RunExplorer_Click">Run Explorer</Button>
+        <Button Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="1" Click="Button_RunExplorer_Click">Run Explorer</Button>
+        <Button Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="1" Click="Button_TestConfiguration_Click">Test Configuration on Data Set</Button>
+        <Button Grid.Row="2" Grid.Column="3" Grid.ColumnSpan="1" Click="Button_TestConfigurationVisually_Click">Test Configuration Visually</Button>
         <TextBlock Grid.Row="0" Grid.RowSpan="3" Grid.Column="5" Name="TextBlock_Info">Data Set info</TextBlock>
     </Grid>
 </UserControl>

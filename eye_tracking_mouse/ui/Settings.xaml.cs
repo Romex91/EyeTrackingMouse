@@ -27,10 +27,6 @@ namespace eye_tracking_mouse
 
         private InputManager input_manager;
 
-        public static EventHandler KeyBindingsChanged;
-        public static EventHandler OptionsChanged;
-        public static EventHandler CalibrationModeChanged;
-
         public Settings(InputManager input_manager)
         {
             this.input_manager = input_manager;
@@ -234,7 +230,7 @@ namespace eye_tracking_mouse
                 {
                     Options.Instance.smothening_points_count = (int)SmootheningPointsCount.Value;
                 }
-                OptionsChanged?.Invoke(this, new EventArgs());
+                Options.Changed?.Invoke(this, new EventArgs());
                 Options.Instance.SaveToFile();
             }
         }
@@ -257,7 +253,7 @@ namespace eye_tracking_mouse
                     var key_bindings = Options.Instance.key_bindings;
                     Options.Instance = Options.Default();
                     Options.Instance.key_bindings = key_bindings;
-                    OptionsChanged?.Invoke(this, new EventArgs());
+                    Options.Changed?.Invoke(this, new EventArgs());
 
                     Options.Instance.SaveToFile();
                     UpdateSliders();
@@ -297,7 +293,7 @@ namespace eye_tracking_mouse
                                     UpdateKeyBindingControls();
                                     UpdateTexts();
                                     Options.Instance.SaveToFile();
-                                    KeyBindingsChanged?.Invoke(this, new EventArgs());
+                                    KeyBindings.Changed?.Invoke(this, new EventArgs());
                                     IsEnabled = true;
                                 }
                             }));
@@ -320,7 +316,7 @@ namespace eye_tracking_mouse
                         UpdateKeyBindingControls();
                         UpdateTexts();
                         Options.Instance.SaveToFile();
-                        KeyBindingsChanged?.Invoke(this, new EventArgs());
+                        KeyBindings.Changed?.Invoke(this, new EventArgs());
                     }
                     return;
                 }
@@ -390,7 +386,7 @@ namespace eye_tracking_mouse
                 {
                     Options.Instance.key_bindings = new KeyBindings();
                     Options.Instance.SaveToFile();
-                    KeyBindingsChanged?.Invoke(this, new EventArgs());
+                    KeyBindings.Changed?.Invoke(this, new EventArgs());
 
                     UpdateKeyBindingControls();
                     UpdateTexts();
@@ -456,8 +452,8 @@ namespace eye_tracking_mouse
                     CustomCalibrationMode.Visibility = Visibility.Collapsed;
                 }
 
-                CalibrationModeChanged?.Invoke(this, null);
-                OptionsChanged?.Invoke(this, new EventArgs());
+                Options.CalibrationMode.Changed?.Invoke(this, null);
+                Options.Changed?.Invoke(this, new EventArgs());
                 Options.Instance.SaveToFile();
             }
         }

@@ -124,7 +124,7 @@ namespace eye_tracking_mouse
                     Options.Instance.calibration_mode.multi_dimensions_detalization = (int)MultidimensionalDetalization.Value;
                 }
 
-                Settings.OptionsChanged?.Invoke(this, new EventArgs());
+                Options.Changed?.Invoke(this, new EventArgs());
                 Options.Instance.SaveToFile();
 
                 ignore_changes = true;
@@ -166,8 +166,8 @@ namespace eye_tracking_mouse
                     Options.Instance.calibration_mode.additional_dimensions_configuration.HeadPosition = HeadPosition.Value;
                 }
 
-                Settings.CalibrationModeChanged?.Invoke(this, null);
-                Settings.OptionsChanged?.Invoke(this, new EventArgs());
+                Options.CalibrationMode.Changed?.Invoke(this, null);
+                Options.Changed?.Invoke(this, new EventArgs());
                 Options.Instance.SaveToFile();
 
                 ignore_changes = true;
@@ -195,8 +195,8 @@ namespace eye_tracking_mouse
                     CustomCalibrationMode.Visibility = Visibility.Collapsed;
                 }
 
-                Settings.CalibrationModeChanged?.Invoke(this, null);
-                Settings.OptionsChanged?.Invoke(this, new EventArgs());
+                Options.CalibrationMode.Changed?.Invoke(this, null);
+                Options.Changed?.Invoke(this, new EventArgs());
                 Options.Instance.SaveToFile();
 
                 ignore_changes = true;
@@ -209,7 +209,7 @@ namespace eye_tracking_mouse
 
         private void CalibrationViewButton_Click(object sender, RoutedEventArgs e)
         {
-            CalibrationManager.Instance.ToggleDebugWindow();
+            CalibrationManager.Instance.IsDebugWindowEnabled = !CalibrationManager.Instance.IsDebugWindowEnabled;
         }
     }
 }

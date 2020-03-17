@@ -8,12 +8,15 @@ using System.Threading.Tasks;
 
 namespace eye_tracking_mouse
 {
-    class FilesSavingQueue
+    public class FilesSavingQueue
     {
+        public static bool DisabledForTesting { get; set; } = false;
         // Suitable when you have large files that updates frequently.
         // |get_serialized_content| may be called immediately or in the future when enough time passes since the last flush.
         public static void Save(string filepath, Func<string> get_serialized_content)
         {
+            if (DisabledForTesting)
+                return;
             lock (Helpers.locker)
             {
                 if (queue.ContainsKey(filepath))

@@ -83,7 +83,7 @@ namespace BlindConfigurationTester
 
                         DataPoints.Add(new DataPoint
                         {
-                            error = (Point)Point.Subtract(location_of_point_on_screen, gaze_point),
+                            true_location_on_screen = location_of_point_on_screen,
                             tobii_coordinates = coordinates
                         });
 

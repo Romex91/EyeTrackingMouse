@@ -1,0 +1,23 @@
+﻿<Window x:Class="BlindConfigurationTester.ConfigurationSelectionDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BlindConfigurationTester"
+        mc:Ignorable="d"
+        Title="Select Configuration" Height="105.429" Width="351.285">
+    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <ComboBox Grid.ColumnSpan="2" Width="300" Name="Combo_Configuration"></ComboBox>
+        <Button Grid.Row="1" Click="Button_Cancel_Click">Cancel</Button>
+        <Button Grid.Row="1" Grid.Column="1" Height="20" VerticalAlignment="Top" Click="Button_Ok_Click">Ok</Button>
+    </Grid>
+</Window>

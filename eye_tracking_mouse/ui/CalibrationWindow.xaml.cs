@@ -57,7 +57,7 @@ namespace eye_tracking_mouse
 
         private Tobii.Interaction.Vector3 GetColorComponents(ShiftPosition coordinates)
         {
-            var color_components = new Tobii.Interaction.Vector3(0,0,0);
+            var color_components = new Tobii.Interaction.Vector3(0, 0, 0);
             for (int i = 2; i < coordinates.Count; i++)
             {
                 int component_index = (i - 2) % 3;
@@ -96,6 +96,7 @@ namespace eye_tracking_mouse
         }
 
         private readonly List<Petzold.Media2D.ArrowLine> arrows = new List<Petzold.Media2D.ArrowLine>();
+        private readonly Petzold.Media2D.ArrowLine current_arrow = new Petzold.Media2D.ArrowLine();
         private List<TextBlock> arrows_lables = new List<TextBlock>();
         private readonly ColorCalculator color_calculator = new ColorCalculator();
 
@@ -114,7 +115,8 @@ namespace eye_tracking_mouse
 
         public void UpdateCorrectionsLables(List<Tuple<string /*text*/, int /*correction index*/>> lables)
         {
-            Dispatcher.BeginInvoke((Action)(() => {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
                 foreach (var lable in arrows_lables)
                     Canvas.Children.Remove(lable);
                 arrows_lables.Clear();
@@ -132,6 +134,33 @@ namespace eye_tracking_mouse
                     }
                 }
             }));
+        }
+
+        public void UpdateCurrentCorrection(UserCorrection correction)
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                color_calculator.AdjustColorBoundaries(correction.Position);
+                InitArrowWithUserCorrection(correction, current_arrow);
+            }));
+        }
+
+        private void InitArrowWithUserCorrection(UserCorrection shift, Petzold.Media2D.ArrowLine arrow)
+        {
+            arrow.X1 = shift.Position.X;
+            arrow.Y1 = shift.Position.Y;
+            arrow.X2 = shift.Position.X + shift.Shift.X;
+            arrow.Y2 = shift.Position.Y + shift.Shift.Y;
+            if (arrow == current_arrow)
+            {
+                arrow.Stroke = Brushes.Green;
+            }
+            else
+            {
+                arrow.Stroke = Options.Instance.calibration_mode.additional_dimensions_configuration.Equals(AdditionalDimensionsConfguration.Disabled) ?
+                    Brushes.Red : new SolidColorBrush(color_calculator.GetColor(shift.Position));
+            }
+            arrow.StrokeThickness = 3;
         }
 
         public void UpdateCorrections(List<UserCorrection> shifts)
@@ -157,14 +186,8 @@ namespace eye_tracking_mouse
                     foreach (var shift in shifts)
                     {
                         var arrow = new Petzold.Media2D.ArrowLine();
-                        arrow.X1 = shift.Position.X;
-                        arrow.Y1 = shift.Position.Y;
-                        arrow.X2 = shift.Position.X + shift.Shift.X;
-                        arrow.Y2 = shift.Position.Y + shift.Shift.Y;
-                        arrow.Stroke = Options.Instance.calibration_mode.additional_dimensions_configuration.Equals(AdditionalDimensionsConfguration.Disabled) ?
-                        Brushes.Red : new SolidColorBrush(color_calculator.GetColor(shift.Position));
-                        arrow.StrokeThickness = 3;
 
+                        InitArrowWithUserCorrection(shift, arrow);
                         Canvas.Children.Add(arrow);
                         arrows.Add(arrow);
                     }
@@ -220,8 +243,10 @@ namespace eye_tracking_mouse
         public CalibrationWindow()
         {
             InitializeComponent();
-            Settings.KeyBindingsChanged += UpdateText;
-            Settings.OptionsChanged += UpdateText;
+
+            Canvas.Children.Add(current_arrow);
+            KeyBindings.Changed += UpdateText;
+            Options.Changed += UpdateText;
         }
 
         private void Window_Deactivated(object sender, EventArgs e)
@@ -231,8 +256,8 @@ namespace eye_tracking_mouse
 
         protected override void OnClosed(EventArgs e)
         {
-            Settings.KeyBindingsChanged -= UpdateText;
-            Settings.OptionsChanged -= UpdateText;
+            KeyBindings.Changed -= UpdateText;
+            Options.Changed -= UpdateText;
             base.OnClosed(e);
         }
         protected override void OnSourceInitialized(EventArgs e)

@@ -37,13 +37,13 @@ namespace eye_tracking_mouse
 
         public ShiftsStorage()
         {
-            Settings.OptionsChanged += OnSettingsChanged;
+            Options.Changed += OnSettingsChanged;
             LoadFromFile();
         }
 
         public void Dispose()
         {
-            Settings.OptionsChanged -= OnSettingsChanged;
+            Options.Changed -= OnSettingsChanged;
             FilesSavingQueue.FlushSynchroniously();
             if (calibration_window != null)
             {
@@ -51,21 +51,26 @@ namespace eye_tracking_mouse
                 calibration_window = null;
             }
         }
-
-        public void ToggleDebugWindow()
+        public bool IsDebugWindowEnabled
         {
-            lock(Helpers.locker)
+            get
+            { return calibration_window != null; }
+
+            set
             {
-                if (calibration_window == null)
+                lock (Helpers.locker)
                 {
-                    calibration_window = new CalibrationWindow();
-                    calibration_window.Show();
-                    calibration_window.UpdateCorrections(Corrections);
-                }
-                else
-                {
-                    calibration_window.Close();
-                    calibration_window = null;
+                    if (value && calibration_window == null)
+                    {
+                        calibration_window = new CalibrationWindow();
+                        calibration_window.Show();
+                        calibration_window.UpdateCorrections(Corrections);
+                    }
+                    else if (!value && calibration_window != null)
+                    {
+                        calibration_window.Close();
+                        calibration_window = null;
+                    }
                 }
             }
         }
@@ -100,25 +105,27 @@ namespace eye_tracking_mouse
             OnShiftsChanged();
         }
 
+        public void SaveInDirectory(string directory_path)
+        {
+            File.WriteAllText(GetFilepath(directory_path), GetSerializedContent());
+        }
+
         private static string GetVector3PathPart(Vector3Bool vector)
         {
             return (vector.X ? "1" : "0") + (vector.Y ? "1" : "0") + (vector.Z ? "1" : "0");
         }
 
-        private static string Filepath
+        private static string GetFilepath(string directory_path)
         {
-            get
-            {
                 var dimensions_config = Options.Instance.calibration_mode.additional_dimensions_configuration;
 
-                return Path.Combine(Helpers.UserDataFolder, "calibration" +
+                return Path.Combine(directory_path, "calibration" +
                   GetVector3PathPart(dimensions_config.LeftEye) +
                   GetVector3PathPart(dimensions_config.RightEye) +
                   GetVector3PathPart(dimensions_config.AngleBetweenEyes) +
                   GetVector3PathPart(dimensions_config.HeadPosition) +
                   GetVector3PathPart(dimensions_config.HeadDirection) +
                   ".json");
-            }
         }
 
         private void LoadFromFile()
@@ -126,12 +133,12 @@ namespace eye_tracking_mouse
             try
             {
                 Corrections.Clear();
-                if (!File.Exists(Filepath))
+                if (!File.Exists(GetFilepath(Helpers.UserDataFolder)))
                     return;
 
                 bool error_message_box_shown = false;
 
-                Corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(File.ReadAllText(Filepath)).Where(x=> {
+                Corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(File.ReadAllText(GetFilepath(Helpers.UserDataFolder))).Where(x=> {
                     if (x.Position.Count != Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesCount)
                     {
                         if (!error_message_box_shown)
@@ -191,7 +198,7 @@ namespace eye_tracking_mouse
         {
             lock (Helpers.locker)
             {
-                FilesSavingQueue.Save(Filepath, GetSerializedContent);
+                FilesSavingQueue.Save(GetFilepath(Helpers.UserDataFolder), GetSerializedContent);
                 calibration_window?.UpdateCorrections(Corrections);
             }
         }
