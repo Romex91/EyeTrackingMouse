@@ -40,7 +40,10 @@ namespace BlindConfigurationTester
         public int number_of_completed_sessions = 0;
         public List<Configuration> configurations = new List<Configuration>() { new Configuration { name = null, save_changes = true } };
 
-        public List<Session> sessions = new List<Session> { new Session { points_count = 50, size_of_circle = 6, instructions = "This text will be shown to user before session." } };
+        public List<Session> sessions = new List<Session> { new Session {
+            points_sequences = new Session.PointsSequence[1]{ new Session.PointsSequence { points_count = 50, seed = 0 } },
+            size_of_circle = 6,
+            instructions = "This text will be shown to user before session." } };
 
         public static string StudiesFolder
         {
