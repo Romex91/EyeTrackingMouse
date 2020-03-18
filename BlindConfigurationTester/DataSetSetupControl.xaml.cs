@@ -111,7 +111,7 @@ namespace BlindConfigurationTester
             TextBlock_Info.Text = SelectedDataSet.GetInfo();
             Button_StartSession.Content = "Start Session " + (SelectedDataSet.number_of_completed_sessions + 1);
         }
-        
+
         private void Button_TestConfigurationVisually_Click(object sender, RoutedEventArgs e)
         {
             var configuration_selection_dialog = new ConfigurationSelectionDialog();
@@ -119,9 +119,9 @@ namespace BlindConfigurationTester
             if (configuration_selection_dialog.ShowDialog() != true || SelectedDataSet == null)
                 return;
 
-            ConfigurationTestVisualisationWindow data_visualisation_window = 
+            ConfigurationTestVisualisationWindow data_visualisation_window =
                 new ConfigurationTestVisualisationWindow(
-                    configuration_selection_dialog.GetSelectedConfiguration(), 
+                    configuration_selection_dialog.GetSelectedConfiguration(),
                     SelectedDataSet.data_points);
 
             data_visualisation_window.ShowDialog();
@@ -133,12 +133,13 @@ namespace BlindConfigurationTester
 
             if (dialog.ShowDialog() != true || SelectedDataSet == null)
                 return;
-            
-            var result = Helpers.TestConfiguration(dialog.GetSelectedConfiguration(), SelectedDataSet.data_points);
+
+            var calibration_manager = Helpers.SetupCalibrationManager(dialog.GetSelectedConfiguration());
+            var result = Helpers.TestCalibrationManager(calibration_manager, SelectedDataSet.data_points);
             eye_tracking_mouse.CalibrationManager.Instance.SaveInDirectory(Utils.DataFolder);
 
             using (var writer = new StreamWriter(
-                System.IO.Path.Combine(SelectedDataSet.DataSetResultsFolder, 
+                System.IO.Path.Combine(SelectedDataSet.DataSetResultsFolder,
                 (dialog.GetSelectedConfiguration() ?? "User Data") + ".csv")))
             {
                 using (var csv = new CsvHelper.CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture))
@@ -146,6 +147,17 @@ namespace BlindConfigurationTester
                     csv.WriteRecords(result.errors);
                 }
             }
+
+            MessageBox.Show("Configuration: "+ (dialog.GetSelectedConfiguration() ?? "User Data") + ". Utility: " + result.UtilityFunction);
+        }
+
+        private void Button_GenerateConfigurationOnData_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedDataSet == null)
+                return;
+            var options = new eye_tracking_mouse.Options();
+            options.calibration_mode = CalibrationModeGenerator.GenerateConfiguration(SelectedDataSet.data_points);
+            options.SaveToFile(System.IO.Path.Combine(SelectedDataSet.DataSetResultsFolder, "options.json"));
         }
 
         private void Button_RunExplorer_Click(object sender, RoutedEventArgs e)

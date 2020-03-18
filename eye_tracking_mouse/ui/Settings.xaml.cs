@@ -231,7 +231,7 @@ namespace eye_tracking_mouse
                     Options.Instance.smothening_points_count = (int)SmootheningPointsCount.Value;
                 }
                 Options.Changed?.Invoke(this, new EventArgs());
-                Options.Instance.SaveToFile();
+                Options.Instance.SaveToFile(Options.Filepath);
             }
         }
 
@@ -255,7 +255,7 @@ namespace eye_tracking_mouse
                     Options.Instance.key_bindings = key_bindings;
                     Options.Changed?.Invoke(this, new EventArgs());
 
-                    Options.Instance.SaveToFile();
+                    Options.Instance.SaveToFile(Options.Filepath);
                     UpdateSliders();
                 }
             }
@@ -292,7 +292,7 @@ namespace eye_tracking_mouse
                                 {
                                     UpdateKeyBindingControls();
                                     UpdateTexts();
-                                    Options.Instance.SaveToFile();
+                                    Options.Instance.SaveToFile(Options.Filepath);
                                     KeyBindings.Changed?.Invoke(this, new EventArgs());
                                     IsEnabled = true;
                                 }
@@ -315,7 +315,7 @@ namespace eye_tracking_mouse
                             Options.Instance.key_bindings.is_modifier_e0 = true;
                         UpdateKeyBindingControls();
                         UpdateTexts();
-                        Options.Instance.SaveToFile();
+                        Options.Instance.SaveToFile(Options.Filepath);
                         KeyBindings.Changed?.Invoke(this, new EventArgs());
                     }
                     return;
@@ -385,7 +385,7 @@ namespace eye_tracking_mouse
                 lock (Helpers.locker)
                 {
                     Options.Instance.key_bindings = new KeyBindings();
-                    Options.Instance.SaveToFile();
+                    Options.Instance.SaveToFile(Options.Filepath);
                     KeyBindings.Changed?.Invoke(this, new EventArgs());
 
                     UpdateKeyBindingControls();
@@ -401,7 +401,7 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 Options.Instance.key_bindings.interception_method = InterceptionMethod.SelectedIndex == 0 ? KeyBindings.InterceptionMethod.WinApi : KeyBindings.InterceptionMethod.OblitaDriver;
-                Options.Instance.SaveToFile();
+                Options.Instance.SaveToFile(Options.Filepath);
                 bool success = input_manager.UpdateInterceptionMethod();
                 if (!success)
                 {
@@ -454,7 +454,7 @@ namespace eye_tracking_mouse
 
                 Options.CalibrationMode.Changed?.Invoke(this, null);
                 Options.Changed?.Invoke(this, new EventArgs());
-                Options.Instance.SaveToFile();
+                Options.Instance.SaveToFile(Options.Filepath);
             }
         }
 

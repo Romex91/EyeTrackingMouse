@@ -83,6 +83,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CalibrationModeGenerator.cs" />
     <Compile Include="CloseAppDialog.xaml.cs">
       <DependentUpon>CloseAppDialog.xaml</DependentUpon>
     </Compile>

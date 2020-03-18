@@ -402,7 +402,7 @@ namespace eye_tracking_mouse
                 lock (Helpers.locker)
                 {
                     Options.Instance.key_bindings.interception_method = KeyBindings.InterceptionMethod.WinApi;
-                    Options.Instance.SaveToFile();
+                    Options.Instance.SaveToFile(Options.Filepath);
                 }
             }
         }

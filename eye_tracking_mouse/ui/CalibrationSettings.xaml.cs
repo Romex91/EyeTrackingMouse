@@ -114,7 +114,7 @@ namespace eye_tracking_mouse
                 }
 
                 Options.Changed?.Invoke(this, new EventArgs());
-                Options.Instance.SaveToFile();
+                Options.Instance.SaveToFile(Options.Filepath);
 
                 ignore_changes = true;
                 UpdateControls();
@@ -157,7 +157,7 @@ namespace eye_tracking_mouse
 
                 Options.CalibrationMode.Changed?.Invoke(this, null);
                 Options.Changed?.Invoke(this, new EventArgs());
-                Options.Instance.SaveToFile();
+                Options.Instance.SaveToFile(Options.Filepath);
 
                 ignore_changes = true;
                 UpdateControls();
@@ -186,7 +186,7 @@ namespace eye_tracking_mouse
 
                 Options.CalibrationMode.Changed?.Invoke(this, null);
                 Options.Changed?.Invoke(this, new EventArgs());
-                Options.Instance.SaveToFile();
+                Options.Instance.SaveToFile(Options.Filepath);
 
                 ignore_changes = true;
                 UpdateControls();

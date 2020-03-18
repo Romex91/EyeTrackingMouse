@@ -116,6 +116,21 @@ namespace BlindConfigurationTester
 
             public List<Error> errors = new List<Error>();
             public long time_ms;
+
+            [JsonIgnore]
+            public double UtilityFunction
+            {
+                get
+                {
+                    double total_correction = 0;
+                    foreach (var error in errors)
+                    {
+                        total_correction += error.before_correction - error.after_correction;
+                    }
+
+                    return total_correction / errors.Count;
+                    }
+            }
         }
 
         public static eye_tracking_mouse.ICalibrationManager SetupCalibrationManager(string configuration)
@@ -130,9 +145,10 @@ namespace BlindConfigurationTester
             return calibration_manager;
         }
 
-        public static TestResult TestConfiguration(string configuration, List<DataPoint> data_points)
+        public static TestResult TestCalibrationManager(
+            eye_tracking_mouse.ICalibrationManager calibration_manager,
+            List<DataPoint> data_points)
         {
-            var calibration_manager = SetupCalibrationManager(configuration);
             var watch = new System.Diagnostics.Stopwatch();
             watch.Start();
 

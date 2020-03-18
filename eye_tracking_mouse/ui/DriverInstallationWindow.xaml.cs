@@ -259,7 +259,7 @@ namespace eye_tracking_mouse
                     lock (Helpers.locker)
                     {
                         Options.Instance.key_bindings.is_driver_installed = true;
-                        Options.Instance.SaveToFile();
+                        Options.Instance.SaveToFile(Options.Filepath);
                         if (MessageBox.Show("Installation successful. Reboot now?", Helpers.application_name, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                         {
                             System.Diagnostics.Process.Start("shutdown.exe", "-r -t 0");

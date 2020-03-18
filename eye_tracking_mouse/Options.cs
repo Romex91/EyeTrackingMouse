@@ -42,7 +42,7 @@ namespace eye_tracking_mouse
         {
             get
             {
-                return new Vector3Percents { X = 0, Y = 0, Z = 0};
+                return new Vector3Percents { X = 0, Y = 0, Z = 0 };
             }
         }
     }
@@ -55,7 +55,8 @@ namespace eye_tracking_mouse
         public Vector3Percents HeadPosition;
         public Vector3Percents HeadDirection;
 
-        private List<Vector3Percents> Vectors {
+        private List<Vector3Percents> Vectors
+        {
             get { return new List<Vector3Percents> { LeftEye, RightEye, AngleBetweenEyes, HeadDirection, HeadPosition }; }
         }
 
@@ -113,7 +114,8 @@ namespace eye_tracking_mouse
 
         public static AdditionalDimensionsConfguration Disabled
         {
-            get {
+            get
+            {
                 return new AdditionalDimensionsConfguration
                 {
                     LeftEye = Vector3Percents.Disabled,
@@ -190,6 +192,22 @@ namespace eye_tracking_mouse
             public string algorithm = "V1";
 
             public AdditionalDimensionsConfguration additional_dimensions_configuration;
+
+            public CalibrationMode Clone()
+            {
+                return new CalibrationMode
+                {
+                    zone_size = this.zone_size,
+                    max_zones_count = this.max_zones_count,
+                    considered_zones_count = this.considered_zones_count,
+                    update_period_ms = this.update_period_ms,
+                    size_of_opaque_sector_in_percents = this.size_of_opaque_sector_in_percents,
+                    size_of_transparent_sector_in_percents = this.size_of_transparent_sector_in_percents,
+                    shade_thickness_in_pixels = this.shade_thickness_in_pixels,
+                    algorithm = this.algorithm,
+                    additional_dimensions_configuration = this.additional_dimensions_configuration
+                };
+            }
             public bool Equals(CalibrationMode other)
             {
                 return
@@ -260,11 +278,11 @@ namespace eye_tracking_mouse
         public int smothening_zone_radius = 250;
         public int smothening_points_count = 15;
 
-        private static string Filepath { get { return Path.Combine(Helpers.UserDataFolder, "options.json"); } }
+        public static string Filepath { get { return Path.Combine(Helpers.UserDataFolder, "options.json"); } }
 
-        public void SaveToFile()
+        public void SaveToFile(string file_path)
         {
-            File.WriteAllText(Filepath, JsonConvert.SerializeObject(this, Formatting.Indented));
+            File.WriteAllText(file_path, JsonConvert.SerializeObject(this, Formatting.Indented));
         }
 
         public static Options Instance { get; set; } = LoadFromFile(Filepath);
