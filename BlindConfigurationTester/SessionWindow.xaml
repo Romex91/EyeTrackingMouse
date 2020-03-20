@@ -8,6 +8,6 @@
         Title="SessionWindow"  Background="LightGray" WindowState="Maximized" Closing="WindowClosing">
     <Canvas Name="Canvas">
         <TextBlock x:Name="TextBlock_PointsLeft" HorizontalAlignment="Right" Canvas.Top="50"/>
-        <Ellipse Width="10" Height="10" Fill="Red" Name="Circle" MouseDown="NextPoint"></Ellipse>
+        <Ellipse Width="10" Height="10" Fill="Blue" Name="Circle" MouseDown="NextPoint"></Ellipse>
     </Canvas>
 </Window>

@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BlindConfigurationTester"
         mc:Ignorable="d"
-        Title="Read this carefully" Height="365.367" Width="595.642">
+        Title="Read this carefully" Height="365.367" Width="595.642"
+        SizeToContent="WidthAndHeight">
     <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
         <Grid.RowDefinitions>
             <RowDefinition></RowDefinition>
