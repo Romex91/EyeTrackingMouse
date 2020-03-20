@@ -25,6 +25,7 @@ namespace BlindConfigurationTester
 
         DateTime time_when_user_started_looking_at_point = DateTime.Now;
         bool is_user_looking_at_point = false;
+        double current_angle = 0;
         int size_of_circle;
 
         eye_tracking_mouse.TobiiCoordinatesProvider coordinatesProvider;
@@ -44,7 +45,7 @@ namespace BlindConfigurationTester
 
             this.points = points;
             InitializeComponent();
-            Circle.Width = size_of_circle;
+            Circle.Width = size_of_circle * (dataset_training_mode ? 2: 1);
             Circle.Height = size_of_circle;
 
             this.dataset_training_mode = dataset_training_mode;
@@ -65,7 +66,7 @@ namespace BlindConfigurationTester
                 if (PresentationSource.FromVisual(Circle) == null)
                     return;
 
-                Point location_of_point_on_screen = this.Circle.PointToScreen(new Point(size_of_circle / 2, size_of_circle / 2));
+                Point location_of_point_on_screen = this.Circle.PointToScreen(new Point(size_of_circle, size_of_circle / 2));
 
                 if (Point.Subtract(gaze_point, location_of_point_on_screen).Length < 200)
                 {
@@ -74,6 +75,9 @@ namespace BlindConfigurationTester
                         is_user_looking_at_point = true;
                         time_when_user_started_looking_at_point = DateTime.Now;
                     }
+
+                    Circle.RenderTransform = new RotateTransform(current_angle, size_of_circle, size_of_circle / 2);
+                    current_angle += 20;
 
                     if ((DateTime.Now - time_when_user_started_looking_at_point).TotalSeconds > 1)
                     {
@@ -87,7 +91,9 @@ namespace BlindConfigurationTester
                             tobii_coordinates = coordinates
                         });
 
-                        NextPoint(null, null);
+                        eye_tracking_mouse.MouseButtons.LeftDown();
+                        eye_tracking_mouse.MouseButtons.LeftUp();
+                        is_user_looking_at_point = false;
                     }
 
                 }

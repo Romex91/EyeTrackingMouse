@@ -22,17 +22,25 @@ namespace BlindConfigurationTester
     {
         public StudySetupControl()
         {
+            if (!Directory.Exists(Study.StudiesFolder))
+            {
+                Directory.CreateDirectory(Study.StudiesFolder);
+            }
+
             InitializeComponent();
             UpdateCombobox(null, null);
+
+            watcher = new FileSystemWatcher(Study.StudiesFolder);
             watcher.Changed += OnStudiesFolderChanged;
-            watcher.Renamed += OnStudiesFolderChanged; 
+            watcher.Renamed += OnStudiesFolderChanged;
             watcher.Created += OnStudiesFolderChanged;
             watcher.Deleted += OnStudiesFolderChanged;
             watcher.IncludeSubdirectories = true;
             watcher.EnableRaisingEvents = true;
+
         }
 
-        FileSystemWatcher watcher = new FileSystemWatcher(Study.StudiesFolder);
+        FileSystemWatcher watcher;
 
         public Study SelectedStudy
         {
@@ -62,7 +70,7 @@ namespace BlindConfigurationTester
             }
 
             foreach (var study in studies)
-            {   
+            {
                 Combo_Study.Items.Add(study);
                 if (study == current_study || Combo_Study.Items.Count == 1)
                     Combo_Study.SelectedIndex = Combo_Study.Items.Count - 1;
@@ -104,7 +112,7 @@ namespace BlindConfigurationTester
             SelectedStudy = Study.Load(Combo_Study.SelectedItem.ToString());
 
             if (SelectedStudy == null)
-            {                
+            {
                 SelectedStudy = new Study(Combo_Study.SelectedItem.ToString());
                 TextBlock_Info.Text = "Format error. Running session will reset the study file.";
                 return;

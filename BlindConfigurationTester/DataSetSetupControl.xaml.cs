@@ -23,8 +23,12 @@ namespace BlindConfigurationTester
     {
         public DataSetSetupControl()
         {
+            if (!Directory.Exists(DataSet.DataSetsFolder))
+                Directory.CreateDirectory(DataSet.DataSetsFolder);
+
             InitializeComponent();
             UpdateCombobox(null, null);
+            watcher = new FileSystemWatcher(DataSet.DataSetsFolder);
             watcher.Changed += OnDataSestsFolderChanged;
             watcher.Renamed += OnDataSestsFolderChanged;
             watcher.Created += OnDataSestsFolderChanged;
@@ -33,7 +37,7 @@ namespace BlindConfigurationTester
             watcher.EnableRaisingEvents = true;
         }
 
-        FileSystemWatcher watcher = new FileSystemWatcher(DataSet.DataSetsFolder);
+        FileSystemWatcher watcher;
         public void OnDataSestsFolderChanged(object source, FileSystemEventArgs e)
         {
             this.Dispatcher.BeginInvoke((Action)(() =>
