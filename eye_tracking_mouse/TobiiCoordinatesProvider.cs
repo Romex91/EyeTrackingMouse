@@ -174,8 +174,12 @@ namespace eye_tracking_mouse
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message + ". Try reinstalling driver for Tobii Eye Tracker 4C.");
-                Environment.Exit(0);
+
+                if (MessageBox.Show("Eye Tracker isn't installed properly. \n\n" +
+                    "Open Tobii software download page? \n",
+                    "Failed Connecting to Tobii Eye Tracker",
+                    MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    Process.Start("https://gaming.tobii.com/getstarted/");
             }
         }
 
