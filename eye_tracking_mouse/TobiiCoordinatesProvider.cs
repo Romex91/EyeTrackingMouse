@@ -200,7 +200,15 @@ namespace eye_tracking_mouse
             {
                 on_coordinates_callback = null;
                 Options.CalibrationMode.Changed -= UpdateTobiiStreams;
-                host.Dispose();
+
+                try
+                {
+                    host.Dispose();
+                }
+                catch (Tobii.Interaction.Client.InteractionApiException)
+                {
+                    // TODO: Fix MemoryLeak
+                }
             }
         }
     }

@@ -97,9 +97,12 @@ namespace BlindConfigurationTester
             Session session = sessions[number_of_completed_sessions];
             int session_seed = unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId);
             var new_data_points = session.Start(true, session_seed);
-            data_points.InsertRange(data_points.Count, new_data_points);
-            number_of_completed_sessions++;
-            SaveToFile();
+            if (new_data_points != null)
+            {
+                data_points.InsertRange(data_points.Count, new_data_points);
+                number_of_completed_sessions++;
+                SaveToFile();
+            }
         }
 
     }
