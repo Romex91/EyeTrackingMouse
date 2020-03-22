@@ -26,6 +26,7 @@ namespace BlindConfigurationTester
         DateTime time_when_user_started_looking_at_point = DateTime.Now;
         bool is_user_looking_at_point = false;
         double current_angle = 0;
+        double current_angle_delta = 0;
         int size_of_circle;
 
         eye_tracking_mouse.TobiiCoordinatesProvider coordinatesProvider;
@@ -68,7 +69,7 @@ namespace BlindConfigurationTester
 
                 Point location_of_point_on_screen = this.Circle.PointToScreen(new Point(size_of_circle, size_of_circle / 2));
 
-                if (Point.Subtract(gaze_point, location_of_point_on_screen).Length < 200)
+                if (Point.Subtract(gaze_point, location_of_point_on_screen).Length < 100)
                 {
                     if (!is_user_looking_at_point)
                     {
@@ -77,23 +78,38 @@ namespace BlindConfigurationTester
                     }
 
                     Circle.RenderTransform = new RotateTransform(current_angle, size_of_circle, size_of_circle / 2);
-                    current_angle += 20;
-
-                    if ((DateTime.Now - time_when_user_started_looking_at_point).TotalSeconds > 1)
+                    if ((DateTime.Now - time_when_user_started_looking_at_point).TotalMilliseconds > 500)
                     {
-                        eye_tracking_mouse.MouseButtons.Move(
-                            (int)location_of_point_on_screen.X,
-                            (int)location_of_point_on_screen.Y);
+                        current_angle_delta += 0.4;
+                        if (current_angle_delta > 10)
+                            current_angle_delta = 10;
+                    } else
+                    {
+                        current_angle_delta -= 0.4;
+                        if (current_angle_delta < 0)
+                            current_angle_delta = 0;
+                    }
+                    current_angle += current_angle_delta;
 
+                    if ((DateTime.Now - time_when_user_started_looking_at_point).TotalMilliseconds > 1000)
+                    {
                         DataPoints.Add(new DataPoint
                         {
                             true_location_on_screen = location_of_point_on_screen,
                             tobii_coordinates = coordinates
                         });
 
-                        eye_tracking_mouse.MouseButtons.LeftDown();
-                        eye_tracking_mouse.MouseButtons.LeftUp();
                         is_user_looking_at_point = false;
+
+                        var dt = new System.Windows.Threading.DispatcherTimer(System.Windows.Threading.DispatcherPriority.Send);
+                        dt.Tick += (s, e) =>
+                        {
+                            dt.Stop();
+                            is_user_looking_at_point = false;
+                            NextPoint(null, null);
+                        };
+                        dt.Interval = TimeSpan.FromMilliseconds(450);
+                        dt.Start();
                     }
 
                 }
