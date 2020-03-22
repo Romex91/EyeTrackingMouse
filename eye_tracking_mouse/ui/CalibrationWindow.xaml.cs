@@ -103,14 +103,17 @@ namespace eye_tracking_mouse
         private int shifts_count = 0;
         public void UpdateText(object sender, EventArgs args)
         {
-            lock (Helpers.locker)
+            Dispatcher.BeginInvoke((Action)(() =>
             {
-                Description.Text =
-                        "CALIBRATIONS COUNT: " + shifts_count + "/" + Options.Instance.calibration_mode.max_zones_count + " \n" +
-                        "HIDE CALIBRATION VIEW: " + Helpers.GetModifierString().ToUpper() +
-                            "+" + Options.Instance.key_bindings[Key.ShowCalibrationView] + "\n" +
-                        "YOU CAN RESET CALIBRATIONS FROM THE TRAY ICON MENU";
-            }
+                lock (Helpers.locker)
+                {
+                    Description.Text =
+                            "CALIBRATIONS COUNT: " + shifts_count + "/" + Options.Instance.calibration_mode.max_zones_count + " \n" +
+                            "HIDE CALIBRATION VIEW: " + Helpers.GetModifierString().ToUpper() +
+                                "+" + Options.Instance.key_bindings[Key.ShowCalibrationView] + "\n" +
+                            "YOU CAN RESET CALIBRATIONS FROM THE TRAY ICON MENU";
+                }
+            }));
         }
 
         public void UpdateCorrectionsLables(List<Tuple<string /*text*/, int /*correction index*/>> lables)

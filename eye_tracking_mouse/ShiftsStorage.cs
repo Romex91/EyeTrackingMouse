@@ -58,20 +58,24 @@ namespace eye_tracking_mouse
 
             set
             {
-                lock (Helpers.locker)
-                {
-                    if (value && calibration_window == null)
-                    {
-                        calibration_window = new CalibrationWindow();
-                        calibration_window.Show();
-                        calibration_window.UpdateCorrections(Corrections);
-                    }
-                    else if (!value && calibration_window != null)
-                    {
-                        calibration_window.Close();
-                        calibration_window = null;
-                    }
-                }
+                App.Current.Dispatcher.BeginInvoke((Action)(() =>
+              {
+                  lock (Helpers.locker)
+                  {
+
+                      if (value && calibration_window == null)
+                      {
+                          calibration_window = new CalibrationWindow();
+                          calibration_window.Show();
+                          calibration_window.UpdateCorrections(Corrections);
+                      }
+                      else if (!value && calibration_window != null)
+                      {
+                          calibration_window.Close();
+                          calibration_window = null;
+                      }
+                  }
+              }));
             }
         }
 
@@ -86,7 +90,7 @@ namespace eye_tracking_mouse
 
         public void AddShift(ShiftPosition cursor_position, Point shift)
         {
-            var closest_shifts =  Helpers.CalculateClosestCorrectionsInfo(this, cursor_position, 2);
+            var closest_shifts = Helpers.CalculateClosestCorrectionsInfo(this, cursor_position, 2);
             if (closest_shifts != null && closest_shifts[0].distance < Options.Instance.calibration_mode.zone_size)
             {
                 Corrections[closest_shifts[0].index] = new UserCorrection(cursor_position, shift);
@@ -117,15 +121,15 @@ namespace eye_tracking_mouse
 
         private static string GetFilepath(string directory_path)
         {
-                var dimensions_config = Options.Instance.calibration_mode.additional_dimensions_configuration;
+            var dimensions_config = Options.Instance.calibration_mode.additional_dimensions_configuration;
 
-                return Path.Combine(directory_path, "calibration" +
-                  GetVector3PathPart(dimensions_config.LeftEye) +
-                  GetVector3PathPart(dimensions_config.RightEye) +
-                  GetVector3PathPart(dimensions_config.AngleBetweenEyes) +
-                  GetVector3PathPart(dimensions_config.HeadPosition) +
-                  GetVector3PathPart(dimensions_config.HeadDirection) +
-                  ".json");
+            return Path.Combine(directory_path, "calibration" +
+              GetVector3PathPart(dimensions_config.LeftEye) +
+              GetVector3PathPart(dimensions_config.RightEye) +
+              GetVector3PathPart(dimensions_config.AngleBetweenEyes) +
+              GetVector3PathPart(dimensions_config.HeadPosition) +
+              GetVector3PathPart(dimensions_config.HeadDirection) +
+              ".json");
         }
 
         private void LoadFromFile()
@@ -138,7 +142,8 @@ namespace eye_tracking_mouse
 
                 bool error_message_box_shown = false;
 
-                Corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(File.ReadAllText(GetFilepath(Helpers.UserDataFolder))).Where(x=> {
+                Corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(File.ReadAllText(GetFilepath(Helpers.UserDataFolder))).Where(x =>
+                {
                     if (x.Position.Count != Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesCount)
                     {
                         if (!error_message_box_shown)
@@ -148,9 +153,9 @@ namespace eye_tracking_mouse
                         }
                         return false;
                     }
-                    return true; 
+                    return true;
                 }).ToList();
-                
+
             }
             catch (Exception e)
             {
