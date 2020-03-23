@@ -120,6 +120,11 @@ namespace BlindConfigurationTester
             public List<Error> errors = new List<Error>();
             public long time_ms;
 
+            public string ToString()
+            {
+                return " Utility: " + UtilityFunction + " Milliseconds Elapsed: " + time_ms;
+            }
+
             [JsonIgnore]
             public double UtilityFunction
             {

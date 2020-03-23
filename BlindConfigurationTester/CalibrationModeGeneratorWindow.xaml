@@ -18,5 +18,6 @@
         <TextBlock Grid.Row="1" Name="Text_GlobalBestModeInfo"></TextBlock>
         <TextBlock Grid.Row="2" Name="Text_LocalBestModeInfo"></TextBlock>
         <TextBlock Grid.Row="3" Name="Text_LastIterationUtilityDelta"></TextBlock>
+        <TextBlock Grid.Row="4" Name="Text_LastTestResult"></TextBlock>
     </Grid>
 </Window>
