@@ -83,7 +83,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="CalibrationModeGenerator.cs" />
+    <Compile Include="CalibrationModeGeneratorWindow.xaml.cs">
+      <DependentUpon>CalibrationModeGeneratorWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="CloseAppDialog.xaml.cs">
       <DependentUpon>CloseAppDialog.xaml</DependentUpon>
     </Compile>
@@ -115,6 +117,10 @@
       <DependentUpon>StudySetupControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utils.cs" />
+    <Page Include="CalibrationModeGeneratorWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="CloseAppDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

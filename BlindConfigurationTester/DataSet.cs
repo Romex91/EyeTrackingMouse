@@ -148,6 +148,21 @@ namespace BlindConfigurationTester
             return calibration_manager;
         }
 
+        public static eye_tracking_mouse.ICalibrationManager SetupCalibrationManager(eye_tracking_mouse.Options.CalibrationMode calibration_mode)
+        {
+            eye_tracking_mouse.Options.Instance.calibration_mode = calibration_mode;
+            eye_tracking_mouse.Options.CalibrationMode.Changed?.Invoke(null, null);
+            var calibration_manager = eye_tracking_mouse.CalibrationManager.Instance;
+            calibration_manager.Reset();
+            return calibration_manager;
+        }
+
+        public static Helpers.TestResult TestCalibrationMode(List<DataPoint> data_points, eye_tracking_mouse.Options.CalibrationMode calibration_mode)
+        {
+            return TestCalibrationManager(SetupCalibrationManager(calibration_mode), data_points);
+        }
+
+
         public static TestResult TestCalibrationManager(
             eye_tracking_mouse.ICalibrationManager calibration_manager,
             List<DataPoint> data_points)
@@ -166,7 +181,7 @@ namespace BlindConfigurationTester
 
             return result;
         }
-
+        
         public static TestResult.Error AddDataPoint(eye_tracking_mouse.ICalibrationManager calibration_manager, DataPoint data_point)
         {
             var shift_position = new eye_tracking_mouse.ShiftPosition(data_point.tobii_coordinates.GetEnabledCoordinates());

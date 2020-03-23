@@ -159,8 +159,14 @@ namespace BlindConfigurationTester
         {
             if (SelectedDataSet == null)
                 return;
+         
+            var window = new CalibrationModeGeneratorWindow(SelectedDataSet.data_points);
+            window.ShowDialog();
+            if (window.BestCalibrationMode == null)
+                return;
+
             var options = new eye_tracking_mouse.Options();
-            options.calibration_mode = CalibrationModeGenerator.GenerateConfiguration(SelectedDataSet.data_points);
+            options.calibration_mode = window.BestCalibrationMode;
             options.SaveToFile(System.IO.Path.Combine(SelectedDataSet.DataSetResultsFolder, "options.json"));
         }
 
