@@ -98,6 +98,11 @@ namespace BlindConfigurationTester
             Utils.LoadFromUserData(GetSelectedConfiguration());
         }
 
+        private void Button_RunExplorer_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start(Utils.GetConfigurationDir(GetSelectedConfiguration()));
+        }
+
         private void Button_ConfigureFromApp_Click(object sender, RoutedEventArgs e)
         {
             Utils.RunApp(GetSelectedConfiguration(), true, null, () => {

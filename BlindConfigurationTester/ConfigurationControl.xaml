@@ -41,6 +41,7 @@
         <Button Grid.Row="2" Grid.Column="0" Click="Button_SaveToUserData_Click">Save to User Data</Button>
         <Button Grid.Row="2" Grid.Column="1" Click="Button_LoadFromUserData_Click">Load from User Data</Button>
 
-        <Button Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Click="Button_ConfigureFromApp_Click">Configure from App</Button>
+      <Button Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="1" Click="Button_ConfigureFromApp_Click">Configure from App</Button>
+      <Button Grid.Row="2" Grid.Column="3" Grid.ColumnSpan="1" Click="Button_RunExplorer_Click">Run Explorer</Button>
     </Grid>
 </UserControl>
