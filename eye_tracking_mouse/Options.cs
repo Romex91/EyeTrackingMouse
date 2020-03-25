@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,11 +28,16 @@ namespace eye_tracking_mouse
 
     // Determines how spatial each new dimension will be.
     // 0 percents means dimension is disabled.
-    public struct Vector3Percents
+    public class Vector3Percents
     {
         public int X { get; set; }
         public int Y { get; set; }
         public int Z { get; set; }
+
+        public Vector3Percents Clone()
+        {
+            return new Vector3Percents { X = this.X, Y = this.Y, Z = this.Z };
+        }
 
         public bool Equals(Vector3Percents other)
         {
@@ -51,7 +57,7 @@ namespace eye_tracking_mouse
     {
         public Vector3Percents LeftEye;
         public Vector3Percents RightEye;
-        public Vector3Percents AngleBetweenEyes; // Z is always false!
+        public Vector3Percents AngleBetweenEyes; // Z is always 0!
         public Vector3Percents HeadPosition;
         public Vector3Percents HeadDirection;
 
@@ -81,6 +87,40 @@ namespace eye_tracking_mouse
 
                 return results;
             }
+
+            set
+            {
+                Debug.Assert(value[0] == 100);
+                Debug.Assert(value[1] == 100);
+                int index = 2;
+                foreach (var vector3 in Vectors)
+                {
+                    if (vector3.X > 0)
+                    {
+                        vector3.X = value[index++];
+                    }
+                    if (vector3.Y > 0)
+                    {
+                        vector3.Y = value[index++];
+                    }
+                    if (vector3.Z > 0)
+                    {
+                        vector3.Z = value[index++];
+                    }
+                }
+            }
+        }
+
+        public AdditionalDimensionsConfguration Clone()
+        {
+            return new AdditionalDimensionsConfguration
+            {
+                AngleBetweenEyes = this.AngleBetweenEyes.Clone(),
+                HeadDirection = this.HeadDirection.Clone(),
+                HeadPosition = this.HeadPosition.Clone(),
+                LeftEye = this.LeftEye.Clone(),
+                RightEye = this.RightEye.Clone()
+            };
         }
 
         [JsonIgnore]
@@ -205,7 +245,7 @@ namespace eye_tracking_mouse
                     size_of_transparent_sector_in_percents = this.size_of_transparent_sector_in_percents,
                     shade_thickness_in_pixels = this.shade_thickness_in_pixels,
                     algorithm = this.algorithm,
-                    additional_dimensions_configuration = this.additional_dimensions_configuration
+                    additional_dimensions_configuration = this.additional_dimensions_configuration.Clone()
                 };
             }
             public bool Equals(CalibrationMode other)

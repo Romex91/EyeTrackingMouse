@@ -60,7 +60,7 @@ namespace BlindConfigurationTester
 
             eye_tracking_mouse.Options.Instance = new eye_tracking_mouse.Options();
             var best_calibration_mode = eye_tracking_mouse.Options.Instance.calibration_mode;
-            double best_utility = Helpers.TestCalibrationMode(data_points, best_calibration_mode).UtilityFunction;
+            double best_utility = 0;
 
             foreach (var mode in calibration_modes_to_test)
             {
@@ -77,7 +77,7 @@ namespace BlindConfigurationTester
 
                     Dispatcher.Invoke((Action)(() =>
                     {
-                        Text_GlobalBestModeInfo.Text = "Global Best Calibration Mode Utility: " + utility + ". Single test time(ms): " + result.time_ms;
+                        Text_GlobalBestModeInfo.Text = "Global Best Calibration Mode " + result.ToString();
                     }));
                 }
 
@@ -181,7 +181,6 @@ namespace BlindConfigurationTester
             OptionsField.BuildLinear(field_name : "size_of_transparent_sector_in_percents", max : 100, min : 0, step: 10),
             OptionsField.BuildLinear(field_name : "shade_thickness_in_pixels", max : 1000, min : 0, step: 10),
 
-            OptionsField.BuildHardcoded(field_name : "coordinate 1", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
             OptionsField.BuildHardcoded(field_name : "coordinate 2", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
             OptionsField.BuildHardcoded(field_name : "coordinate 3", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
             OptionsField.BuildHardcoded(field_name : "coordinate 4", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
@@ -305,7 +304,9 @@ namespace BlindConfigurationTester
                 {
                     return;
                 }
-                calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents[coordinate_index] = value;
+                int[] coordinates_scales = calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
+                coordinates_scales[coordinate_index] = value;
+                calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents = coordinates_scales;
             }
             else
             {
@@ -364,8 +365,8 @@ namespace BlindConfigurationTester
         }
 
         private eye_tracking_mouse.Options.CalibrationMode MaxOutEachDimension(
-        eye_tracking_mouse.Options.CalibrationMode mode,
-        List<DataPoint> data_points)
+            eye_tracking_mouse.Options.CalibrationMode mode,
+            List<DataPoint> data_points)
         {
             eye_tracking_mouse.Options.CalibrationMode best_calibration_mode = mode;
             double best_utility = 0;
