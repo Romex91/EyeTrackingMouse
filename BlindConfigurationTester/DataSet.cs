@@ -208,7 +208,8 @@ namespace BlindConfigurationTester
             };
 
             var correction = Point.Subtract(data_point.true_location_on_screen, tobii_gaze_point);
-            calibration_manager.AddShift(shift_position, new System.Drawing.Point((int)correction.X, (int)correction.Y));
+            if (error.after_correction > 5)
+                calibration_manager.AddShift(shift_position, new System.Drawing.Point((int)correction.X, (int)correction.Y));
             return error;
         }
     }
