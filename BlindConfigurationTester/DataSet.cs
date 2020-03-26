@@ -172,18 +172,17 @@ namespace BlindConfigurationTester
             eye_tracking_mouse.ICalibrationManager calibration_manager,
             List<DataPoint> data_points)
         {
-            var watch = new System.Diagnostics.Stopwatch();
-            watch.Start();
-
+            var time_before = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+            
             TestResult result = new TestResult();
             foreach (var data_point in data_points)
             {
                 result.errors.Add(AddDataPoint(calibration_manager, data_point));
             }
 
-            watch.Stop();
-            result.time_ms = watch.ElapsedMilliseconds;
-
+            var time_after = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+            
+            result.time_ms = (int)(time_after - time_before).TotalMilliseconds;
             return result;
         }
         

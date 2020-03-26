@@ -152,7 +152,7 @@ namespace BlindConfigurationTester
                 }
             }
 
-            MessageBox.Show("Configuration: "+ (dialog.GetSelectedConfiguration() ?? "User Data") + ". Utility: " + result.UtilityFunction);
+            MessageBox.Show("Configuration: "+ (dialog.GetSelectedConfiguration() ?? "User Data") + ". " + result.ToString());
         }
 
         private void Button_GenerateConfigurationOnData_Click(object sender, RoutedEventArgs e)
