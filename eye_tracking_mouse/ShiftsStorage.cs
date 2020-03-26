@@ -166,6 +166,8 @@ namespace eye_tracking_mouse
 
         private void OnSettingsChanged(object sender, EventArgs e)
         {
+            ShiftPosition.UpdateCache();
+
             // Adjust to new calibration zone size.
             for (int i = 0; i < Corrections.Count - 1;)
             {
@@ -292,14 +294,13 @@ namespace eye_tracking_mouse
 
         public static List<CorrectionInfoRelatedToCursor> CalculateClosestCorrectionsInfo(ShiftsStorage storage, ShiftPosition cursor_position, int number)
         {
-            var Corrections = storage.Corrections;
-            if (Corrections.Count == 0)
+            if (storage.Corrections.Count == 0)
                 return null;
 
             var retval = new List<CorrectionInfoRelatedToCursor>();
-            for (int i = 0; i < Corrections.Count(); i++)
+            for (int i = 0; i < storage.Corrections.Count(); i++)
             {
-                CorrectionInfoRelatedToCursor info = new CorrectionInfoRelatedToCursor { index = i, vector_from_cursor = Corrections[i].Position - cursor_position };
+                CorrectionInfoRelatedToCursor info = new CorrectionInfoRelatedToCursor { index = i, vector_from_cursor = storage.Corrections[i].Position - cursor_position };
                 info.distance = Helpers.GetVectorLength(info.vector_from_cursor);
                 if (info.distance < 0.001)
                     info.distance = 0.001;
@@ -327,10 +328,10 @@ namespace eye_tracking_mouse
             double squared_distance = 0;
             for (int i = 0; i < vector.Count; i++)
             {
-                squared_distance += Math.Pow(vector[i], 2);
+                squared_distance += vector[i] * vector[i];
             }
 
-            return Math.Pow(squared_distance, 0.5);
+            return Math.Sqrt(squared_distance);
         }
 
         public static double GetAngleBetweenVectors(CorrectionInfoRelatedToCursor a, CorrectionInfoRelatedToCursor b)

@@ -18,11 +18,16 @@ namespace eye_tracking_mouse
         [JsonIgnore]
         private readonly List<double> adjusted_coordinates;
 
+        public static void UpdateCache()
+        {
+            coordinates_scales_in_percents = Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
+        }
+        private static int[] coordinates_scales_in_percents = Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
+
         public ShiftPosition(List<double> coordinates)
         {
             this.coordinates = coordinates;
             adjusted_coordinates = new List<double>(coordinates.Count);
-            var coordinates_scales_in_percents = Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
             for (int i = 0; i < coordinates.Count; i++)
             {
                 adjusted_coordinates.Add(coordinates_scales_in_percents[i] / 100.0 * coordinates[i]);
