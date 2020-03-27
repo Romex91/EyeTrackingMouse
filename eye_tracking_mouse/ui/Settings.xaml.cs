@@ -253,6 +253,7 @@ namespace eye_tracking_mouse
                     var key_bindings = Options.Instance.key_bindings;
                     Options.Instance = Options.Default();
                     Options.Instance.key_bindings = key_bindings;
+                    Options.CalibrationMode.Changed?.Invoke(this, new EventArgs());
                     Options.Changed?.Invoke(this, new EventArgs());
 
                     Options.Instance.SaveToFile(Options.Filepath);

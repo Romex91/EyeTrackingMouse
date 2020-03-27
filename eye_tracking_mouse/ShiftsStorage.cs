@@ -136,12 +136,13 @@ namespace eye_tracking_mouse
         {
             try
             {
+                ShiftPosition.UpdateCache();
                 Corrections.Clear();
                 if (!File.Exists(GetFilepath(Helpers.UserDataFolder)))
                     return;
 
                 bool error_message_box_shown = false;
-
+                
                 Corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(File.ReadAllText(GetFilepath(Helpers.UserDataFolder))).Where(x =>
                 {
                     if (x.Position.Count != Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesCount)
@@ -166,8 +167,6 @@ namespace eye_tracking_mouse
 
         private void OnSettingsChanged(object sender, EventArgs e)
         {
-            ShiftPosition.UpdateCache();
-
             // Adjust to new calibration zone size.
             for (int i = 0; i < Corrections.Count - 1;)
             {

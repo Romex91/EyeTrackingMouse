@@ -75,6 +75,7 @@ namespace eye_tracking_mouse
             lock(Helpers.locker)
             {
                 instance?.Dispose();
+
                 if (Options.Instance.calibration_mode.algorithm == "V0")
                     instance = new CalibrationManagerV0();
                 else if (Options.Instance.calibration_mode.algorithm == "V1")
