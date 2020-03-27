@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -57,7 +58,8 @@ namespace BlindConfigurationTester
         private long number_of_tests = 0;
         private long number_of_local_iterations = 0;
         private long number_of_global_iterations = 0;
-
+        private long total_min_max_permutations = 0;
+        private long remaining_min_max_permutations = 0;
         private void GenerateConfiguration(List<DataPoint> data_points)
         {
             eye_tracking_mouse.FilesSavingQueue.DisabledForTesting = true;
@@ -66,8 +68,10 @@ namespace BlindConfigurationTester
 
             foreach (var mode in calibration_modes_to_test)
             {
-                MaxOutEachDimension(mode, data_points);
+                ForEachMinMaxPermutation(mode, x => IncrementalImprove(x, data_points));
                 number_of_global_iterations++;
+                
+                break;
             }
         }
 
@@ -151,14 +155,11 @@ namespace BlindConfigurationTester
             }
         }
 
-
-
         const double eps = 0.0001;
-
 
         private static OptionsField[] fields = new OptionsField[]
         {
-            OptionsField.BuildLinear(field_name : "zone_size", max : 2000, min : 1, step: 10),
+            OptionsField.BuildLinear(field_name : "zone_size", max : 2000, min : 10, step: 10),
             OptionsField.BuildExponential(field_name : "max_zones_count", max : 2000, min : 1, step: 2),
             OptionsField.BuildHardcoded(field_name : "considered_zones_count", new List<int>{ 1, 2, 3, 4, 6, 10, 20 }),
             OptionsField.BuildLinear(field_name : "size_of_opaque_sector_in_percents", max : 100, min : 0, step: 10),
@@ -173,8 +174,59 @@ namespace BlindConfigurationTester
             OptionsField.BuildHardcoded(field_name : "coordinate 7", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
             OptionsField.BuildHardcoded(field_name : "coordinate 8", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
             OptionsField.BuildHardcoded(field_name : "coordinate 9", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
-    };
+        };
 
+        private void ForEachMinMaxPermutation(
+            eye_tracking_mouse.Options.CalibrationMode starting_mode, 
+            Action<eye_tracking_mouse.Options.CalibrationMode> callback)
+        {
+            callback(starting_mode);
+            
+            List<OptionsField> enabled_fields = new List<OptionsField>();
+
+            long iterator = 1;
+
+            foreach (var field in fields)
+            {
+                if (GetFieldValue(starting_mode, field) != -1)
+                {
+                    enabled_fields.Add(field);
+                    // two additional permutations
+                    iterator *= 2;
+                }
+            }
+
+            total_min_max_permutations = iterator;
+            
+
+            while (iterator > 0)
+            {
+                if (cancellation.Token.IsCancellationRequested)
+                    return;
+
+                eye_tracking_mouse.Options.CalibrationMode mode = starting_mode.Clone();
+
+                for(int field_number = 0; field_number < enabled_fields.Count; field_number++)
+                {
+                    if((iterator & (1 << field_number)) == 0)
+                    {
+                        SetFieldValue(mode, enabled_fields[field_number], enabled_fields[field_number].range.GetRange().Last());
+                    } else
+                    {
+                        SetFieldValue(mode, enabled_fields[field_number], enabled_fields[field_number].range.GetRange().First());
+                    }
+                }
+
+                Dispatcher.Invoke((Action)(() => {
+                    Text_CurrentPermutation.Text = JsonConvert.SerializeObject(mode, Formatting.Indented);                
+                }));
+
+                callback(mode);
+                iterator--;
+
+                remaining_min_max_permutations = iterator;
+            }
+        }
 
         private static eye_tracking_mouse.Options.CalibrationMode[] calibration_modes_to_test = new eye_tracking_mouse.Options.CalibrationMode[]
             {
@@ -370,7 +422,6 @@ namespace BlindConfigurationTester
                         eye_tracking_mouse.Options.CalibrationMode calibration_mode = local_best_calibration_mode.Clone();
                         SetFieldValue(calibration_mode, field, range[i]);
 
-
                         if (cancellation.Token.IsCancellationRequested)
                             return;
 
@@ -403,12 +454,13 @@ namespace BlindConfigurationTester
                 Text_ProgressInfo.Text =
                     "Total Runned Tests: " + number_of_tests +
                     ". Local Iterations: " + number_of_local_iterations +
-                    ". Global Iterations " + number_of_global_iterations;
+                    ". Global Iterations " + number_of_global_iterations +
+                    ". MinMax Permutations " + remaining_min_max_permutations + "/" + total_min_max_permutations;
             }));
             var results = Helpers.TestCalibrationMode(data_points, mode);
             Dispatcher.BeginInvoke((Action)(() =>
             {
-                Text_LastTestResult.Text = "Last test results " + results.ToString();
+                Text_LastTestResult.Text = "Last test results " + results.ToString() + " \n" + JsonConvert.SerializeObject(mode, Formatting.Indented);
             }));
 
             double utility = results.UtilityFunction;
@@ -445,7 +497,7 @@ namespace BlindConfigurationTester
             eye_tracking_mouse.Options.CalibrationMode mode, 
             List<DataPoint> data_points)
         {
-            eye_tracking_mouse.Options.CalibrationMode local_best_calibration_mode = eye_tracking_mouse.Options.Instance.calibration_mode;
+            eye_tracking_mouse.Options.CalibrationMode local_best_calibration_mode = mode;
             double local_best_utility = 0;
             RunTest(data_points, local_best_calibration_mode, ref local_best_calibration_mode, ref local_best_utility);
 
@@ -461,20 +513,17 @@ namespace BlindConfigurationTester
                         return;
 
                     eye_tracking_mouse.Options.CalibrationMode calibration_mode;
-                    while ((calibration_mode = IncrementField(local_best_calibration_mode, field)) != null)
+                    if ((calibration_mode = IncrementField(local_best_calibration_mode, field)) != null)
                     {
-                        if (!RunTest(data_points, calibration_mode, ref local_best_calibration_mode, ref local_best_utility))
+                        if (RunTest(data_points, calibration_mode, ref local_best_calibration_mode, ref local_best_utility))
                         {
-                            break;
+                            continue;
                         }
                     }
 
-                    while ((calibration_mode = DecrementField(local_best_calibration_mode, field)) != null)
+                    if ((calibration_mode = DecrementField(local_best_calibration_mode, field)) != null)
                     {
-                        if (!RunTest(data_points, calibration_mode, ref local_best_calibration_mode, ref local_best_utility))
-                        {
-                            break;
-                        }
+                        RunTest(data_points, calibration_mode, ref local_best_calibration_mode, ref local_best_utility);
                     }
                 }
                 if (local_best_utility - old_best_utility < eps)
