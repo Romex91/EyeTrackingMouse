@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,7 +30,7 @@ namespace BlindConfigurationTester
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
 
-                BestCalibrationMode = GenerateConfiguration(data_points);
+                GenerateConfiguration(data_points);
                 watch.Stop();
 
                 MessageBox.Show("Finished! Elapsed time:" + watch.Elapsed.ToString());
@@ -43,9 +44,12 @@ namespace BlindConfigurationTester
             get; set;
         }
 
+        private double global_best_utility = 0;
+
         private void CalibrationModeGeneratorWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             cancellation.Cancel();
+            mode_generation_background_task.Wait();
         }
 
         System.Threading.CancellationTokenSource cancellation = new System.Threading.CancellationTokenSource();
@@ -54,37 +58,17 @@ namespace BlindConfigurationTester
         private long number_of_local_iterations = 0;
         private long number_of_global_iterations = 0;
 
-        private eye_tracking_mouse.Options.CalibrationMode GenerateConfiguration(List<DataPoint> data_points)
+        private void GenerateConfiguration(List<DataPoint> data_points)
         {
             eye_tracking_mouse.FilesSavingQueue.DisabledForTesting = true;
 
             eye_tracking_mouse.Options.Instance = new eye_tracking_mouse.Options();
-            var best_calibration_mode = eye_tracking_mouse.Options.Instance.calibration_mode;
-            double best_utility = 0;
 
             foreach (var mode in calibration_modes_to_test)
             {
-                var maximized_calibration_mode = IncrementalImprove(mode, data_points);
-                if (maximized_calibration_mode == null)
-                    return null;
-
-                var result = Helpers.TestCalibrationMode(data_points, maximized_calibration_mode);
-                double utility = result.UtilityFunction;
-                if (utility > best_utility)
-                {
-                    best_utility = utility;
-                    best_calibration_mode = maximized_calibration_mode;
-
-                    Dispatcher.Invoke((Action)(() =>
-                    {
-                        Text_GlobalBestModeInfo.Text = "Global Best Calibration Mode " + result.ToString();
-                    }));
-                }
-
+                MaxOutEachDimension(mode, data_points);
                 number_of_global_iterations++;
             }
-
-            return best_calibration_mode;
         }
 
         private interface IntRange
@@ -194,69 +178,69 @@ namespace BlindConfigurationTester
 
         private static eye_tracking_mouse.Options.CalibrationMode[] calibration_modes_to_test = new eye_tracking_mouse.Options.CalibrationMode[]
             {
-            //new eye_tracking_mouse.Options.CalibrationMode
-            //{
-            //    considered_zones_count = 5,
-            //    max_zones_count = 200,
-            //    shade_thickness_in_pixels = 10,
-            //    size_of_opaque_sector_in_percents = 30,
-            //    size_of_transparent_sector_in_percents = 30,
-            //    zone_size = 150,
+            new eye_tracking_mouse.Options.CalibrationMode
+            {
+                considered_zones_count = 5,
+                max_zones_count = 200,
+                shade_thickness_in_pixels = 10,
+                size_of_opaque_sector_in_percents = 30,
+                size_of_transparent_sector_in_percents = 30,
+                zone_size = 150,
 
-            //    algorithm = "V1",
-            //    update_period_ms = 0,
-            //    additional_dimensions_configuration =
-            //        new eye_tracking_mouse.AdditionalDimensionsConfguration
-            //        {
-            //            LeftEye = new eye_tracking_mouse.Vector3Percents { X = 700, Y = 700, Z = 700 },
-            //            RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-            //            AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 700, Y = 700, Z = 0 },
-            //            HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-            //            HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
-            //        }
-            //},
-            //new eye_tracking_mouse.Options.CalibrationMode
-            //{
-            //    considered_zones_count = 5,
-            //    max_zones_count = 200,
-            //    shade_thickness_in_pixels = 10,
-            //    size_of_opaque_sector_in_percents = 30,
-            //    size_of_transparent_sector_in_percents = 30,
-            //    zone_size = 150,
+                algorithm = "V1",
+                update_period_ms = 0,
+                additional_dimensions_configuration =
+                    new eye_tracking_mouse.AdditionalDimensionsConfguration
+                    {
+                        LeftEye = new eye_tracking_mouse.Vector3Percents { X = 700, Y = 700, Z = 700 },
+                        RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
+                        AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 700, Y = 700, Z = 0 },
+                        HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
+                        HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
+                    }
+            },
+            new eye_tracking_mouse.Options.CalibrationMode
+            {
+                considered_zones_count = 5,
+                max_zones_count = 200,
+                shade_thickness_in_pixels = 10,
+                size_of_opaque_sector_in_percents = 30,
+                size_of_transparent_sector_in_percents = 30,
+                zone_size = 150,
 
-            //    algorithm = "V1",
-            //    update_period_ms = 0,
-            //    additional_dimensions_configuration =
-            //        new eye_tracking_mouse.AdditionalDimensionsConfguration
-            //        {
-            //            LeftEye = new eye_tracking_mouse.Vector3Percents { X = 700, Y = 700, Z = 700 },
-            //            RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-            //            AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-            //            HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-            //            HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
-            //        }
-            //},
-            //new eye_tracking_mouse.Options.CalibrationMode
-            //{
-            //    considered_zones_count = 5,
-            //    max_zones_count = 200,
-            //    shade_thickness_in_pixels = 10,
-            //    size_of_opaque_sector_in_percents = 30,
-            //    size_of_transparent_sector_in_percents = 30,
-            //    zone_size = 150,
+                algorithm = "V1",
+                update_period_ms = 0,
+                additional_dimensions_configuration =
+                    new eye_tracking_mouse.AdditionalDimensionsConfguration
+                    {
+                        LeftEye = new eye_tracking_mouse.Vector3Percents { X = 700, Y = 700, Z = 700 },
+                        RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
+                        AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
+                        HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
+                        HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
+                    }
+            },
+            new eye_tracking_mouse.Options.CalibrationMode
+            {
+                considered_zones_count = 5,
+                max_zones_count = 200,
+                shade_thickness_in_pixels = 10,
+                size_of_opaque_sector_in_percents = 30,
+                size_of_transparent_sector_in_percents = 30,
+                zone_size = 150,
 
-            //    algorithm = "V1",
-            //    update_period_ms = 0,
-            //    additional_dimensions_configuration =
-            //    new eye_tracking_mouse.AdditionalDimensionsConfguration
-            //    {
-            //        LeftEye = new eye_tracking_mouse.Vector3Percents { X = 700, Y = 700, Z = 700 },
-            //        RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-            //        AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-            //        HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-            //        HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 700, Y = 700, Z = 700 }
-            //    }
-            //},
+                algorithm = "V1",
+                update_period_ms = 0,
+                additional_dimensions_configuration =
+                new eye_tracking_mouse.AdditionalDimensionsConfguration
+                {
+                    LeftEye = new eye_tracking_mouse.Vector3Percents { X = 700, Y = 700, Z = 700 },
+                    RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
+                    AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
+                    HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
+                    HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 700, Y = 700, Z = 700 }
+                }
+            },
             new eye_tracking_mouse.Options.CalibrationMode
             {
                 considered_zones_count = 5,
@@ -364,147 +348,144 @@ namespace BlindConfigurationTester
             return null;
         }
 
-        private eye_tracking_mouse.Options.CalibrationMode MaxOutEachDimension(
+        private void MaxOutEachDimension(
             eye_tracking_mouse.Options.CalibrationMode mode,
             List<DataPoint> data_points)
         {
-            eye_tracking_mouse.Options.CalibrationMode best_calibration_mode = mode;
-            double best_utility = 0;
+            eye_tracking_mouse.Options.CalibrationMode local_best_calibration_mode = mode;
+            double local_best_utility = 0;
 
             while (true)
             {
-                double old_best_utility = best_utility;
+                double old_best_utility = local_best_utility;
                 foreach (var field in fields)
                 {
-                    if (GetFieldValue(best_calibration_mode, field) == -1)
+                    if (GetFieldValue(local_best_calibration_mode, field) == -1)
                         continue;
 
                     var range = field.range.GetRange();
 
                     for (int i = 0; i < range.Count; i++)
                     {
-                        eye_tracking_mouse.Options.CalibrationMode calibration_mode = best_calibration_mode.Clone();
+                        eye_tracking_mouse.Options.CalibrationMode calibration_mode = local_best_calibration_mode.Clone();
                         SetFieldValue(calibration_mode, field, range[i]);
 
 
                         if (cancellation.Token.IsCancellationRequested)
-                            return null;
+                            return;
 
-                        var results = RunTest(data_points, calibration_mode);
-                        double utility = results.UtilityFunction;
-
-                        Dispatcher.Invoke((Action)(() =>
-                        {
-                            Text_LastTestResult.Text = "Last test results " + results.ToString() + ". Delta: " + (utility - old_best_utility);
-                        }));
-
-                        if (utility > best_utility)
-                        {
-                            best_utility = utility;
-                            best_calibration_mode = calibration_mode;
-
-                            Dispatcher.Invoke((Action)(() =>
-                            {
-                                Text_LocalBestModeInfo.Text = "Local Best Calibration Mode  " + results.ToString() + ". Delta: " + (utility - old_best_utility);
-                            }));
-                        }
+                        RunTest(data_points, calibration_mode, ref local_best_calibration_mode, ref local_best_utility);
                     }
                 }
 
                 number_of_local_iterations++;
-                Dispatcher.Invoke((Action)(() =>
+                Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    Text_LastIterationUtilityDelta.Text = "Last Iteration Utility Delta: " + (best_utility - old_best_utility);
+                    Text_LastIterationUtilityDelta.Text = "Last Iteration Utility Delta: " + (local_best_utility - old_best_utility);
                 }));
 
-                if (best_utility - old_best_utility < eps)
+                if (local_best_utility - old_best_utility < eps)
                     break;
             }
 
-            return best_calibration_mode;
         }
 
-        private  Helpers.TestResult RunTest(List<DataPoint> data_points, eye_tracking_mouse.Options.CalibrationMode mode)
+        private  bool RunTest(
+            List<DataPoint> data_points, 
+            eye_tracking_mouse.Options.CalibrationMode mode,
+            ref eye_tracking_mouse.Options.CalibrationMode local_best_mode,
+            ref double local_best_utility)
         {
             number_of_tests++;
 
-            Dispatcher.Invoke((Action)(() =>
+            Dispatcher.BeginInvoke((Action)(() =>
             {
                 Text_ProgressInfo.Text =
                     "Total Runned Tests: " + number_of_tests +
                     ". Local Iterations: " + number_of_local_iterations +
                     ". Global Iterations " + number_of_global_iterations;
             }));
-            return Helpers.TestCalibrationMode(data_points, mode);
+            var results = Helpers.TestCalibrationMode(data_points, mode);
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                Text_LastTestResult.Text = "Last test results " + results.ToString();
+            }));
+
+            double utility = results.UtilityFunction;
+
+            Debug.Assert(global_best_utility >= local_best_utility);
+
+            if (utility > global_best_utility)
+            {
+                global_best_utility = utility;
+                BestCalibrationMode = mode;
+
+                Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Text_GlobalBestModeInfo.Text = "Global Best Calibration Mode  " + results.ToString();
+                }));
+            }
+
+            if (utility > local_best_utility)
+            {
+                local_best_utility = utility;
+                local_best_mode = mode;
+
+                Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    Text_LocalBestModeInfo.Text = "Local Best Calibration Mode  " + results.ToString();
+                }));
+
+                return true;
+            }
+            return false;
         }
 
-        private eye_tracking_mouse.Options.CalibrationMode IncrementalImprove(
+        private void IncrementalImprove(
             eye_tracking_mouse.Options.CalibrationMode mode, 
             List<DataPoint> data_points)
         {
-            eye_tracking_mouse.Options.CalibrationMode best_calibration_mode = eye_tracking_mouse.Options.Instance.calibration_mode;
-            double best_utility = Helpers.TestCalibrationMode(data_points, best_calibration_mode).UtilityFunction;
+            eye_tracking_mouse.Options.CalibrationMode local_best_calibration_mode = eye_tracking_mouse.Options.Instance.calibration_mode;
+            double local_best_utility = 0;
+            RunTest(data_points, local_best_calibration_mode, ref local_best_calibration_mode, ref local_best_utility);
 
             while (true)
             {
-                double old_best_utility = best_utility;
+                double old_best_utility = local_best_utility;
                 foreach (var field in fields)
                 {
-                    if (GetFieldValue(best_calibration_mode, field) == -1)
+                    if (GetFieldValue(local_best_calibration_mode, field) == -1)
                         continue;
 
-                    eye_tracking_mouse.Options.CalibrationMode calibration_mode;
-                    while ((calibration_mode = IncrementField(best_calibration_mode, field)) != null)
-                    {
-                        var results = RunTest(data_points, calibration_mode);
-                        double utility = results.UtilityFunction;
-                        if (utility > best_utility)
-                        {
-                            best_utility = utility;
-                            best_calibration_mode = calibration_mode;
+                    if (cancellation.Token.IsCancellationRequested)
+                        return;
 
-                            Dispatcher.Invoke((Action)(() =>
-                            {
-                                Text_LocalBestModeInfo.Text = "Local Best Calibration Mode  " + results.ToString() + ". Delta: " + (utility - old_best_utility);
-                            }));
-                        }
-                        else
+                    eye_tracking_mouse.Options.CalibrationMode calibration_mode;
+                    while ((calibration_mode = IncrementField(local_best_calibration_mode, field)) != null)
+                    {
+                        if (!RunTest(data_points, calibration_mode, ref local_best_calibration_mode, ref local_best_utility))
                         {
                             break;
                         }
                     }
 
-                    while ((calibration_mode = DecrementField(best_calibration_mode, field)) != null)
+                    while ((calibration_mode = DecrementField(local_best_calibration_mode, field)) != null)
                     {
-                        var results = RunTest(data_points, calibration_mode);
-                        double utility = results.UtilityFunction;
-                        if (utility > best_utility)
-                        {
-                            best_utility = utility;
-                            best_calibration_mode = calibration_mode;
-
-                            Dispatcher.Invoke((Action)(() =>
-                            {
-                                Text_LocalBestModeInfo.Text = "Local Best Calibration Mode  " + results.ToString() + ". Delta: " + (utility - old_best_utility);
-                            }));
-                        }
-                        else
+                        if (!RunTest(data_points, calibration_mode, ref local_best_calibration_mode, ref local_best_utility))
                         {
                             break;
                         }
                     }
                 }
-                if (best_utility - old_best_utility < eps)
+                if (local_best_utility - old_best_utility < eps)
                     break;
 
                 number_of_local_iterations++;
-                Dispatcher.Invoke((Action)(() =>
+                Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    Text_LastIterationUtilityDelta.Text = "Last Iteration Utility Delta: " + (best_utility - old_best_utility);
+                    Text_LastIterationUtilityDelta.Text = "Last Iteration Utility Delta: " + (local_best_utility - old_best_utility);
                 }));
             }
-
-            return best_calibration_mode;
         }
     }
 }
