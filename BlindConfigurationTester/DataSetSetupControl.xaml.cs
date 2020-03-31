@@ -152,22 +152,46 @@ namespace BlindConfigurationTester
                 }
             }
 
-            MessageBox.Show("Configuration: "+ (dialog.GetSelectedConfiguration() ?? "User Data") + ". " + result.ToString());
+            MessageBox.Show("Configuration: " + (dialog.GetSelectedConfiguration() ?? "User Data") + ". " + result.ToString());
         }
 
         private void Button_GenerateConfigurationOnData_Click(object sender, RoutedEventArgs e)
         {
             if (SelectedDataSet == null)
                 return;
-         
+
             var window = new CalibrationModeGeneratorWindow(SelectedDataSet.data_points);
             window.ShowDialog();
             if (window.BestCalibrationMode == null)
                 return;
 
-            var options = new eye_tracking_mouse.Options();
-            options.calibration_mode = window.BestCalibrationMode;
-            options.SaveToFile(System.IO.Path.Combine(SelectedDataSet.DataSetResultsFolder, "options.json"));
+            int generated_configs_max_index = 0;
+            var existing_configurations = Utils.GetConfigurationsList();
+            foreach (var existing_config in existing_configurations)
+            {
+                if (existing_config == null)
+                    continue;
+
+                var tokens = existing_config.Split('_');
+                int index = 0;
+                if (tokens.Length > 1 &&
+                    tokens[0] == "gen" &&
+                    int.TryParse(tokens[1], out index) &&
+                    index > generated_configs_max_index)
+                {
+                    generated_configs_max_index = index;
+                }
+            }
+
+            string new_config = "gen_" +
+                (generated_configs_max_index + 1) + "_" +
+                Helpers.TestCalibrationMode(SelectedDataSet.data_points, window.BestCalibrationMode).UtilityFunction;
+
+            Utils.CreateConfiguration(new_config);
+            (new eye_tracking_mouse.Options
+            {
+                calibration_mode = window.BestCalibrationMode
+            }).SaveToFile(System.IO.Path.Combine(Utils.GetConfigurationDir(new_config), "options.json"));
         }
 
         private void Button_RunExplorer_Click(object sender, RoutedEventArgs e)

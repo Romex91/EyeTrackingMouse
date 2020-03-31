@@ -68,9 +68,12 @@ namespace BlindConfigurationTester
 
             foreach (var mode in calibration_modes_to_test)
             {
-                ForEachMinMaxPermutation(mode, x => IncrementalImprove(x, data_points));
+                MaxOutEachDimension(mode.Clone(), data_points);
+                IncrementalImprove(mode.Clone(), data_points);
+                //ForEachMinMaxPermutation(mode, x => IncrementalImprove(x, data_points));
                 number_of_global_iterations++;
                 
+                // TODO: remove
                 break;
             }
         }
@@ -440,7 +443,7 @@ namespace BlindConfigurationTester
                     Text_LastIterationUtilityDelta.Text = "Last Iteration Utility Delta: " + (local_best_utility - old_best_utility);
                 }));
 
-                if (local_best_utility - old_best_utility < eps)
+                if (local_best_utility == old_best_utility)
                     break;
             }
 
