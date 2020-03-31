@@ -159,21 +159,21 @@ namespace BlindConfigurationTester
 
         private static OptionsField[] fields = new OptionsField[]
         {
-            OptionsField.BuildLinear(field_name : "zone_size", max : 2000, min : 10, step: 10),
-            OptionsField.BuildExponential(field_name : "max_zones_count", max : 2000, min : 1, step: 2),
-            OptionsField.BuildHardcoded(field_name : "considered_zones_count", new List<int>{ 1, 2, 3, 4, 6, 10, 20 }),
+            OptionsField.BuildLinear(field_name : "zone_size", max : 800, min : 10, step: 10),
+            OptionsField.BuildExponential(field_name : "max_zones_count", max : 1024, min : 1, step: 2),
+            OptionsField.BuildHardcoded(field_name : "considered_zones_count", new List<int>{ 3, 4, 6, 10, 20 }),
             OptionsField.BuildLinear(field_name : "size_of_opaque_sector_in_percents", max : 100, min : 0, step: 10),
             OptionsField.BuildLinear(field_name : "size_of_transparent_sector_in_percents", max : 100, min : 0, step: 10),
-            OptionsField.BuildLinear(field_name : "shade_thickness_in_pixels", max : 1000, min : 0, step: 10),
+            OptionsField.BuildLinear(field_name : "shade_thickness_in_pixels", max : 200, min : 0, step: 20),
 
-            OptionsField.BuildHardcoded(field_name : "coordinate 2", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 3", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 4", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 5", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 6", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 7", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 8", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 9", new List<int> {1, 10, 50, 100, 250, 300, 600, 1000, 10000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 2", new List<int> {50, 100, 250, 600, 1000, 10000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 3", new List<int> {50, 100, 250, 600, 1000, 10000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 4", new List<int> {50, 100, 250, 600, 1000, 10000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 5", new List<int> {50, 100, 250, 600, 1000, 10000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 6", new List<int> {50, 100, 250, 600, 1000, 10000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 7", new List<int> {50, 100, 250, 600, 1000, 10000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 8", new List<int> {50, 100, 250, 600, 1000, 10000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 9", new List<int> {50, 100, 250, 600, 1000, 10000 }),
         };
 
         private void ForEachMinMaxPermutation(
@@ -181,7 +181,6 @@ namespace BlindConfigurationTester
             Action<eye_tracking_mouse.Options.CalibrationMode> callback)
         {
             callback(starting_mode);
-            
             List<OptionsField> enabled_fields = new List<OptionsField>();
 
             long iterator = 1;
@@ -197,9 +196,16 @@ namespace BlindConfigurationTester
             }
 
             total_min_max_permutations = iterator;
-            
+            remaining_min_max_permutations = 0;
+            List<long> permutations = new List<long>();
 
             while (iterator > 0)
+            {
+                permutations.Add(iterator--);
+            }
+            permutations.Shuffle(new Random((int)(DateTime.Now.ToBinary() % int.MaxValue)));
+
+            foreach(var permutation in permutations)
             {
                 if (cancellation.Token.IsCancellationRequested)
                     return;
@@ -208,7 +214,7 @@ namespace BlindConfigurationTester
 
                 for(int field_number = 0; field_number < enabled_fields.Count; field_number++)
                 {
-                    if((iterator & (1 << field_number)) == 0)
+                    if((permutation & (1 << field_number)) == 0)
                     {
                         SetFieldValue(mode, enabled_fields[field_number], enabled_fields[field_number].range.GetRange().Last());
                     } else
@@ -222,9 +228,8 @@ namespace BlindConfigurationTester
                 }));
 
                 callback(mode);
-                iterator--;
 
-                remaining_min_max_permutations = iterator;
+                remaining_min_max_permutations++;
             }
         }
 
@@ -504,10 +509,14 @@ namespace BlindConfigurationTester
             while (true)
             {
                 double old_best_utility = local_best_utility;
-                foreach (var field in fields)
+
+                for (int i = 0; i < fields.Length; i++)
                 {
+                    var field = fields[i];
                     if (GetFieldValue(local_best_calibration_mode, field) == -1)
+                    {
                         continue;
+                    }
 
                     if (cancellation.Token.IsCancellationRequested)
                         return;
@@ -523,10 +532,13 @@ namespace BlindConfigurationTester
 
                     if ((calibration_mode = DecrementField(local_best_calibration_mode, field)) != null)
                     {
-                        RunTest(data_points, calibration_mode, ref local_best_calibration_mode, ref local_best_utility);
+                        if (RunTest(data_points, calibration_mode, ref local_best_calibration_mode, ref local_best_utility))
+                        {
+                            continue;
+                        }
                     }
                 }
-                if (local_best_utility - old_best_utility < eps)
+                if (local_best_utility == old_best_utility)
                     break;
 
                 number_of_local_iterations++;
