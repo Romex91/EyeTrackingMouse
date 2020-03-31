@@ -13,8 +13,8 @@ namespace eye_tracking_mouse
     {
         bool IsDebugWindowEnabled { get; set; }
         void Reset();
-        void AddShift(ShiftPosition cursor_position, Point shift);
-        Point GetShift(ShiftPosition cursor_position);
+        void AddShift(List<double> coordinates, Point shift);
+        Point GetShift(List<double> coordinates);
 
         void SaveInDirectory(string directory_path);
     }
@@ -25,7 +25,7 @@ namespace eye_tracking_mouse
     {
         public bool IsDebugWindowEnabled { get => false; set { } }
 
-        public void AddShift(ShiftPosition cursor_position, Point shift)
+        public void AddShift(List<double> coordinates, Point shift)
         {
         }
 
@@ -33,7 +33,7 @@ namespace eye_tracking_mouse
         {
         }
 
-        public Point GetShift(ShiftPosition cursor_position)
+        public Point GetShift(List<double> coordinates)
         {
             return new Point(0, 0);
         }
@@ -68,21 +68,31 @@ namespace eye_tracking_mouse
             }
         }
 
+        static public ICalibrationManager BuildCalibrationManagerForTesting(Options.CalibrationMode calibration_mode)
+        {
+            return BuildCalibrationManager(calibration_mode);
+        }
+
         static private ICalibrationManager instance;
+
+        static private ICalibrationManager BuildCalibrationManager(Options.CalibrationMode calibration_mode)
+        {
+
+            if (calibration_mode.algorithm == "V0")
+                return new CalibrationManagerV0(calibration_mode);
+            else if (calibration_mode.algorithm == "V1")
+                return new CalibrationManagerV1(calibration_mode);
+            else if (calibration_mode.algorithm == "NO")
+                return new NoCalibrationManager();
+            else throw new Exception("Wrong algorithm name in options file");
+        }
 
         static private void ReloadInstance(object sender, EventArgs args)
         {
             lock(Helpers.locker)
             {
                 instance?.Dispose();
-
-                if (Options.Instance.calibration_mode.algorithm == "V0")
-                    instance = new CalibrationManagerV0();
-                else if (Options.Instance.calibration_mode.algorithm == "V1")
-                    instance = new CalibrationManagerV1();
-                else if (Options.Instance.calibration_mode.algorithm == "NO")
-                    instance = new NoCalibrationManager();
-                else throw new Exception("Wrong algorithm name in options file");
+                instance = BuildCalibrationManager(Options.Instance.calibration_mode);
             }
         }
     }

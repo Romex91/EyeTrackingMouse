@@ -12,49 +12,57 @@ namespace eye_tracking_mouse
     // Takes average of closest corrections.
     class CalibrationManagerV1 : ICalibrationManager
     {
-        public Point GetShift(ShiftPosition cursor_position)
+        private readonly ShiftsStorage shift_storage;
+        private readonly Options.CalibrationMode calibration_mode;
+        private readonly ShiftPositionCache cache;
+        public CalibrationManagerV1(Options.CalibrationMode mode)
         {
-            lock (Helpers.locker)
+            calibration_mode = mode;
+            cache = new ShiftPositionCache { coordinates_scales_in_percents = calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents };
+            shift_storage = new ShiftsStorage(calibration_mode, cache);
+        }
+
+        public Point GetShift(List<double> coordinates)
+        {
+            ShiftPosition cursor_position = new ShiftPosition(coordinates, cache);
+            shift_storage.calibration_window?.OnCursorPositionUpdate(cursor_position);
+
+            var closest_corrections = Helpers.CalculateClosestCorrectionsInfo(shift_storage, cursor_position, calibration_mode.considered_zones_count);
+            if (closest_corrections == null)
             {
-                shift_storage.calibration_window?.OnCursorPositionUpdate(cursor_position);
-
-                var closest_corrections = Helpers.CalculateClosestCorrectionsInfo(shift_storage, cursor_position, Options.Instance.calibration_mode.considered_zones_count);
-                if (closest_corrections == null)
-                {
-                    Debug.Assert(shift_storage.Corrections.Count() == 0);
-                    return new Point(0, 0);
-                }
-
-
-                double sum_of_reverse_distances = 0;
-                foreach (var index in closest_corrections)
-                {
-                    sum_of_reverse_distances += (1 / index.distance);
-                }
-
-
-                ApplyShades(closest_corrections);
-
-                foreach (var correction in closest_corrections)
-                {
-                    correction.weight = correction.weight / correction.distance / sum_of_reverse_distances;
-                }
-
-                Helpers.NormalizeWeights(closest_corrections);
-
-                var result = Helpers.GetWeightedAverage(shift_storage, closest_corrections);
-
-                if (shift_storage.calibration_window != null)
-                {
-                    var lables = new List<Tuple<string /*text*/, int /*correction index*/>>();
-                    foreach (var correction in closest_corrections)
-                        lables.Add(new Tuple<string, int>((int)(correction.weight * 100) + "%", correction.index));
-                    shift_storage.calibration_window.UpdateCorrectionsLables(lables);
-                    shift_storage.calibration_window.UpdateCurrentCorrection(new UserCorrection(cursor_position, result));
-                }
-
-                return result;
+                Debug.Assert(shift_storage.Corrections.Count() == 0);
+                return new Point(0, 0);
             }
+
+
+            double sum_of_reverse_distances = 0;
+            foreach (var index in closest_corrections)
+            {
+                sum_of_reverse_distances += (1 / index.distance);
+            }
+
+
+            ApplyShades(closest_corrections);
+
+            foreach (var correction in closest_corrections)
+            {
+                correction.weight = correction.weight / correction.distance / sum_of_reverse_distances;
+            }
+
+            Helpers.NormalizeWeights(closest_corrections);
+
+            var result = Helpers.GetWeightedAverage(shift_storage, closest_corrections);
+
+            if (shift_storage.calibration_window != null)
+            {
+                var lables = new List<Tuple<string /*text*/, int /*correction index*/>>();
+                foreach (var correction in closest_corrections)
+                    lables.Add(new Tuple<string, int>((int)(correction.weight * 100) + "%", correction.index));
+                shift_storage.calibration_window.UpdateCorrectionsLables(lables);
+                shift_storage.calibration_window.UpdateCurrentCorrection(new UserCorrection(cursor_position, result));
+            }
+
+            return result;
         }
 
         private double GetShadeOpacity(
@@ -63,25 +71,23 @@ namespace eye_tracking_mouse
         {
             Debug.Assert(source_of_shade.distance <= shaded_correction.distance);
 
-            var mode = Options.Instance.calibration_mode;
-
             double opacity = 1;
 
             double angle_in_percents = Helpers.GetAngleBetweenVectors(source_of_shade, shaded_correction) * 100 / Math.PI;
             Debug.Assert(angle_in_percents <= 100);
 
             // Opacity descendes gradualy in the sector between opaque and transparent sectors.
-            if (angle_in_percents < mode.size_of_opaque_sector_in_percents)
+            if (angle_in_percents < calibration_mode.size_of_opaque_sector_in_percents)
                 opacity = 1;
-            else if (angle_in_percents > 100 - mode.size_of_transparent_sector_in_percents)
+            else if (angle_in_percents > 100 - calibration_mode.size_of_transparent_sector_in_percents)
                 opacity = 0;
             else
-                opacity = (angle_in_percents + mode.size_of_transparent_sector_in_percents - 100) /
-                    (mode.size_of_opaque_sector_in_percents + mode.size_of_transparent_sector_in_percents - 100);
+                opacity = (angle_in_percents + calibration_mode.size_of_transparent_sector_in_percents - 100) /
+                    (calibration_mode.size_of_opaque_sector_in_percents + calibration_mode.size_of_transparent_sector_in_percents - 100);
 
             double distance_from_shade_shell_to_shaded_correction = shaded_correction.distance - source_of_shade.distance;
-            if (distance_from_shade_shell_to_shaded_correction < mode.shade_thickness_in_pixels)
-                opacity *= distance_from_shade_shell_to_shaded_correction / mode.shade_thickness_in_pixels;
+            if (distance_from_shade_shell_to_shaded_correction < calibration_mode.shade_thickness_in_pixels)
+                opacity *= distance_from_shade_shell_to_shaded_correction / calibration_mode.shade_thickness_in_pixels;
 
             return opacity * source_of_shade.weight;
         }
@@ -103,8 +109,9 @@ namespace eye_tracking_mouse
             }
         }
 
-        public void AddShift(ShiftPosition cursor_position, Point shift)
+        public void AddShift(List<double> coordinates, Point shift)
         {
+            ShiftPosition cursor_position = new ShiftPosition(coordinates, cache);
             shift_storage.AddShift(cursor_position, shift);
         }
 
@@ -123,8 +130,6 @@ namespace eye_tracking_mouse
             shift_storage.SaveInDirectory(directory_path);
         }
 
-
-        private readonly ShiftsStorage shift_storage = new ShiftsStorage();
 
         public bool IsDebugWindowEnabled
         {

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,30 +9,55 @@ using System.Threading.Tasks;
 
 namespace eye_tracking_mouse
 {
+    public class ShiftPositionCache : CustomCreationConverter<ShiftPosition>
+    {
+        public int[] coordinates_scales_in_percents = Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
+
+        public override ShiftPosition Create(Type objectType)
+        {
+            return new ShiftPosition(this);
+        }
+    }
+
     // A multidimensional vector where first two coordinates represent 2d point on the display.
     // Other dimensions represent user body position.
     public class ShiftPosition
     {
         [JsonProperty]
-        private readonly List<double> coordinates;
+        private List<double> Coordinates
+        {
+            get { return coordinates; }
+            set
+            {
+                coordinates = value;
+                adjusted_coordinates = new List<double>(coordinates.Count);
+                Debug.Assert(coordinates.Count == cache.coordinates_scales_in_percents.Length);
+
+                for (int i = 0; i < coordinates.Count; i++)
+                {
+                    adjusted_coordinates.Add(cache.coordinates_scales_in_percents[i] / 100.0 * coordinates[i]);
+                }
+            }
+        }
 
         [JsonIgnore]
-        private readonly List<double> adjusted_coordinates;
+        private List<double> coordinates;
 
-        public static void UpdateCache()
+        [JsonIgnore]
+        private List<double> adjusted_coordinates;
+
+        [JsonIgnore]
+        private ShiftPositionCache cache;
+
+        public ShiftPosition(ShiftPositionCache cache)
         {
-            coordinates_scales_in_percents = Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
+            this.cache = cache;
         }
-        private static int[] coordinates_scales_in_percents = Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
 
-        public ShiftPosition(List<double> coordinates)
+        public ShiftPosition(List<double> coordinates, ShiftPositionCache cache)
         {
-            this.coordinates = coordinates;
-            adjusted_coordinates = new List<double>(coordinates.Count);
-            for (int i = 0; i < coordinates.Count; i++)
-            {
-                adjusted_coordinates.Add(coordinates_scales_in_percents[i] / 100.0 * coordinates[i]);
-            }
+            this.cache = cache;
+            this.Coordinates = coordinates;
         }
 
         [JsonIgnore]
@@ -85,11 +111,12 @@ namespace eye_tracking_mouse
         public static ShiftPosition operator -(ShiftPosition a, ShiftPosition b)
         {
             Debug.Assert(a.coordinates.Count == b.coordinates.Count);
+            Debug.Assert(a.cache == b.cache);
             List<double> coordinates = new List<double>(a.coordinates.Count);
 
             for (int i = 0; i < a.coordinates.Count; i++)
                 coordinates.Add(a.coordinates[i] - b.coordinates[i]);
-            return new ShiftPosition(coordinates);
+            return new ShiftPosition(coordinates, a.cache);
         }
     }
 }

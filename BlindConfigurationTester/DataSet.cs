@@ -141,43 +141,39 @@ namespace BlindConfigurationTester
             }
         }
 
-        public static eye_tracking_mouse.ICalibrationManager SetupCalibrationManager(string configuration)
+        public static eye_tracking_mouse.Options.CalibrationMode GetCalibrationMode(string configuration)
         {
-            eye_tracking_mouse.Options.Instance = eye_tracking_mouse.Options.LoadFromFile(
-                Path.Combine(Utils.GetConfigurationDir(configuration), "options.json"));
-            eye_tracking_mouse.Options.CalibrationMode.Changed?.Invoke(null, null);
-
             eye_tracking_mouse.FilesSavingQueue.DisabledForTesting = true;
-            var calibration_manager = eye_tracking_mouse.CalibrationManager.Instance;
-            calibration_manager.Reset();
-            return calibration_manager;
+            eye_tracking_mouse.Options options = eye_tracking_mouse.Options.LoadFromFile(
+                Path.Combine(Utils.GetConfigurationDir(configuration), "options.json"));
+            return options.calibration_mode;
         }
 
         public static eye_tracking_mouse.ICalibrationManager SetupCalibrationManager(eye_tracking_mouse.Options.CalibrationMode calibration_mode)
         {
-            eye_tracking_mouse.Options.Instance.calibration_mode = calibration_mode;
-            eye_tracking_mouse.Options.CalibrationMode.Changed?.Invoke(null, null);
-            var calibration_manager = eye_tracking_mouse.CalibrationManager.Instance;
+            eye_tracking_mouse.FilesSavingQueue.DisabledForTesting = true;
+            var calibration_manager = eye_tracking_mouse.CalibrationManager.BuildCalibrationManagerForTesting(calibration_mode);
             calibration_manager.Reset();
             return calibration_manager;
         }
 
         public static Helpers.TestResult TestCalibrationMode(List<DataPoint> data_points, eye_tracking_mouse.Options.CalibrationMode calibration_mode)
         {
-            return TestCalibrationManager(SetupCalibrationManager(calibration_mode), data_points);
+            return TestCalibrationManager(SetupCalibrationManager(calibration_mode), data_points, calibration_mode.additional_dimensions_configuration);
         }
 
 
         public static TestResult TestCalibrationManager(
             eye_tracking_mouse.ICalibrationManager calibration_manager,
-            List<DataPoint> data_points)
+            List<DataPoint> data_points,
+            eye_tracking_mouse.AdditionalDimensionsConfguration config)
         {
             var time_before = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
             
             TestResult result = new TestResult();
             foreach (var data_point in data_points)
             {
-                result.errors.Add(AddDataPoint(calibration_manager, data_point));
+                result.errors.Add(AddDataPoint(calibration_manager, data_point, config));
             }
 
             var time_after = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
@@ -186,9 +182,12 @@ namespace BlindConfigurationTester
             return result;
         }
         
-        public static TestResult.Error AddDataPoint(eye_tracking_mouse.ICalibrationManager calibration_manager, DataPoint data_point)
+        public static TestResult.Error AddDataPoint(
+            eye_tracking_mouse.ICalibrationManager calibration_manager,
+            DataPoint data_point,
+            eye_tracking_mouse.AdditionalDimensionsConfguration config)
         {
-            var shift_position = new eye_tracking_mouse.ShiftPosition(data_point.tobii_coordinates.GetEnabledCoordinates());
+            var shift_position = data_point.tobii_coordinates.ToCoordinates(config);
             var tobii_gaze_point = new Point(
                         data_point.tobii_coordinates.gaze_point.X,
                         data_point.tobii_coordinates.gaze_point.Y);

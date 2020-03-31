@@ -23,13 +23,14 @@ namespace BlindConfigurationTester
         private List<DataPoint> data_points;
         private int current_point_index = 0;
         private string configuration;
-        
+        private eye_tracking_mouse.Options.CalibrationMode calibration_mode;
 
         public ConfigurationTestVisualisationWindow(string configuration, List<DataPoint> data_points)
         {
             InitializeComponent();
             this.data_points = data_points;
-            calibration_manager = Helpers.SetupCalibrationManager(configuration);
+            calibration_mode = Helpers.GetCalibrationMode(configuration);
+            calibration_manager = Helpers.SetupCalibrationManager(calibration_mode);
             this.configuration = configuration ?? "User Data";
             this.Closing += ConfigurationTestVisualisationWindow_Closing;
             this.KeyDown += ConfigurationTestVisualisationWindow_KeyDown;
@@ -83,7 +84,7 @@ namespace BlindConfigurationTester
             TextBlock_Info.Text = "Configuration " + configuration + " \n" +
                 "point " + current_point_index + "/" + data_points.Count;
 
-            calibration_manager.GetShift(new eye_tracking_mouse.ShiftPosition(data_points[current_point_index].tobii_coordinates.GetEnabledCoordinates()));
+            calibration_manager.GetShift(data_points[current_point_index].tobii_coordinates.ToCoordinates(calibration_mode.additional_dimensions_configuration));
         }
 
         private void SetCurrentPointIndex(int new_current_point_index)
@@ -96,7 +97,7 @@ namespace BlindConfigurationTester
 
             while (current_point_index < new_current_point_index)
             {
-                Helpers.AddDataPoint(calibration_manager, data_points[current_point_index++]);
+                Helpers.AddDataPoint(calibration_manager, data_points[current_point_index++], calibration_mode.additional_dimensions_configuration);
             }
 
             OnCurrentPointChanged();

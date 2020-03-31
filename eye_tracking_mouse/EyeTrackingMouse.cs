@@ -56,7 +56,7 @@ namespace eye_tracking_mouse
                 {
                     if (DateTime.Now > freeze_until)
                     {
-                        this.current_coordinates = coordinates.GetEnabledCoordinates();
+                        this.current_coordinates = coordinates.ToCoordinates(Options.Instance.calibration_mode.additional_dimensions_configuration);
                         gaze_point = coordinates.gaze_point;
 
                         if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.reset_calibration_zone_size)
@@ -68,7 +68,7 @@ namespace eye_tracking_mouse
                             (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration_mode.update_period_ms)
                         {
                             last_shift_update_time = DateTime.Now;
-                            calibration_shift = CalibrationManager.Instance.GetShift(new ShiftPosition(current_coordinates));
+                            calibration_shift = CalibrationManager.Instance.GetShift(current_coordinates);
                         }
                     }
 
@@ -229,7 +229,7 @@ namespace eye_tracking_mouse
             if (mouse_state == MouseState.Calibrating &&
                 (key == Key.LeftMouseButton || key == Key.RightMouseButton))
             {
-                CalibrationManager.Instance.AddShift(new ShiftPosition(current_coordinates), calibration_shift);
+                CalibrationManager.Instance.AddShift(current_coordinates, calibration_shift);
                 mouse_state = MouseState.Controlling;
             }
 

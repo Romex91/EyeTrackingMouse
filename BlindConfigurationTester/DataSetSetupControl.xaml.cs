@@ -138,8 +138,9 @@ namespace BlindConfigurationTester
             if (dialog.ShowDialog() != true || SelectedDataSet == null)
                 return;
 
-            var calibration_manager = Helpers.SetupCalibrationManager(dialog.GetSelectedConfiguration());
-            var result = Helpers.TestCalibrationManager(calibration_manager, SelectedDataSet.data_points);
+            var caibration_mode = Helpers.GetCalibrationMode(dialog.GetSelectedConfiguration());
+            var calibration_manager = Helpers.SetupCalibrationManager(caibration_mode);
+            var result = Helpers.TestCalibrationManager(calibration_manager, SelectedDataSet.data_points, caibration_mode.additional_dimensions_configuration);
             eye_tracking_mouse.CalibrationManager.Instance.SaveInDirectory(Utils.DataFolder);
 
             using (var writer = new StreamWriter(

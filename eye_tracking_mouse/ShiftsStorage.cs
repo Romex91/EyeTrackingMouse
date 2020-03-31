@@ -35,15 +35,18 @@ namespace eye_tracking_mouse
         public CalibrationWindow calibration_window = null;
         public List<UserCorrection> Corrections = new List<UserCorrection>();
 
-        public ShiftsStorage()
+        private Options.CalibrationMode calibration_mode;
+        private ShiftPositionCache cache;
+
+        public ShiftsStorage(Options.CalibrationMode mode, ShiftPositionCache cache)
         {
-            Options.Changed += OnSettingsChanged;
+            calibration_mode = mode;
+            this.cache = cache;
             LoadFromFile();
         }
 
         public void Dispose()
         {
-            Options.Changed -= OnSettingsChanged;
             FilesSavingQueue.FlushSynchroniously();
             if (calibration_window != null)
             {
@@ -62,7 +65,6 @@ namespace eye_tracking_mouse
               {
                   lock (Helpers.locker)
                   {
-
                       if (value && calibration_window == null)
                       {
                           calibration_window = new CalibrationWindow();
@@ -81,23 +83,20 @@ namespace eye_tracking_mouse
 
         public void Reset()
         {
-            lock (Helpers.locker)
-            {
-                Corrections.Clear();
-                OnShiftsChanged();
-            }
+            Corrections.Clear();
+            OnShiftsChanged();
         }
 
         public void AddShift(ShiftPosition cursor_position, Point shift)
         {
             var closest_shifts = Helpers.CalculateClosestCorrectionsInfo(this, cursor_position, 2);
-            if (closest_shifts != null && closest_shifts[0].distance < Options.Instance.calibration_mode.zone_size)
+            if (closest_shifts != null && closest_shifts[0].distance < calibration_mode.zone_size)
             {
                 Corrections[closest_shifts[0].index] = new UserCorrection(cursor_position, shift);
-                if (closest_shifts.Count > 1 && closest_shifts[1].distance < Options.Instance.calibration_mode.zone_size)
+                if (closest_shifts.Count > 1 && closest_shifts[1].distance < calibration_mode.zone_size)
                     Corrections.RemoveAt(closest_shifts[1].index);
             }
-            else if (Corrections.Count() < Options.Instance.calibration_mode.max_zones_count)
+            else if (Corrections.Count() < calibration_mode.max_zones_count)
             {
                 Corrections.Add(new UserCorrection(cursor_position, shift));
             }
@@ -119,9 +118,9 @@ namespace eye_tracking_mouse
             return (vector.X > 0 ? "1" : "0") + (vector.Y > 0 ? "1" : "0") + (vector.Z > 0 ? "1" : "0");
         }
 
-        private static string GetFilepath(string directory_path)
+        private string GetFilepath(string directory_path)
         {
-            var dimensions_config = Options.Instance.calibration_mode.additional_dimensions_configuration;
+            var dimensions_config = calibration_mode.additional_dimensions_configuration;
 
             return Path.Combine(directory_path, "calibration" +
               GetVector3PathPart(dimensions_config.LeftEye) +
@@ -136,16 +135,18 @@ namespace eye_tracking_mouse
         {
             try
             {
-                ShiftPosition.UpdateCache();
                 Corrections.Clear();
                 if (!File.Exists(GetFilepath(Helpers.UserDataFolder)))
                     return;
 
                 bool error_message_box_shown = false;
-                
-                Corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(File.ReadAllText(GetFilepath(Helpers.UserDataFolder))).Where(x =>
+
+                Corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(
+                    File.ReadAllText(GetFilepath(Helpers.UserDataFolder)),
+                    cache
+                    ).Where(x =>
                 {
-                    if (x.Position.Count != Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesCount)
+                    if (x.Position.Count != calibration_mode.additional_dimensions_configuration.CoordinatesCount)
                     {
                         if (!error_message_box_shown)
                         {
@@ -165,48 +166,15 @@ namespace eye_tracking_mouse
             }
         }
 
-        private void OnSettingsChanged(object sender, EventArgs e)
-        {
-            // Adjust to new calibration zone size.
-            for (int i = 0; i < Corrections.Count - 1;)
-            {
-                bool did_remove = false;
-                for (int j = i + 1; j < Corrections.Count; j++)
-                {
-                    if (Helpers.GetVectorLength(Corrections[j].Position - Corrections[i].Position) < Options.Instance.calibration_mode.zone_size)
-                    {
-                        did_remove = true;
-                        Corrections.RemoveAt(i);
-                        break;
-                    }
-                }
-
-                if (!did_remove)
-                    i++;
-            }
-
-            // Adjust to new calibration zones count.
-            while (Corrections.Count > Options.Instance.calibration_mode.max_zones_count)
-                Corrections.RemoveAt(0);
-
-            OnShiftsChanged();
-        }
-
         private string GetSerializedContent()
         {
-            lock (Helpers.locker)
-            {
-                return JsonConvert.SerializeObject(Corrections);
-            }
+            return JsonConvert.SerializeObject(Corrections);
         }
 
         private void OnShiftsChanged()
         {
-            lock (Helpers.locker)
-            {
-                FilesSavingQueue.Save(GetFilepath(Helpers.UserDataFolder), GetSerializedContent);
-                calibration_window?.UpdateCorrections(Corrections);
-            }
+            FilesSavingQueue.Save(GetFilepath(Helpers.UserDataFolder), GetSerializedContent);
+            calibration_window?.UpdateCorrections(Corrections);
         }
 
         private int GetSectorNumber(UserCorrection shift, int max_sector_x)
@@ -341,7 +309,13 @@ namespace eye_tracking_mouse
             for (int i = 0; i < a.vector_from_cursor.Count; i++)
                 dot_product += a.vector_from_cursor[i] * b.vector_from_cursor[i];
 
-            return Math.Acos(dot_product / a.distance / b.distance);
+            double cos = dot_product / a.distance / b.distance;
+            if (cos > 1.0)
+                cos = 1.0;
+            else if (cos < -1.0)
+                cos = -1.0;
+
+            return Math.Acos(cos);
         }
     }
 }

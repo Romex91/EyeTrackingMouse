@@ -19,9 +19,8 @@ namespace eye_tracking_mouse
         public Tobii.Interaction.Vector3 head_position;
         public Tobii.Interaction.Vector3 head_direction;
 
-        public List<double> GetEnabledCoordinates()
+        public List<double> ToCoordinates(AdditionalDimensionsConfguration config)
         {
-            var config = Options.Instance.calibration_mode.additional_dimensions_configuration;
             List<double> coordinates = new List<double>(config.CoordinatesCount);
 
             coordinates.Add(gaze_point.X);
