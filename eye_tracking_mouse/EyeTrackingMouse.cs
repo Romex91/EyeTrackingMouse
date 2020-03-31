@@ -29,7 +29,7 @@ namespace eye_tracking_mouse
         private Statistics statistics = Statistics.LoadFromFile(Statistics.Filepath);
 
         private TobiiCoordinatesProvider tobii_coordinates_provider;
-        private List<double> current_coordinates;
+        private double[] current_coordinates;
 
         public enum MouseState
         {

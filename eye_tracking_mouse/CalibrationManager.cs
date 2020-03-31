@@ -13,8 +13,8 @@ namespace eye_tracking_mouse
     {
         bool IsDebugWindowEnabled { get; set; }
         void Reset();
-        void AddShift(List<double> coordinates, Point shift);
-        Point GetShift(List<double> coordinates);
+        void AddShift(double[] coordinates, Point shift);
+        Point GetShift(double[] coordinates);
 
         void SaveInDirectory(string directory_path);
     }
@@ -25,7 +25,7 @@ namespace eye_tracking_mouse
     {
         public bool IsDebugWindowEnabled { get => false; set { } }
 
-        public void AddShift(List<double> coordinates, Point shift)
+        public void AddShift(double[] coordinates, Point shift)
         {
         }
 
@@ -33,7 +33,7 @@ namespace eye_tracking_mouse
         {
         }
 
-        public Point GetShift(List<double> coordinates)
+        public Point GetShift(double[] coordinates)
         {
             return new Point(0, 0);
         }

@@ -19,12 +19,13 @@ namespace eye_tracking_mouse
         public Tobii.Interaction.Vector3 head_position;
         public Tobii.Interaction.Vector3 head_direction;
 
-        public List<double> ToCoordinates(AdditionalDimensionsConfguration config)
+        public double[] ToCoordinates(AdditionalDimensionsConfguration config)
         {
-            List<double> coordinates = new List<double>(config.CoordinatesCount);
+            double[] coordinates = new double[config.CoordinatesCount];
 
-            coordinates.Add(gaze_point.X);
-            coordinates.Add(gaze_point.Y);
+            int index = 0;
+            coordinates[index++] = gaze_point.X;
+            coordinates[index++] = gaze_point.Y;
 
             foreach (var vector3 in new List<Tuple<Tobii.Interaction.Vector3, Vector3Percents>> {
                     new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (left_eye, config.LeftEye),
@@ -34,11 +35,11 @@ namespace eye_tracking_mouse
                     new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (head_position, config.HeadPosition)})
             {
                 if (vector3.Item2.X > 0)
-                    coordinates.Add(vector3.Item1.X);
+                    coordinates[index++] = vector3.Item1.X;
                 if (vector3.Item2.Y > 0)
-                    coordinates.Add(vector3.Item1.Y);
+                    coordinates[index++] = vector3.Item1.Y;
                 if (vector3.Item2.Z > 0)
-                    coordinates.Add(vector3.Item1.Z);
+                    coordinates[index++] = vector3.Item1.Z;
             }
             return coordinates;
         }

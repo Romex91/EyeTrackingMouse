@@ -22,7 +22,7 @@ namespace eye_tracking_mouse
             shift_storage = new ShiftsStorage(calibration_mode, cache);
         }
 
-        public Point GetShift(List<double> coordinates)
+        public Point GetShift(double[] coordinates)
         {
             ShiftPosition cursor_position = new ShiftPosition(coordinates, cache);
             shift_storage.calibration_window?.OnCursorPositionUpdate(cursor_position);
@@ -109,7 +109,7 @@ namespace eye_tracking_mouse
             }
         }
 
-        public void AddShift(List<double> coordinates, Point shift)
+        public void AddShift(double[] coordinates, Point shift)
         {
             ShiftPosition cursor_position = new ShiftPosition(coordinates, cache);
             shift_storage.AddShift(cursor_position, shift);

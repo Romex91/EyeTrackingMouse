@@ -24,27 +24,28 @@ namespace eye_tracking_mouse
     public class ShiftPosition
     {
         [JsonProperty]
-        private List<double> Coordinates
+        private double[] Coordinates
         {
             get { return coordinates; }
             set
             {
                 coordinates = value;
-                adjusted_coordinates = new List<double>(coordinates.Count);
-                Debug.Assert(coordinates.Count == cache.coordinates_scales_in_percents.Length);
+                adjusted_coordinates = new double[coordinates.Length];
+                Debug.Assert(coordinates.Length == cache.coordinates_scales_in_percents.Length);
 
-                for (int i = 0; i < coordinates.Count; i++)
+                for (int i = 0; i < coordinates.Length; i++)
                 {
-                    adjusted_coordinates.Add(cache.coordinates_scales_in_percents[i] / 100.0 * coordinates[i]);
+
+                    adjusted_coordinates[i] = cache.coordinates_scales_in_percents[i] / 100.0 * coordinates[i];
                 }
             }
         }
 
         [JsonIgnore]
-        private List<double> coordinates;
+        private double[] coordinates;
 
         [JsonIgnore]
-        private List<double> adjusted_coordinates;
+        private double[] adjusted_coordinates;
 
         [JsonIgnore]
         private ShiftPositionCache cache;
@@ -54,7 +55,7 @@ namespace eye_tracking_mouse
             this.cache = cache;
         }
 
-        public ShiftPosition(List<double> coordinates, ShiftPositionCache cache)
+        public ShiftPosition(double[] coordinates, ShiftPositionCache cache)
         {
             this.cache = cache;
             this.Coordinates = coordinates;
@@ -67,7 +68,7 @@ namespace eye_tracking_mouse
             {
                 if (coordinates == null)
                     return 0;
-                return coordinates.Count;
+                return coordinates.Length;
             }
         }
 
@@ -110,12 +111,13 @@ namespace eye_tracking_mouse
 
         public static ShiftPosition operator -(ShiftPosition a, ShiftPosition b)
         {
-            Debug.Assert(a.coordinates.Count == b.coordinates.Count);
+            Debug.Assert(a.coordinates.Length == b.coordinates.Length);
             Debug.Assert(a.cache == b.cache);
-            List<double> coordinates = new List<double>(a.coordinates.Count);
 
-            for (int i = 0; i < a.coordinates.Count; i++)
-                coordinates.Add(a.coordinates[i] - b.coordinates[i]);
+            double[] coordinates = new double[a.coordinates.Length];
+
+            for (int i = 0; i < a.coordinates.Length; i++)
+                coordinates[i] = a.coordinates[i] - b.coordinates[i];
             return new ShiftPosition(coordinates, a.cache);
         }
     }
