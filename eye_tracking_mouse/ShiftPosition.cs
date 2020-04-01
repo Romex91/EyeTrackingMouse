@@ -109,16 +109,18 @@ namespace eye_tracking_mouse
             }
         }
 
-        public static ShiftPosition operator -(ShiftPosition a, ShiftPosition b)
+        public static double[] operator -(ShiftPosition a, ShiftPosition b)
         {
             Debug.Assert(a.coordinates.Length == b.coordinates.Length);
             Debug.Assert(a.cache == b.cache);
 
-            double[] coordinates = new double[a.coordinates.Length];
+            var retval = new double[a.coordinates.Length];
 
             for (int i = 0; i < a.coordinates.Length; i++)
-                coordinates[i] = a.coordinates[i] - b.coordinates[i];
-            return new ShiftPosition(coordinates, a.cache);
+            {
+                retval[i] = a.adjusted_coordinates[i] - b.adjusted_coordinates[i];
+            }
+            return retval;
         }
     }
 }

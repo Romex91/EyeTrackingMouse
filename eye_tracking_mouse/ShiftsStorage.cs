@@ -254,7 +254,7 @@ namespace eye_tracking_mouse
         public class CorrectionInfoRelatedToCursor
         {
             public int index;
-            public ShiftPosition vector_from_cursor;
+            public double[] vector_from_cursor;
             public double distance;
             public double weight;
         }
@@ -290,10 +290,10 @@ namespace eye_tracking_mouse
             return retval;
         }
 
-        public static double GetVectorLength(ShiftPosition vector)
+        public static double GetVectorLength(double[] vector)
         {
             double squared_distance = 0;
-            for (int i = 0; i < vector.Count; i++)
+            for (int i = 0; i < vector.Length; i++)
             {
                 squared_distance += vector[i] * vector[i];
             }
@@ -303,10 +303,10 @@ namespace eye_tracking_mouse
 
         public static double GetAngleBetweenVectors(CorrectionInfoRelatedToCursor a, CorrectionInfoRelatedToCursor b)
         {
-            Debug.Assert(a.vector_from_cursor.Count == b.vector_from_cursor.Count);
+            Debug.Assert(a.vector_from_cursor.Length == b.vector_from_cursor.Length);
             double dot_product = 0;
 
-            for (int i = 0; i < a.vector_from_cursor.Count; i++)
+            for (int i = 0; i < a.vector_from_cursor.Length; i++)
                 dot_product += a.vector_from_cursor[i] * b.vector_from_cursor[i];
 
             double cos = dot_product / a.distance / b.distance;
