@@ -86,6 +86,7 @@
     <Compile Include="CalibrationModeGeneratorWindow.xaml.cs">
       <DependentUpon>CalibrationModeGeneratorWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="CalibrationModesForTesting.cs" />
     <Compile Include="CloseAppDialog.xaml.cs">
       <DependentUpon>CloseAppDialog.xaml</DependentUpon>
     </Compile>

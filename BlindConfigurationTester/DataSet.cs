@@ -117,6 +117,7 @@ namespace BlindConfigurationTester
                 public double after_correction { get; set; }
             }
 
+            [JsonIgnore]
             public List<Error> errors = new List<Error>();
             public long time_ms;
 
@@ -125,7 +126,6 @@ namespace BlindConfigurationTester
                 return " Utility: " + UtilityFunction + " Milliseconds Elapsed: " + time_ms;
             }
 
-            [JsonIgnore]
             public double UtilityFunction
             {
                 get

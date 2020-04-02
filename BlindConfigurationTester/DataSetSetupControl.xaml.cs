@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -156,16 +157,10 @@ namespace BlindConfigurationTester
             MessageBox.Show("Configuration: " + (dialog.GetSelectedConfiguration() ?? "User Data") + ". " + result.ToString());
         }
 
-        private void Button_GenerateConfigurationOnData_Click(object sender, RoutedEventArgs e)
+        private void CreateConfiguration(
+            eye_tracking_mouse.Options.CalibrationMode mode,
+            List<Tuple<double, eye_tracking_mouse.Options.CalibrationMode>> good_modes)
         {
-            if (SelectedDataSet == null)
-                return;
-
-            var window = new CalibrationModeGeneratorWindow(SelectedDataSet.data_points);
-            window.ShowDialog();
-            if (window.BestCalibrationMode == null)
-                return;
-
             int generated_configs_max_index = 0;
             var existing_configurations = Utils.GetConfigurationsList();
             foreach (var existing_config in existing_configurations)
@@ -186,13 +181,45 @@ namespace BlindConfigurationTester
 
             string new_config = "gen_" +
                 (generated_configs_max_index + 1) + "_" +
-                Helpers.TestCalibrationMode(SelectedDataSet.data_points, window.BestCalibrationMode).UtilityFunction;
+                Helpers.TestCalibrationMode(SelectedDataSet.data_points, mode).UtilityFunction;
 
             Utils.CreateConfiguration(new_config);
             (new eye_tracking_mouse.Options
             {
-                calibration_mode = window.BestCalibrationMode
+                calibration_mode = mode
             }).SaveToFile(System.IO.Path.Combine(Utils.GetConfigurationDir(new_config), "options.json"));
+
+
+            for (int i = 0; i < 2; i++)
+            {
+                var processed_results = new List<Tuple<Helpers.TestResult, eye_tracking_mouse.Options.CalibrationMode>>();
+                foreach (var good_mode in good_modes)
+                {
+                    var calibration_manager = Helpers.SetupCalibrationManager(good_mode.Item2);
+                    var test_result = Helpers.TestCalibrationManager(
+                        calibration_manager,
+                        SelectedDataSet.data_points,
+                        good_mode.Item2.additional_dimensions_configuration);
+
+                    processed_results.Add(new Tuple<Helpers.TestResult, eye_tracking_mouse.Options.CalibrationMode>(test_result, good_mode.Item2));
+                }
+                File.WriteAllText(
+                    System.IO.Path.Combine(Utils.GetConfigurationDir(new_config), i == 0 ? "good_modes.json" : "good_modes_sorted.json"),
+                    JsonConvert.SerializeObject(processed_results, Formatting.Indented));
+                good_modes.Sort();
+            }
+        }
+
+        private void Button_GenerateConfigurationOnData_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedDataSet == null)
+                return;
+
+            var window = new CalibrationModeGeneratorWindow(SelectedDataSet.data_points);
+            window.ShowDialog();
+            if (window.BestCalibrationMode == null)
+                return;
+            CreateConfiguration(window.BestCalibrationMode, window.GoodModes);
         }
 
         private void Button_RunExplorer_Click(object sender, RoutedEventArgs e)
