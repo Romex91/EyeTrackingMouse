@@ -50,10 +50,16 @@ namespace BlindConfigurationTester
 
         private void TryAddToGoodModes(double utility, eye_tracking_mouse.Options.CalibrationMode mode)
         {
+            if (utility <= 0)
+                return;
+
             foreach(var good_mode in GoodModes)
             {
                 if (good_mode.Item2.Equals(mode))
+                {
+                    good_mode.Item2.tag_for_testing += "+" + mode.tag_for_testing;
                     return;
+                }
             }
 
             GoodModes.Add(new Tuple<double, eye_tracking_mouse.Options.CalibrationMode>(utility, mode));
@@ -80,9 +86,11 @@ namespace BlindConfigurationTester
 
             eye_tracking_mouse.Options.Instance = new eye_tracking_mouse.Options();
 
-            foreach (var mode in CalibrationModesForTesting.Modes)
+            foreach (var mode in CalibrationModesForTesting.Short)
             {
-                ForModeAndItsVariations(mode, x => { MaxOutEachDimension(x.Clone(), data_points); IncrementalImprove(x.Clone(), data_points); });
+                ForModeAndItsVariations(mode, (x,tag) => { 
+                    MaxOutEachDimension(x.Clone(), data_points, tag); 
+                    IncrementalImprove(x.Clone(), data_points, tag); });
                 //ForEachMinMaxPermutation(mode, x => IncrementalImprove(x, data_points));
                 number_of_global_iterations++;
             }
@@ -172,28 +180,29 @@ namespace BlindConfigurationTester
         {
             OptionsField.BuildHardcoded(field_name : "zone_size", new List<int>{ 10, 15, 25, 50, 75, 100, 150, 200, 250, 350, 500, 800 }),
             OptionsField.BuildHardcoded(field_name : "considered_zones_count", new List<int>{ 3,  6, 10, 20 }),
-            OptionsField.BuildLinear(field_name : "size_of_opaque_sector_in_percents", max : 100, min : 0, step: 10),
-            OptionsField.BuildLinear(field_name : "size_of_transparent_sector_in_percents", max : 100, min : 0, step: 10),
+            OptionsField.BuildLinear(field_name : "size_of_opaque_sector_in_percents", max : 70, min : 30, step: 10),
+            OptionsField.BuildLinear(field_name : "size_of_transparent_sector_in_percents", max : 60, min : 0, step: 10),
+            OptionsField.BuildHardcoded(field_name : "correction_fade_out_distance", new List<int>{ 50, 75, 100, 150, 200, 250, 350, 500, 800 }),
 
-            OptionsField.BuildHardcoded(field_name : "coordinate 2", new List<int> {50, 100, 250, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 3", new List<int> {50, 100, 250, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 4", new List<int> {50, 100, 250, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 5", new List<int> {50, 100, 250, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 6", new List<int> {50, 100, 250, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 7", new List<int> {50, 100, 250, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 8", new List<int> {50, 100, 250, 600, 1000, 10000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 9", new List<int> {50, 100, 250, 600, 1000, 10000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 2", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 3", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 4", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 5", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 6", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 7", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 8", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+            OptionsField.BuildHardcoded(field_name : "coordinate 9", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
         };
 
         private void ForModeAndItsVariations(
             eye_tracking_mouse.Options.CalibrationMode starting_mode,
-            Action<eye_tracking_mouse.Options.CalibrationMode> callback)
+            Action<eye_tracking_mouse.Options.CalibrationMode, string> callback)
         {
             Dispatcher.Invoke((Action)(() =>
             {
                 Text_CurrentPermutation.Text = JsonConvert.SerializeObject(starting_mode, Formatting.Indented);
             }));
-            callback(starting_mode);
+            callback(starting_mode, "mid");
             List<OptionsField> enabled_fields = new List<OptionsField>();
             foreach (var field in fields)
             {
@@ -223,7 +232,7 @@ namespace BlindConfigurationTester
                 }));
                 if (cancellation.Token.IsCancellationRequested)
                     return;
-                callback(mode);
+                callback(mode, i == 0 ? "max" : "min" );
             }
         }
 
@@ -328,9 +337,10 @@ namespace BlindConfigurationTester
             }
         }
 
-        private static eye_tracking_mouse.Options.CalibrationMode IncrementField(
+        private static eye_tracking_mouse.Options.CalibrationMode ChangeField(
             eye_tracking_mouse.Options.CalibrationMode calibration_mode,
-            OptionsField field)
+            OptionsField field, 
+            int steps_number)
         {
             var new_calibration_mode = calibration_mode.Clone();
 
@@ -341,45 +351,26 @@ namespace BlindConfigurationTester
             }
 
             var range = field.range.GetRange();
-            for (int i = 0; i < range.Count; i++)
+            int i = 0;
+            for (; i < range.Count; i++)
             {
                 if (range[i] > value)
                 {
-                    SetFieldValue(new_calibration_mode, field, range[i]);
-                    return new_calibration_mode;
+                    break;
                 }
             }
-            return null;
-        }
 
-        private static eye_tracking_mouse.Options.CalibrationMode DecrementField(
-            eye_tracking_mouse.Options.CalibrationMode calibration_mode,
-            OptionsField field)
-        {
-            var new_calibration_mode = calibration_mode.Clone();
-
-            int value = GetFieldValue(new_calibration_mode, field);
-            if (value == -1)
-            {
+            i += steps_number;
+            if (i < 0 || i >= range.Count)
                 return null;
-            }
 
-            var range = field.range.GetRange();
-            for (int i = range.Count - 1; i >= 0; i--)
-            {
-                if (range[i] < value)
-                {
-                    SetFieldValue(new_calibration_mode, field, range[i]);
-                    return new_calibration_mode;
-                }
-            }
-
-            return null;
+            SetFieldValue(new_calibration_mode, field, range[i]);
+            return new_calibration_mode;
         }
 
         private void MaxOutEachDimension(
             eye_tracking_mouse.Options.CalibrationMode mode,
-            List<DataPoint> data_points)
+            List<DataPoint> data_points, string tag)
         {
             eye_tracking_mouse.Options.CalibrationMode local_best_calibration_mode = mode;
             double local_best_utility = 0;
@@ -419,7 +410,14 @@ namespace BlindConfigurationTester
                 if (local_best_utility == old_best_utility)
                     break;
             }
+            local_best_calibration_mode.tag_for_testing = tag + "_max_out";
             TryAddToGoodModes(local_best_utility, local_best_calibration_mode);
+        }
+
+        private bool IsModeCorrect(eye_tracking_mouse.Options.CalibrationMode mode)
+        {
+            return
+                mode.size_of_opaque_sector_in_percents + mode.size_of_transparent_sector_in_percents < 91;
         }
 
         private void RunTests(
@@ -443,6 +441,8 @@ namespace BlindConfigurationTester
             {
                 tasks.Add(Task.Factory.StartNew<Helpers.TestResult>(() =>
                 {
+                    if (!IsModeCorrect(mode))
+                        return new Helpers.TestResult();
                     return Helpers.TestCalibrationMode(data_points, mode);
                 }));
             }
@@ -494,7 +494,8 @@ namespace BlindConfigurationTester
 
         private void IncrementalImprove(
             eye_tracking_mouse.Options.CalibrationMode mode,
-            List<DataPoint> data_points)
+            List<DataPoint> data_points,
+            string tag)
         {
             eye_tracking_mouse.Options.CalibrationMode local_best_calibration_mode = mode;
             double local_best_utility = 0;
@@ -504,6 +505,8 @@ namespace BlindConfigurationTester
                 ref local_best_calibration_mode,
                 ref local_best_utility);
 
+
+            int steps_number = 0;
             while (true)
             {
                 double old_best_utility = local_best_utility;
@@ -521,21 +524,26 @@ namespace BlindConfigurationTester
                         return;
 
                     eye_tracking_mouse.Options.CalibrationMode calibration_mode;
-                    if ((calibration_mode = IncrementField(local_best_calibration_mode, field)) != null)
+                    if ((calibration_mode = ChangeField(local_best_calibration_mode, field, steps_number)) != null)
                     {
                         modes_to_test.Add(calibration_mode);
                     }
 
-                    if ((calibration_mode = DecrementField(local_best_calibration_mode, field)) != null)
+                    if ((calibration_mode = ChangeField(local_best_calibration_mode, field, -steps_number)) != null)
                     {
                         modes_to_test.Add(calibration_mode);
                     }
                 }
 
+                if (modes_to_test.Count == 0)
+                    break;
+
                 RunTests(data_points, modes_to_test, ref local_best_calibration_mode, ref local_best_utility);
 
                 if (local_best_utility == old_best_utility)
-                    break;
+                    steps_number++;
+                else
+                    steps_number = 0;
 
                 number_of_local_iterations++;
                 Dispatcher.BeginInvoke((Action)(() =>
@@ -544,6 +552,7 @@ namespace BlindConfigurationTester
                 }));
             }
 
+            local_best_calibration_mode.tag_for_testing = tag + "_incremental";
             TryAddToGoodModes(local_best_utility, local_best_calibration_mode);
         }
     }

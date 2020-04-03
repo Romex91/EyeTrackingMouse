@@ -82,6 +82,8 @@ namespace eye_tracking_mouse
                 return new CalibrationManagerV0(calibration_mode);
             else if (calibration_mode.algorithm == "V1")
                 return new CalibrationManagerV1(calibration_mode);
+            else if (calibration_mode.algorithm == "V2")
+                return new CalibrationManagerV2(calibration_mode);
             else if (calibration_mode.algorithm == "NO")
                 return new NoCalibrationManager();
             else throw new Exception("Wrong algorithm name in options file");

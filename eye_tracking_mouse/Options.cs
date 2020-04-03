@@ -228,8 +228,13 @@ namespace eye_tracking_mouse
             public int size_of_transparent_sector_in_percents = 30;
             public int shade_thickness_in_pixels = 50;
 
+            // V2
+            public int correction_fade_out_distance = 100;
+
+            public string tag_for_testing;
+
             // TODO: remove the option. There can be only one!
-            public string algorithm = "V1";
+            public string algorithm = "V2";
 
             public AdditionalDimensionsConfguration additional_dimensions_configuration;
 
@@ -244,6 +249,7 @@ namespace eye_tracking_mouse
                     size_of_opaque_sector_in_percents = this.size_of_opaque_sector_in_percents,
                     size_of_transparent_sector_in_percents = this.size_of_transparent_sector_in_percents,
                     shade_thickness_in_pixels = this.shade_thickness_in_pixels,
+                    correction_fade_out_distance = this.correction_fade_out_distance,
                     algorithm = this.algorithm,
                     additional_dimensions_configuration = this.additional_dimensions_configuration.Clone()
                 };
@@ -255,6 +261,11 @@ namespace eye_tracking_mouse
                     max_zones_count == other.max_zones_count &&
                     considered_zones_count == other.considered_zones_count &&
                     update_period_ms == other.update_period_ms &&
+                    size_of_opaque_sector_in_percents == other.size_of_opaque_sector_in_percents &&
+                    size_of_transparent_sector_in_percents == other.size_of_transparent_sector_in_percents &&
+                    shade_thickness_in_pixels == other.shade_thickness_in_pixels &&
+                    correction_fade_out_distance == other.correction_fade_out_distance &&
+                    algorithm == other.algorithm &&
                     additional_dimensions_configuration.Equals(other.additional_dimensions_configuration);
             }
 

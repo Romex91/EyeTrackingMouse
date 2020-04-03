@@ -39,7 +39,7 @@ namespace BlindConfigurationTester
         {
             on_configurations_changed -= UpdateCombobox;
         }
-        
+
         private void UpdateCombobox(object sender, EventArgs args)
         {
             string current_configuration = GetSelectedConfiguration();
@@ -61,7 +61,7 @@ namespace BlindConfigurationTester
         private void Button_Add_Click(object sender, RoutedEventArgs e)
         {
             var name_input = new NameInput();
-            if( name_input.ShowDialog() == true && name_input.NameValue.Length > 0)
+            if (name_input.ShowDialog() == true && name_input.NameValue.Length > 0)
             {
                 Utils.CreateConfiguration(name_input.NameValue);
             }
@@ -79,7 +79,7 @@ namespace BlindConfigurationTester
         {
             if (MessageBox.Show("Sure?", "", MessageBoxButton.YesNo) == MessageBoxResult.No)
                 return;
-           
+
             Utils.RemoveConfiguration(GetSelectedConfiguration());
             on_configurations_changed.Invoke(this, null);
         }
@@ -105,13 +105,29 @@ namespace BlindConfigurationTester
 
         private void Button_ConfigureFromApp_Click(object sender, RoutedEventArgs e)
         {
-            Utils.RunApp(GetSelectedConfiguration(), true, null, () => {
-                while (Utils.IsApplicationOpen())
+            Utils.RunApp(
+                GetSelectedConfiguration(), 
+                true,
+                () =>
                 {
-                    MessageBox.Show(
-                        eye_tracking_mouse.Helpers.application_name + " is running with selected configuration. Close it to proceed.");
-                }
-            });
+                    if (GetSelectedConfiguration() == null)
+                    {
+                        Utils.TryCloseApplication();
+                    }
+                }, 
+                () =>
+                {
+                    if (GetSelectedConfiguration() == null)
+                    {
+                        return;
+                    }
+
+                    while (Utils.IsApplicationOpen())
+                    {
+                        MessageBox.Show(
+                            eye_tracking_mouse.Helpers.application_name + " is running with selected configuration. Close it to proceed.");
+                    }
+                });
         }
     }
 }

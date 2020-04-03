@@ -118,6 +118,7 @@
     <Compile Include="CalibrationManager.cs" />
     <Compile Include="CalibrationManagerV0.cs" />
     <Compile Include="CalibrationManagerV1.cs" />
+    <Compile Include="CalibrationManagerV2.cs" />
     <Compile Include="ShiftPosition.cs" />
     <Compile Include="TobiiCoordinatesProvider.cs" />
     <Compile Include="ui\Arrowheads\ArrowEnds.cs" />

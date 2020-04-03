@@ -135,9 +135,10 @@ namespace BlindConfigurationTester
                     {
                         total_correction += error.before_correction - error.after_correction;
                     }
-
+                    if (errors.Count == 0)
+                        return 0;
                     return total_correction / errors.Count;
-                    }
+                }
             }
         }
 
@@ -169,7 +170,7 @@ namespace BlindConfigurationTester
             eye_tracking_mouse.AdditionalDimensionsConfguration config)
         {
             var time_before = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
-            
+
             TestResult result = new TestResult();
             foreach (var data_point in data_points)
             {
@@ -177,11 +178,11 @@ namespace BlindConfigurationTester
             }
 
             var time_after = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
-            
+
             result.time_ms = (int)(time_after - time_before).TotalMilliseconds;
             return result;
         }
-        
+
         public static TestResult.Error AddDataPoint(
             eye_tracking_mouse.ICalibrationManager calibration_manager,
             DataPoint data_point,
@@ -196,7 +197,7 @@ namespace BlindConfigurationTester
                 tobii_gaze_point.X + shift.X,
                 tobii_gaze_point.Y + shift.Y);
 
-            TestResult.Error error =  new TestResult.Error
+            TestResult.Error error = new TestResult.Error
             {
                 before_correction = Point.Subtract(
                     data_point.true_location_on_screen,
