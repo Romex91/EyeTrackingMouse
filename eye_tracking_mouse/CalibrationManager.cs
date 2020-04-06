@@ -86,7 +86,12 @@ namespace eye_tracking_mouse
                 return new CalibrationManagerV2(calibration_mode);
             else if (calibration_mode.algorithm == "NO")
                 return new NoCalibrationManager();
-            else throw new Exception("Wrong algorithm name in options file");
+            else
+            {
+                System.Windows.MessageBox.Show("Wrong algorithm name in options file");
+                Environment.Exit(-1);
+                return null;
+            }
         }
 
         static private void ReloadInstance(object sender, EventArgs args)
