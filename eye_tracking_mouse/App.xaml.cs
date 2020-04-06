@@ -117,9 +117,24 @@ namespace eye_tracking_mouse
                 {
                     try
                     {
-                        using (var update_manager = UpdateManager.GitHubUpdateManager("https://github.com/Romex91/EyeTrackingMouse").Result)
+                        string path = Environment.GetEnvironmentVariable("EYE_TRACKING_MOUSE_UPDATE_FROM");
+                        if (path == null || path.Length == 0)
                         {
-                            update_manager.UpdateApp().Wait();
+                            using (var update_manager = UpdateManager.GitHubUpdateManager("https://github.com/Romex91/EyeTrackingMouse").Result)
+                            {
+                                update_manager.UpdateApp().Wait();
+                            }
+                        } else
+                        {
+                            if (!Directory.Exists(path))
+                            {
+                                MessageBox.Show("Inexistent directory in EYE_TRACKING_MOUSE_UPDATE_FROM environment variable");
+                                return;
+                            }
+                            using (var update_manager = new UpdateManager(path))
+                            {
+                                update_manager.UpdateApp().Wait();
+                            }
                         }
                     }
                     catch (Exception)
