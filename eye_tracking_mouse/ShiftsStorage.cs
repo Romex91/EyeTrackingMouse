@@ -38,9 +38,12 @@ namespace eye_tracking_mouse
         private Options.CalibrationMode calibration_mode;
         private ShiftPositionCache cache;
 
+        private string DefaultPath { get; set; } 
+
         public ShiftsStorage(Options.CalibrationMode mode, ShiftPositionCache cache)
         {
             calibration_mode = mode;
+            DefaultPath = GetFilepath(Helpers.UserDataFolder);
             this.cache = cache;
             LoadFromFile();
         }
@@ -136,13 +139,13 @@ namespace eye_tracking_mouse
             try
             {
                 Corrections.Clear();
-                if (!File.Exists(GetFilepath(Helpers.UserDataFolder)))
+                if (!File.Exists(DefaultPath))
                     return;
 
                 bool error_message_box_shown = false;
 
                 Corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(
-                    File.ReadAllText(GetFilepath(Helpers.UserDataFolder)),
+                    File.ReadAllText(DefaultPath),
                     cache
                     ).Where(x =>
                 {
@@ -173,7 +176,7 @@ namespace eye_tracking_mouse
 
         private void OnShiftsChanged()
         {
-            FilesSavingQueue.Save(GetFilepath(Helpers.UserDataFolder), GetSerializedContent);
+            FilesSavingQueue.Save(GetFilepath(DefaultPath), GetSerializedContent);
             calibration_window?.UpdateCorrections(Corrections);
         }
 
@@ -217,7 +220,9 @@ namespace eye_tracking_mouse
             {
                 if (sectors[GetSectorNumber(Corrections[i], max_sector_x)] == max_points_count_in_sector)
                 {
-                    double distance = Helpers.GetVectorLength(Corrections[i].Position - cursor_position);
+                    double distance = 0;
+                    ShiftPosition.Subtract(Corrections[i].Position, cursor_position, out distance);
+                    
                     if (min_distance > distance)
                     {
                         min_distance = distance;
@@ -246,8 +251,13 @@ namespace eye_tracking_mouse
             var retval = new List<CorrectionInfoRelatedToCursor>();
             for (int i = 0; i < Corrections.Count(); i++)
             {
-                CorrectionInfoRelatedToCursor info = new CorrectionInfoRelatedToCursor { index = i, vector_from_cursor = Corrections[i].Position - cursor_position };
-                info.distance = Helpers.GetVectorLength(info.vector_from_cursor);
+                double distance = 0;
+                CorrectionInfoRelatedToCursor info = new CorrectionInfoRelatedToCursor {
+                    index = i,
+                    vector_from_cursor = ShiftPosition.Subtract(Corrections[i].Position, cursor_position, out distance)
+                };
+
+                info.distance = distance;
                 if (info.distance < 0.001)
                     info.distance = 0.001;
 
@@ -291,17 +301,6 @@ namespace eye_tracking_mouse
                 resulting_shift.Y += (int)(shift_storage.Corrections[correction.index].Shift.Y * correction.weight);
             }
             return resulting_shift;
-        }
-
-        public static double GetVectorLength(double[] vector)
-        {
-            double squared_distance = 0;
-            for (int i = 0; i < vector.Length; i++)
-            {
-                squared_distance += vector[i] * vector[i];
-            }
-
-            return Math.Sqrt(squared_distance);
         }
 
         public static double GetAngleBetweenVectors(

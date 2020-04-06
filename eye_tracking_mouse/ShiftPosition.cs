@@ -13,15 +13,20 @@ namespace eye_tracking_mouse
     {
         public ShiftPositionCache(Options.CalibrationMode mode)
         {
-            coordinates_scales_in_percents = mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
+            var scales_in_percents = mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
+            CoordinateScales = scales_in_percents.Select(x => x/100.0).ToArray();
+
             operator_minus_result_cache = new double[mode.max_zones_count][];
             for (int i = 0; i < mode.max_zones_count; i++ )
             {
-                operator_minus_result_cache[i] = new double [coordinates_scales_in_percents.Length];
+                operator_minus_result_cache[i] = new double [CoordinateScales.Length];
             }
         }
 
-        public int[] coordinates_scales_in_percents = Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
+        public double[] CoordinateScales {
+            private set;
+            get;
+        }
 
         // For the purposes of optimisation results of |ShiftPosition.Operator-| are stored here.
         // Rationale is to avoid memory allocation during each algorithm iteration.
@@ -61,12 +66,11 @@ namespace eye_tracking_mouse
             {
                 coordinates = value;
                 adjusted_coordinates = new double[coordinates.Length];
-                Debug.Assert(coordinates.Length == cache.coordinates_scales_in_percents.Length);
+                Debug.Assert(coordinates.Length == cache.CoordinateScales.Length);
 
                 for (int i = 0; i < coordinates.Length; i++)
                 {
-
-                    adjusted_coordinates[i] = cache.coordinates_scales_in_percents[i] / 100.0 * coordinates[i];
+                    adjusted_coordinates[i] = cache.CoordinateScales[i] * coordinates[i];
                 }
             }
         }
@@ -113,13 +117,13 @@ namespace eye_tracking_mouse
         [JsonIgnore]
         public double X
         {
-            get { return coordinates[0]; }
+            get { return adjusted_coordinates[0]; }
         }
 
         [JsonIgnore]
         public double Y
         {
-            get { return coordinates[1]; }
+            get { return adjusted_coordinates[1]; }
         }
         // To calculate points density we split the screen to sectors. This algprithm is not accurate but simple and fast
         [JsonIgnore]
@@ -139,17 +143,42 @@ namespace eye_tracking_mouse
             }
         }
 
-        public static double[] operator -(ShiftPosition a, ShiftPosition b)
+        // WARNING: This is the main performance bottleneck. Measure performance before and after each change.
+        public static double[] Subtract(ShiftPosition a, ShiftPosition b, out double distance)
         {
             Debug.Assert(a.coordinates.Length == b.coordinates.Length);
             Debug.Assert(a.cache == b.cache);
 
             var retval = a.cache.GetMemoryForNextResult();
 
-            for (int i = 0; i < a.coordinates.Length; i++)
-            {
-                retval[i] = a.adjusted_coordinates[i] - b.adjusted_coordinates[i];
-            }
+            double dot_product = 0;
+
+            retval[0] = a.adjusted_coordinates[0] - b.adjusted_coordinates[0]; dot_product += retval[0] * retval[0];
+            retval[1] = a.adjusted_coordinates[1] - b.adjusted_coordinates[1]; dot_product += retval[1] * retval[1];
+            retval[2] = a.adjusted_coordinates[2] - b.adjusted_coordinates[2]; dot_product += retval[2] * retval[2];
+            retval[3] = a.adjusted_coordinates[3] - b.adjusted_coordinates[3]; dot_product += retval[3] * retval[3];
+            retval[4] = a.adjusted_coordinates[4] - b.adjusted_coordinates[4]; dot_product += retval[4] * retval[4];
+            retval[5] = a.adjusted_coordinates[5] - b.adjusted_coordinates[5]; dot_product += retval[5] * retval[5];
+            retval[6] = a.adjusted_coordinates[6] - b.adjusted_coordinates[6]; dot_product += retval[6] * retval[6];
+            retval[7] = a.adjusted_coordinates[7] - b.adjusted_coordinates[7]; dot_product += retval[7] * retval[7];
+
+            //{
+            //    var a_simd = new System.Numerics.Vector<double>(a.adjusted_coordinates, 0);
+            //    var b_simd = new System.Numerics.Vector<double>(b.adjusted_coordinates, 0);
+            //    var c_simd = (a_simd - b_simd);
+            //    dot_product += System.Numerics.Vector.Dot(c_simd, c_simd);
+            //    c_simd.CopyTo(retval, 0);
+            //}
+            //{
+            //    var a_simd = new System.Numerics.Vector<double>(a.adjusted_coordinates, 4);
+            //    var b_simd = new System.Numerics.Vector<double>(b.adjusted_coordinates, 4);
+            //    var c_simd = (a_simd - b_simd);
+            //    dot_product += System.Numerics.Vector.Dot(c_simd, c_simd);
+
+            //    c_simd.CopyTo(retval, 4);
+            //}
+
+            distance = Math.Sqrt(dot_product);
             return retval;
         }
     }
