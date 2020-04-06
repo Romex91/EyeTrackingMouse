@@ -249,32 +249,61 @@ namespace eye_tracking_mouse
 
             cache.ClearCachedResults() ;
             var retval = new List<CorrectionInfoRelatedToCursor>();
+            var tmp_info = new CorrectionInfoRelatedToCursor();
+
+            double max_distance = 0;
             for (int i = 0; i < Corrections.Count(); i++)
             {
-                double distance = 0;
-                CorrectionInfoRelatedToCursor info = new CorrectionInfoRelatedToCursor {
-                    index = i,
-                    vector_from_cursor = ShiftPosition.Subtract(Corrections[i].Position, cursor_position, out distance)
-                };
+                double distance;
+                double[] vector_from_cursor = ShiftPosition.Subtract(Corrections[i].Position, cursor_position, out distance);
 
-                info.distance = distance;
-                if (info.distance < 0.001)
-                    info.distance = 0.001;
-
-                int j = 0;
-                for (; j < retval.Count; j++)
+                if (distance < 0.001)
+                    distance = 0.001;
+                if (distance > max_distance)
                 {
-                    if (info.distance < retval[j].distance)
+                    if (retval.Count < number)
+                        max_distance = distance;
+                    else
+                        continue;
+                }
+
+                if (retval.Count < number)
+                {
+                    int j = 0;
+                    for (; j < retval.Count; j++)
                     {
-                        retval.Insert(j, info);
+                        if (distance < retval[j].distance)
+                        {
+                            break;
+                        }
+                    }
+
+                    retval.Insert(j, new CorrectionInfoRelatedToCursor
+                    {
+                        index = i,
+                        distance = distance,
+                        weight = 1,
+                        vector_from_cursor = vector_from_cursor
+                    });
+                    continue;
+                }
+
+                tmp_info.distance = distance;
+                tmp_info.vector_from_cursor = vector_from_cursor;
+                tmp_info.index = i;
+
+                for (int j = 0; j < retval.Count; j++)
+                {
+                    if (tmp_info.distance < retval[j].distance)
+                    {
+                        var t = retval[retval.Count - 1];
+                        retval.RemoveAt(retval.Count - 1);
+                        retval.Insert(j, tmp_info);
+                        tmp_info = t;
                         break;
                     }
                 }
-                if (j == retval.Count)
-                    retval.Add(info);
 
-                if (retval.Count > number)
-                    retval.RemoveAt(retval.Count - 1);
             }
             return retval;
         }
