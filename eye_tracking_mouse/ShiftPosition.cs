@@ -153,14 +153,19 @@ namespace eye_tracking_mouse
 
             double dot_product = 0;
 
-            retval[0] = a.adjusted_coordinates[0] - b.adjusted_coordinates[0]; dot_product += retval[0] * retval[0];
-            retval[1] = a.adjusted_coordinates[1] - b.adjusted_coordinates[1]; dot_product += retval[1] * retval[1];
-            retval[2] = a.adjusted_coordinates[2] - b.adjusted_coordinates[2]; dot_product += retval[2] * retval[2];
-            retval[3] = a.adjusted_coordinates[3] - b.adjusted_coordinates[3]; dot_product += retval[3] * retval[3];
-            retval[4] = a.adjusted_coordinates[4] - b.adjusted_coordinates[4]; dot_product += retval[4] * retval[4];
-            retval[5] = a.adjusted_coordinates[5] - b.adjusted_coordinates[5]; dot_product += retval[5] * retval[5];
-            retval[6] = a.adjusted_coordinates[6] - b.adjusted_coordinates[6]; dot_product += retval[6] * retval[6];
-            retval[7] = a.adjusted_coordinates[7] - b.adjusted_coordinates[7]; dot_product += retval[7] * retval[7];
+            for (int i = 0; i < a.adjusted_coordinates.Length; i++)
+            {
+                retval[i] = a.adjusted_coordinates[i] - b.adjusted_coordinates[i]; dot_product += retval[i] * retval[i];
+            }
+
+            //retval[0] = a.adjusted_coordinates[0] - b.adjusted_coordinates[0]; dot_product += retval[0] * retval[0];
+            //retval[1] = a.adjusted_coordinates[1] - b.adjusted_coordinates[1]; dot_product += retval[1] * retval[1];
+            //retval[2] = a.adjusted_coordinates[2] - b.adjusted_coordinates[2]; dot_product += retval[2] * retval[2];
+            //retval[3] = a.adjusted_coordinates[3] - b.adjusted_coordinates[3]; dot_product += retval[3] * retval[3];
+            //retval[4] = a.adjusted_coordinates[4] - b.adjusted_coordinates[4]; dot_product += retval[4] * retval[4];
+            //retval[5] = a.adjusted_coordinates[5] - b.adjusted_coordinates[5]; dot_product += retval[5] * retval[5];
+            //retval[6] = a.adjusted_coordinates[6] - b.adjusted_coordinates[6]; dot_product += retval[6] * retval[6];
+            //retval[7] = a.adjusted_coordinates[7] - b.adjusted_coordinates[7]; dot_product += retval[7] * retval[7];
 
             //{
             //    var a_simd = new System.Numerics.Vector<double>(a.adjusted_coordinates, 0);
