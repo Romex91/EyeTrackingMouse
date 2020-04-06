@@ -154,7 +154,17 @@ namespace BlindConfigurationTester
                 }
             }
 
-            MessageBox.Show("Configuration: " + (dialog.GetSelectedConfiguration() ?? "User Data") + ". " + result.ToString());
+            double total_time = result.time_ms;
+            for (int i = 1; i < 10; i++)
+            {
+                calibration_manager.Reset();
+                total_time += Helpers.TestCalibrationManager(
+                    calibration_manager, 
+                    SelectedDataSet.data_points, 
+                    caibration_mode.additional_dimensions_configuration).time_ms;
+            }
+
+            MessageBox.Show("Configuration: " + (dialog.GetSelectedConfiguration() ?? "User Data") + ". " + result.ToString() + ": Avg time:" + total_time/10);
         }
 
         private void CreateConfiguration(
