@@ -89,7 +89,7 @@ namespace eye_tracking_mouse
 
         public void AddShift(ShiftPosition cursor_position, Point shift)
         {
-            var closest_shifts = Helpers.CalculateClosestCorrectionsInfo(this, cursor_position, 2);
+            var closest_shifts = CalculateClosestCorrectionsInfo(cursor_position, 2);
             if (closest_shifts != null && closest_shifts[0].distance < calibration_mode.zone_size)
             {
                 Corrections[closest_shifts[0].index] = new UserCorrection(cursor_position, shift);
@@ -209,6 +209,8 @@ namespace eye_tracking_mouse
                     max_points_count_in_sector = points_number_in_sector;
             }
 
+            cache.ClearCachedResults();
+
             int index_of_closest_point = 0;
             double min_distance = double.MaxValue;
             for (int i = 0; i < Corrections.Count; i++)
@@ -226,30 +228,6 @@ namespace eye_tracking_mouse
 
             return index_of_closest_point;
         }
-    }
-
-    public static partial class Helpers
-    {
-        public static void NormalizeWeights(List<CorrectionInfoRelatedToCursor> corrections)
-        {
-            double total_weight = 0;
-            foreach (var correction in corrections)
-                total_weight += correction.weight;
-
-            for (int i = 0; i < corrections.Count; i++)
-                corrections[i].weight = corrections[i].weight / total_weight;
-        }
-
-        public static Point GetWeightedAverage(ShiftsStorage shift_storage, List<CorrectionInfoRelatedToCursor> corrections)
-        {
-            Point resulting_shift = new Point(0, 0);
-            foreach (var correction in corrections)
-            {
-                resulting_shift.X += (int)(shift_storage.Corrections[correction.index].Shift.X * correction.weight);
-                resulting_shift.Y += (int)(shift_storage.Corrections[correction.index].Shift.Y * correction.weight);
-            }
-            return resulting_shift;
-        }
 
         public class CorrectionInfoRelatedToCursor
         {
@@ -259,15 +237,16 @@ namespace eye_tracking_mouse
             public double weight;
         }
 
-        public static List<CorrectionInfoRelatedToCursor> CalculateClosestCorrectionsInfo(ShiftsStorage storage, ShiftPosition cursor_position, int number)
+        public List<CorrectionInfoRelatedToCursor> CalculateClosestCorrectionsInfo(ShiftPosition cursor_position, int number)
         {
-            if (storage.Corrections.Count == 0)
+            if (Corrections.Count == 0)
                 return null;
 
+            cache.ClearCachedResults() ;
             var retval = new List<CorrectionInfoRelatedToCursor>();
-            for (int i = 0; i < storage.Corrections.Count(); i++)
+            for (int i = 0; i < Corrections.Count(); i++)
             {
-                CorrectionInfoRelatedToCursor info = new CorrectionInfoRelatedToCursor { index = i, vector_from_cursor = storage.Corrections[i].Position - cursor_position };
+                CorrectionInfoRelatedToCursor info = new CorrectionInfoRelatedToCursor { index = i, vector_from_cursor = Corrections[i].Position - cursor_position };
                 info.distance = Helpers.GetVectorLength(info.vector_from_cursor);
                 if (info.distance < 0.001)
                     info.distance = 0.001;
@@ -289,6 +268,30 @@ namespace eye_tracking_mouse
             }
             return retval;
         }
+    }
+
+    public static partial class Helpers
+    {
+        public static void NormalizeWeights(List<ShiftsStorage.CorrectionInfoRelatedToCursor> corrections)
+        {
+            double total_weight = 0;
+            foreach (var correction in corrections)
+                total_weight += correction.weight;
+
+            for (int i = 0; i < corrections.Count; i++)
+                corrections[i].weight = corrections[i].weight / total_weight;
+        }
+
+        public static Point GetWeightedAverage(ShiftsStorage shift_storage, List<ShiftsStorage.CorrectionInfoRelatedToCursor> corrections)
+        {
+            Point resulting_shift = new Point(0, 0);
+            foreach (var correction in corrections)
+            {
+                resulting_shift.X += (int)(shift_storage.Corrections[correction.index].Shift.X * correction.weight);
+                resulting_shift.Y += (int)(shift_storage.Corrections[correction.index].Shift.Y * correction.weight);
+            }
+            return resulting_shift;
+        }
 
         public static double GetVectorLength(double[] vector)
         {
@@ -301,7 +304,9 @@ namespace eye_tracking_mouse
             return Math.Sqrt(squared_distance);
         }
 
-        public static double GetAngleBetweenVectors(CorrectionInfoRelatedToCursor a, CorrectionInfoRelatedToCursor b)
+        public static double GetAngleBetweenVectors(
+        	ShiftsStorage.CorrectionInfoRelatedToCursor a, 
+        	ShiftsStorage.CorrectionInfoRelatedToCursor b)
         {
             Debug.Assert(a.vector_from_cursor.Length == b.vector_from_cursor.Length);
             double dot_product = 0;

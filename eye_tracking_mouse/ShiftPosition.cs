@@ -11,7 +11,37 @@ namespace eye_tracking_mouse
 {
     public class ShiftPositionCache : CustomCreationConverter<ShiftPosition>
     {
+        public ShiftPositionCache(Options.CalibrationMode mode)
+        {
+            coordinates_scales_in_percents = mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
+            operator_minus_result_cache = new double[mode.max_zones_count][];
+            for (int i = 0; i < mode.max_zones_count; i++ )
+            {
+                operator_minus_result_cache[i] = new double [coordinates_scales_in_percents.Length];
+            }
+        }
+
         public int[] coordinates_scales_in_percents = Options.Instance.calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
+
+        // For the purposes of optimisation results of |ShiftPosition.Operator-| are stored here.
+        // Rationale is to avoid memory allocation during each algorithm iteration.
+        private double[][] operator_minus_result_cache;
+        private int last_operator_minus_result_index = 0;
+
+
+        // WARNING. All |ShiftPosition.Operator-| results acquired in the past will become invalid!
+        public void ClearCachedResults()
+        {
+            last_operator_minus_result_index = 0;
+        }
+
+        public double[] GetMemoryForNextResult()
+        {
+            Debug.Assert(
+                last_operator_minus_result_index < operator_minus_result_cache.Length,
+                "Either increase size of cache or add |ClearCachedResults()| call before calling |ShiftPosition.Operator-|");
+            return operator_minus_result_cache[last_operator_minus_result_index++];
+        }
 
         public override ShiftPosition Create(Type objectType)
         {
@@ -114,7 +144,7 @@ namespace eye_tracking_mouse
             Debug.Assert(a.coordinates.Length == b.coordinates.Length);
             Debug.Assert(a.cache == b.cache);
 
-            var retval = new double[a.coordinates.Length];
+            var retval = a.cache.GetMemoryForNextResult();
 
             for (int i = 0; i < a.coordinates.Length; i++)
             {

@@ -18,7 +18,7 @@ namespace eye_tracking_mouse
         public CalibrationManagerV2(Options.CalibrationMode mode)
         {
             calibration_mode = mode;
-            cache = new ShiftPositionCache { coordinates_scales_in_percents = calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents };
+            cache = new ShiftPositionCache(mode);
             shift_storage = new ShiftsStorage(calibration_mode, cache);
         }
 
@@ -27,7 +27,7 @@ namespace eye_tracking_mouse
             ShiftPosition cursor_position = new ShiftPosition(coordinates, cache);
             shift_storage.calibration_window?.OnCursorPositionUpdate(cursor_position);
 
-            var closest_corrections = Helpers.CalculateClosestCorrectionsInfo(shift_storage, cursor_position, calibration_mode.considered_zones_count);
+            var closest_corrections = shift_storage.CalculateClosestCorrectionsInfo(cursor_position, calibration_mode.considered_zones_count);
             if (closest_corrections == null)
             {
                 Debug.Assert(shift_storage.Corrections.Count() == 0);
@@ -89,8 +89,8 @@ namespace eye_tracking_mouse
         }
 
         private double GetShadeOpacity(
-            Helpers.CorrectionInfoRelatedToCursor source_of_shade,
-            Helpers.CorrectionInfoRelatedToCursor shaded_correction)
+            ShiftsStorage.CorrectionInfoRelatedToCursor source_of_shade,
+            ShiftsStorage.CorrectionInfoRelatedToCursor shaded_correction)
         {
             Debug.Assert(source_of_shade.distance <= shaded_correction.distance);
 
@@ -115,7 +115,7 @@ namespace eye_tracking_mouse
             return opacity;
         }
 
-        private void ApplyShades(List<Helpers.CorrectionInfoRelatedToCursor> corrections)
+        private void ApplyShades(List<ShiftsStorage.CorrectionInfoRelatedToCursor> corrections)
         {
             for (int i = 0; i < corrections.Count;)
             {
