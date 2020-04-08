@@ -14,17 +14,18 @@ namespace eye_tracking_mouse
     // When users correct inacurate precision with W/A/S/D and then click stuff they create a |UserCorrection|.
     public class UserCorrection
     {
-        public UserCorrection(ShiftPosition position, Point shift)
+        public UserCorrection(double[] coordinates, Point shift)
         {
-            Position = position;
+            Coordinates = coordinates;
             Shift = shift;
         }
 
         // How far the cursor moved from the point before the correction.
         public Point Shift { get; private set; }
 
-        // Where the correction took place on the screen and what posture user had during the correction.
-        public ShiftPosition Position { get; private set; }
+        // A multidimensional vector where first two coordinates represent 2d point on the display.
+        // Other dimensions represent user body position.
+        public double[] Coordinates{ get; private set; }
     }
 
     // |ShiftsStorage| is responsible for storing user corrections (shifts).
@@ -91,28 +92,31 @@ namespace eye_tracking_mouse
             OnShiftsChanged();
         }
 
-        public void AddShift(ShiftPosition cursor_position, Point shift)
+        public void AddShift(double[] cursor_position, Point shift)
         {
             var closest_shifts = CalculateClosestCorrectionsInfo(2);
             if (closest_shifts != null && closest_shifts[0].distance < calibration_mode.zone_size)
             {
-                Corrections[closest_shifts[0].index].Position.DeleteFromLongTermMemory();
-                Corrections[closest_shifts[0].index] = new UserCorrection(cursor_position.SaveToLongTermMemory(), shift);
+                cache.SaveToCache(cursor_position, closest_shifts[0].index);
+                Corrections[closest_shifts[0].index] = new UserCorrection(cursor_position, shift);
                 if (closest_shifts.Count > 1 && closest_shifts[1].distance < calibration_mode.zone_size)
                 {
-                    Corrections[closest_shifts[1].index].Position.DeleteFromLongTermMemory();
+                    cache.FreeIndex(closest_shifts[1].index);
                     Corrections.RemoveAt(closest_shifts[1].index);
                 }
             }
             else if (Corrections.Count() < calibration_mode.max_zones_count)
             {
-                Corrections.Add(new UserCorrection(cursor_position.SaveToLongTermMemory(), shift));
+                if (cache.AllocateIndex() != Corrections.Count)
+                    throw new Exception("Logic error");
+                cache.SaveToCache(cursor_position, Corrections.Count);
+                Corrections.Add(new UserCorrection(cursor_position, shift));
             }
             else
             {
                 var highest_density_point = GetClosestPointOfHihestDensity();
-                Corrections[highest_density_point].Position.DeleteFromLongTermMemory();
-                Corrections[highest_density_point] = new UserCorrection(cursor_position.SaveToLongTermMemory(), shift);
+                cache.SaveToCache(cursor_position, highest_density_point);
+                Corrections[highest_density_point] = new UserCorrection(cursor_position, shift);
             }
 
             OnShiftsChanged();
@@ -153,11 +157,11 @@ namespace eye_tracking_mouse
                 bool error_message_box_shown = false;
 
                 Corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(
-                    File.ReadAllText(DefaultPath),
-                    cache
-                    ).Where(x =>
+                    File.ReadAllText(DefaultPath)).Where(x =>
                 {
-                    if (x.Position.Count != calibration_mode.additional_dimensions_configuration.CoordinatesCount)
+                    if (x.Coordinates == null)
+                        return false;
+                    if (x.Coordinates.Length != calibration_mode.additional_dimensions_configuration.CoordinatesCount)
                     {
                         if (!error_message_box_shown)
                         {
@@ -168,6 +172,15 @@ namespace eye_tracking_mouse
                     }
                     return true;
                 }).ToList();
+                while (Corrections.Count > calibration_mode.max_zones_count)
+                    Corrections.Remove(Corrections.Last());
+                for (int i = 0; i < Corrections.Count; i++)
+                {
+                    if (cache.AllocateIndex() != i)
+                        throw new Exception("Logic error");
+
+                    cache.SaveToCache(Corrections[i].Coordinates, i);
+                }
 
             }
             catch (Exception e)
@@ -185,13 +198,19 @@ namespace eye_tracking_mouse
 
         private void OnShiftsChanged()
         {
-            FilesSavingQueue.Save(GetFilepath(DefaultPath), GetSerializedContent);
+            FilesSavingQueue.Save(DefaultPath, GetSerializedContent);
             calibration_window?.UpdateCorrections(Corrections);
+        }
+
+        private static int GetSectorNumber(double coordinate)
+        {
+            return (int)(coordinate / 500.0);
         }
 
         private int GetSectorNumber(UserCorrection shift, int max_sector_x)
         {
-            return shift.Position.SectorX + shift.Position.SectorY * (max_sector_x + 1);
+            return GetSectorNumber(shift.Coordinates[0]) + 
+                GetSectorNumber(shift.Coordinates[1]) * (max_sector_x + 1);
         }
 
         private int GetClosestPointOfHihestDensity()
@@ -200,9 +219,11 @@ namespace eye_tracking_mouse
 
             int max_sector_x = 0;
             for (int i = 0; i < Corrections.Count; i++)
-                if (Corrections[i].Position.SectorX > max_sector_x)
-                    max_sector_x = Corrections[i].Position.SectorX;
-
+            {
+                int sector_x = GetSectorNumber(Corrections[i].Coordinates[0]);
+                if (sector_x > max_sector_x)
+                    max_sector_x = sector_x;
+            }
             var sectors = new Dictionary<int /*number of sector*/, int /*Count of points in sector*/>();
             for (int i = 0; i < Corrections.Count; i++)
             {
@@ -228,7 +249,7 @@ namespace eye_tracking_mouse
             {
                 if (sectors[GetSectorNumber(Corrections[i], max_sector_x)] == max_points_count_in_sector)
                 {
-                    double distance = Corrections[i].Position.DistanceFromCursor;
+                    double distance = cache.GetDistanceFromCursor(i);
                     
                     if (min_distance > distance)
                     {
@@ -248,7 +269,7 @@ namespace eye_tracking_mouse
             public double[] VectorFromCorrectionToCursor
             {
                 get {
-                    return shifts_storage.Corrections[index].Position.SubtractionResult;
+                    return shifts_storage.cache.GetSubtractionResult(index);
                 }
             }
             public int index;
@@ -271,7 +292,7 @@ namespace eye_tracking_mouse
             int corrections_count = Corrections.Count;
             for (int i = 0; i < corrections_count; i++)
             {
-                double distance = Corrections[i].Position.DistanceFromCursor;
+                double distance = cache.GetDistanceFromCursor(i);
 
                 if (distance < 0.001)
                     distance = 0.001;
