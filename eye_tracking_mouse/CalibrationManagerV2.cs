@@ -24,10 +24,10 @@ namespace eye_tracking_mouse
 
         public Point GetShift(double[] coordinates)
         {
-            ShiftPosition cursor_position = new ShiftPosition(coordinates, cache);
+            ShiftPosition cursor_position = cache.ChangeCursorPosition(coordinates);
             shift_storage.calibration_window?.OnCursorPositionUpdate(cursor_position);
 
-            var closest_corrections = shift_storage.CalculateClosestCorrectionsInfo(cursor_position, calibration_mode.considered_zones_count);
+            var closest_corrections = shift_storage.CalculateClosestCorrectionsInfo(calibration_mode.considered_zones_count);
             if (closest_corrections == null)
             {
                 Debug.Assert(shift_storage.Corrections.Count() == 0);
@@ -60,9 +60,10 @@ namespace eye_tracking_mouse
             double total_weight = 0;
             foreach (var correction in closest_corrections)
             {
+                var vector_from_correction_to_cursor = correction.VectorFromCorrectionToCursor;
                 double XYdistance = Math.Sqrt(
-                    correction.vector_from_cursor[0] * correction.vector_from_cursor[0] +
-                    correction.vector_from_cursor[1] * correction.vector_from_cursor[1]);
+                    vector_from_correction_to_cursor[0] * vector_from_correction_to_cursor[0] +
+                    vector_from_correction_to_cursor[1] * vector_from_correction_to_cursor[1]);
 
                 double factor = 1.0 - Math.Pow(
                     XYdistance / calibration_mode.correction_fade_out_distance, 2);
@@ -134,7 +135,7 @@ namespace eye_tracking_mouse
 
         public void AddShift(double[] coordinates, Point shift)
         {
-            ShiftPosition cursor_position = new ShiftPosition(coordinates, cache);
+            ShiftPosition cursor_position = cache.ChangeCursorPosition(coordinates);
             shift_storage.AddShift(cursor_position, shift);
         }
 

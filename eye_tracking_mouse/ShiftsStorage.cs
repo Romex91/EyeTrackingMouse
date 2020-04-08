@@ -87,25 +87,32 @@ namespace eye_tracking_mouse
         public void Reset()
         {
             Corrections.Clear();
+            cache.Clear();
             OnShiftsChanged();
         }
 
         public void AddShift(ShiftPosition cursor_position, Point shift)
         {
-            var closest_shifts = CalculateClosestCorrectionsInfo(cursor_position, 2);
+            var closest_shifts = CalculateClosestCorrectionsInfo(2);
             if (closest_shifts != null && closest_shifts[0].distance < calibration_mode.zone_size)
             {
-                Corrections[closest_shifts[0].index] = new UserCorrection(cursor_position, shift);
+                Corrections[closest_shifts[0].index].Position.DeleteFromLongTermMemory();
+                Corrections[closest_shifts[0].index] = new UserCorrection(cursor_position.SaveToLongTermMemory(), shift);
                 if (closest_shifts.Count > 1 && closest_shifts[1].distance < calibration_mode.zone_size)
+                {
+                    Corrections[closest_shifts[1].index].Position.DeleteFromLongTermMemory();
                     Corrections.RemoveAt(closest_shifts[1].index);
+                }
             }
             else if (Corrections.Count() < calibration_mode.max_zones_count)
             {
-                Corrections.Add(new UserCorrection(cursor_position, shift));
+                Corrections.Add(new UserCorrection(cursor_position.SaveToLongTermMemory(), shift));
             }
             else
             {
-                Corrections[GetClosestPointOfHihestDensity(cursor_position)] = new UserCorrection(cursor_position, shift);
+                var highest_density_point = GetClosestPointOfHihestDensity();
+                Corrections[highest_density_point].Position.DeleteFromLongTermMemory();
+                Corrections[highest_density_point] = new UserCorrection(cursor_position.SaveToLongTermMemory(), shift);
             }
 
             OnShiftsChanged();
@@ -139,6 +146,7 @@ namespace eye_tracking_mouse
             try
             {
                 Corrections.Clear();
+                cache.Clear();
                 if (!File.Exists(DefaultPath))
                     return;
 
@@ -165,6 +173,7 @@ namespace eye_tracking_mouse
             catch (Exception e)
             {
                 Corrections = new List<UserCorrection>();
+                cache.Clear();
                 System.Windows.MessageBox.Show("Failed reading shifts storage: " + e.Message, Helpers.application_name, System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
@@ -185,7 +194,7 @@ namespace eye_tracking_mouse
             return shift.Position.SectorX + shift.Position.SectorY * (max_sector_x + 1);
         }
 
-        private int GetClosestPointOfHihestDensity(ShiftPosition cursor_position)
+        private int GetClosestPointOfHihestDensity()
         {
             Debug.Assert(Corrections.Count > 0);
 
@@ -212,7 +221,6 @@ namespace eye_tracking_mouse
                     max_points_count_in_sector = points_number_in_sector;
             }
 
-            cache.ClearCachedResults();
 
             int index_of_closest_point = 0;
             double min_distance = double.MaxValue;
@@ -220,8 +228,7 @@ namespace eye_tracking_mouse
             {
                 if (sectors[GetSectorNumber(Corrections[i], max_sector_x)] == max_points_count_in_sector)
                 {
-                    double distance = 0;
-                    ShiftPosition.Subtract(Corrections[i].Position, cursor_position, out distance);
+                    double distance = Corrections[i].Position.DistanceFromCursor;
                     
                     if (min_distance > distance)
                     {
@@ -236,26 +243,35 @@ namespace eye_tracking_mouse
 
         public class CorrectionInfoRelatedToCursor
         {
+            public ShiftsStorage shifts_storage;
+
+            public double[] VectorFromCorrectionToCursor
+            {
+                get {
+                    return shifts_storage.Corrections[index].Position.SubtractionResult;
+                }
+            }
             public int index;
-            public double[] vector_from_cursor;
             public double distance;
             public double weight;
         }
 
-        public List<CorrectionInfoRelatedToCursor> CalculateClosestCorrectionsInfo(ShiftPosition cursor_position, int number)
+        public List<CorrectionInfoRelatedToCursor> CalculateClosestCorrectionsInfo(int number)
         {
             if (Corrections.Count == 0)
                 return null;
 
-            cache.ClearCachedResults() ;
             var retval = new List<CorrectionInfoRelatedToCursor>();
-            var tmp_info = new CorrectionInfoRelatedToCursor();
+            var tmp_info = new CorrectionInfoRelatedToCursor
+            {
+                shifts_storage = this
+            };
 
             double max_distance = 0;
-            for (int i = 0; i < Corrections.Count(); i++)
+            int corrections_count = Corrections.Count;
+            for (int i = 0; i < corrections_count; i++)
             {
-                double distance;
-                double[] vector_from_cursor = ShiftPosition.Subtract(Corrections[i].Position, cursor_position, out distance);
+                double distance = Corrections[i].Position.DistanceFromCursor;
 
                 if (distance < 0.001)
                     distance = 0.001;
@@ -283,13 +299,12 @@ namespace eye_tracking_mouse
                         index = i,
                         distance = distance,
                         weight = 1,
-                        vector_from_cursor = vector_from_cursor
+                        shifts_storage = this
                     });
                     continue;
                 }
 
                 tmp_info.distance = distance;
-                tmp_info.vector_from_cursor = vector_from_cursor;
                 tmp_info.index = i;
 
                 for (int j = 0; j < retval.Count; j++)
@@ -336,11 +351,15 @@ namespace eye_tracking_mouse
         	ShiftsStorage.CorrectionInfoRelatedToCursor a, 
         	ShiftsStorage.CorrectionInfoRelatedToCursor b)
         {
-            Debug.Assert(a.vector_from_cursor.Length == b.vector_from_cursor.Length);
-            double dot_product = 0;
+            var vector_to_cursor_a = a.VectorFromCorrectionToCursor;
+            var vector_to_cursor_b = b.VectorFromCorrectionToCursor;
 
-            for (int i = 0; i < a.vector_from_cursor.Length; i++)
-                dot_product += a.vector_from_cursor[i] * b.vector_from_cursor[i];
+
+            Debug.Assert(vector_to_cursor_a.Length == vector_to_cursor_b.Length);
+
+            double dot_product = 0;
+            for (int i = 0; i < vector_to_cursor_a.Length; i++)
+                dot_product += vector_to_cursor_a[i] * vector_to_cursor_b[i];
 
             double cos = dot_product / a.distance / b.distance;
             if (cos > 1.0)
