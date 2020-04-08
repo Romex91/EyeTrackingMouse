@@ -123,7 +123,7 @@
     <Compile Include="CalibrationManagerV0.cs" />
     <Compile Include="CalibrationManagerV1.cs" />
     <Compile Include="CalibrationManagerV2.cs" />
-    <Compile Include="ShiftPosition.cs" />
+    <Compile Include="ShiftStorageCache.cs" />
     <Compile Include="TobiiCoordinatesProvider.cs" />
     <Compile Include="ui\Arrowheads\ArrowEnds.cs" />
     <Compile Include="ui\Arrowheads\ArrowLine.cs" />

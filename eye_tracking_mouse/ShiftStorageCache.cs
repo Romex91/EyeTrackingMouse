@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace eye_tracking_mouse
 {
-    public class ShiftPositionCache
+    public class ShiftStorageCache
     {
-        public ShiftPositionCache(Options.CalibrationMode mode)
+        public ShiftStorageCache(Options.CalibrationMode mode)
         {
             this.mode = mode;
             var scales_in_percents = mode.additional_dimensions_configuration.CoordinatesScalesInPercents;

@@ -37,11 +37,11 @@ namespace eye_tracking_mouse
         public List<UserCorrection> Corrections = new List<UserCorrection>();
 
         private Options.CalibrationMode calibration_mode;
-        private ShiftPositionCache cache;
+        private ShiftStorageCache cache;
 
         private string DefaultPath { get; set; } 
 
-        public ShiftsStorage(Options.CalibrationMode mode, ShiftPositionCache cache)
+        public ShiftsStorage(Options.CalibrationMode mode, ShiftStorageCache cache)
         {
             calibration_mode = mode;
             DefaultPath = GetFilepath(Helpers.UserDataFolder);
