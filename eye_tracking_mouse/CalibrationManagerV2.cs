@@ -27,7 +27,7 @@ namespace eye_tracking_mouse
             cache.ChangeCursorPosition(cursor_position);
             shift_storage.calibration_window?.OnCursorPositionUpdate(cursor_position);
 
-            var closest_corrections = shift_storage.CalculateClosestCorrectionsInfo(calibration_mode.considered_zones_count);
+            var closest_corrections = cache.ClosestPoints;
             if (closest_corrections == null)
             {
                 Debug.Assert(shift_storage.Corrections.Count() == 0);
@@ -60,7 +60,7 @@ namespace eye_tracking_mouse
             double total_weight = 0;
             foreach (var correction in closest_corrections)
             {
-                var vector_from_correction_to_cursor = correction.VectorFromCorrectionToCursor;
+                var vector_from_correction_to_cursor = correction.vector_from_correction_to_cursor;
                 double XYdistance = Math.Sqrt(
                     vector_from_correction_to_cursor[0] * vector_from_correction_to_cursor[0] +
                     vector_from_correction_to_cursor[1] * vector_from_correction_to_cursor[1]);
@@ -90,8 +90,8 @@ namespace eye_tracking_mouse
         }
 
         private double GetShadeOpacity(
-            ShiftsStorage.CorrectionInfoRelatedToCursor source_of_shade,
-            ShiftsStorage.CorrectionInfoRelatedToCursor shaded_correction)
+            ShiftStorageCache.PointInfo source_of_shade,
+            ShiftStorageCache.PointInfo shaded_correction)
         {
             Debug.Assert(source_of_shade.distance <= shaded_correction.distance);
 
@@ -116,7 +116,7 @@ namespace eye_tracking_mouse
             return opacity;
         }
 
-        private void ApplyShades(List<ShiftsStorage.CorrectionInfoRelatedToCursor> corrections)
+        private void ApplyShades(List<ShiftStorageCache.PointInfo> corrections)
         {
             for (int i = 0; i < corrections.Count;)
             {

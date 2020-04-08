@@ -27,7 +27,7 @@ namespace eye_tracking_mouse
             cache.ChangeCursorPosition(cursor_position);
             shift_storage.calibration_window?.OnCursorPositionUpdate(cursor_position);
 
-            var closest_corrections = shift_storage.CalculateClosestCorrectionsInfo(calibration_mode.considered_zones_count);
+            var closest_corrections = cache.ClosestPoints;
             if (closest_corrections == null)
             {
                 Debug.Assert(shift_storage.Corrections.Count() == 0);

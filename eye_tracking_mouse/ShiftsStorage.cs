@@ -94,7 +94,7 @@ namespace eye_tracking_mouse
 
         public void AddShift(double[] cursor_position, Point shift)
         {
-            var closest_shifts = CalculateClosestCorrectionsInfo(2);
+            var closest_shifts = cache.ClosestPoints;
             if (closest_shifts != null && closest_shifts[0].distance < calibration_mode.zone_size)
             {
                 cache.SaveToCache(cursor_position, closest_shifts[0].index);
@@ -262,92 +262,11 @@ namespace eye_tracking_mouse
             return index_of_closest_point;
         }
 
-        public class CorrectionInfoRelatedToCursor
-        {
-            public ShiftsStorage shifts_storage;
-
-            public double[] VectorFromCorrectionToCursor
-            {
-                get {
-                    return shifts_storage.cache.GetSubtractionResult(index);
-                }
-            }
-            public int index;
-            public double distance;
-            public double weight;
-        }
-
-        public List<CorrectionInfoRelatedToCursor> CalculateClosestCorrectionsInfo(int number)
-        {
-            if (Corrections.Count == 0)
-                return null;
-
-            var retval = new List<CorrectionInfoRelatedToCursor>();
-            var tmp_info = new CorrectionInfoRelatedToCursor
-            {
-                shifts_storage = this
-            };
-
-            double max_distance = 0;
-            int corrections_count = Corrections.Count;
-            for (int i = 0; i < corrections_count; i++)
-            {
-                double distance = cache.GetDistanceFromCursor(i);
-
-                if (distance < 0.001)
-                    distance = 0.001;
-                if (distance > max_distance)
-                {
-                    if (retval.Count < number)
-                        max_distance = distance;
-                    else
-                        continue;
-                }
-
-                if (retval.Count < number)
-                {
-                    int j = 0;
-                    for (; j < retval.Count; j++)
-                    {
-                        if (distance < retval[j].distance)
-                        {
-                            break;
-                        }
-                    }
-
-                    retval.Insert(j, new CorrectionInfoRelatedToCursor
-                    {
-                        index = i,
-                        distance = distance,
-                        weight = 1,
-                        shifts_storage = this
-                    });
-                    continue;
-                }
-
-                tmp_info.distance = distance;
-                tmp_info.index = i;
-
-                for (int j = 0; j < retval.Count; j++)
-                {
-                    if (tmp_info.distance < retval[j].distance)
-                    {
-                        var t = retval[retval.Count - 1];
-                        retval.RemoveAt(retval.Count - 1);
-                        retval.Insert(j, tmp_info);
-                        tmp_info = t;
-                        break;
-                    }
-                }
-
-            }
-            return retval;
-        }
     }
 
     public static partial class Helpers
     {
-        public static void NormalizeWeights(List<ShiftsStorage.CorrectionInfoRelatedToCursor> corrections)
+        public static void NormalizeWeights(List<ShiftStorageCache.PointInfo> corrections)
         {
             double total_weight = 0;
             foreach (var correction in corrections)
@@ -357,7 +276,7 @@ namespace eye_tracking_mouse
                 corrections[i].weight = corrections[i].weight / total_weight;
         }
 
-        public static Point GetWeightedAverage(ShiftsStorage shift_storage, List<ShiftsStorage.CorrectionInfoRelatedToCursor> corrections)
+        public static Point GetWeightedAverage(ShiftsStorage shift_storage, List<ShiftStorageCache.PointInfo> corrections)
         {
             Point resulting_shift = new Point(0, 0);
             foreach (var correction in corrections)
@@ -369,18 +288,16 @@ namespace eye_tracking_mouse
         }
 
         public static double GetAngleBetweenVectors(
-        	ShiftsStorage.CorrectionInfoRelatedToCursor a, 
-        	ShiftsStorage.CorrectionInfoRelatedToCursor b)
+            ShiftStorageCache.PointInfo a,
+            ShiftStorageCache.PointInfo b)
         {
-            var vector_to_cursor_a = a.VectorFromCorrectionToCursor;
-            var vector_to_cursor_b = b.VectorFromCorrectionToCursor;
-
-
-            Debug.Assert(vector_to_cursor_a.Length == vector_to_cursor_b.Length);
+            Debug.Assert(
+                a.vector_from_correction_to_cursor.Length ==
+                b.vector_from_correction_to_cursor.Length);
 
             double dot_product = 0;
-            for (int i = 0; i < vector_to_cursor_a.Length; i++)
-                dot_product += vector_to_cursor_a[i] * vector_to_cursor_b[i];
+            for (int i = 0; i < a.vector_from_correction_to_cursor.Length; i++)
+                dot_product += a.vector_from_correction_to_cursor[i] * b.vector_from_correction_to_cursor[i];
 
             double cos = dot_product / a.distance / b.distance;
             if (cos > 1.0)

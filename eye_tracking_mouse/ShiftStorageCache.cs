@@ -42,6 +42,21 @@ namespace eye_tracking_mouse
             private set;
             get;
         }
+
+        public class PointInfo
+        {
+            public double[] vector_from_correction_to_cursor;
+            public int index;
+            public double distance;
+            public double weight;
+        }
+
+        public List<PointInfo> ClosestPoints
+        {
+            private set;
+            get;
+        }
+
         public int SavedCoordinatesStartingIndex
         {
             private set;
@@ -103,13 +118,19 @@ namespace eye_tracking_mouse
 
         }
 
-        // WARNING: This is the main performance bottleneck. Measure performance before and after each change.
         // Performs cacluclation of distance from cursor to each saved point.
+        // WARNING: This is the main performance bottleneck. Measure performance before and after each change.
         public void ChangeCursorPosition(double[] coordinates)
         {
             SaveToCache(coordinates, -1);
+            FindDistancesFromCursor();
+            FindClosestPoints();
+        }
+
+        private void FindDistancesFromCursor()
+        {
             // Subtract 
-            for(int i = 0; i < number_of_shift_positions * 8; i+= 8)
+            for (int i = 0; i < number_of_shift_positions * 8; i += 8)
             {
                 int saved_coordinates_index = i + SavedCoordinatesStartingIndex;
                 int subtract_results_index = i + SubtractResultsStartingIndex;
@@ -122,18 +143,71 @@ namespace eye_tracking_mouse
             // Length of subtract results
             for (int i = 0; i < number_of_shift_positions; ++i)
             {
-                int subtract_results_index = i  * 8 + SubtractResultsStartingIndex;
+                int subtract_results_index = i * 8 + SubtractResultsStartingIndex;
                 double dot_product = 0;
                 for (int j = 0; j < 8; ++j)
                 {
                     double k = CoordinatesCache[subtract_results_index + j];
-                    dot_product += k*k;
+                    dot_product += k * k;
                 }
                 int distance_index = i + DistancesStartingIndex;
                 CoordinatesCache[distance_index] = Math.Sqrt(dot_product);
             }
         }
 
+        // Find indexes of points closest to cursor position.
+        private void FindClosestPoints()
+        {
+            int indexes_count = 0;
+
+            int[] indexes_closest_to_cursor = new int[Math.Min(mode.considered_zones_count, number_of_shift_positions)];
+            for (int i = 0; i < indexes_closest_to_cursor.Length; i++)
+            {
+                indexes_closest_to_cursor[i] = int.MaxValue;
+            }
+            for (int i = DistancesStartingIndex; i < DistancesStartingIndex + number_of_shift_positions; ++i)
+            {
+                int j = 0;
+                for (; j < indexes_count; j++)
+                {
+                    if (CoordinatesCache[i] < CoordinatesCache[indexes_closest_to_cursor[j]])
+                    {
+                        for (int k = indexes_closest_to_cursor.Length - 1; k > j; k--)
+                        {
+                            indexes_closest_to_cursor[k] = indexes_closest_to_cursor[k - 1];
+                        }
+                        indexes_closest_to_cursor[j] = i;
+                        if (indexes_count < indexes_closest_to_cursor.Length)
+                            indexes_count++;
+                        j = indexes_closest_to_cursor.Length;
+                        break;
+                    }
+                }
+                if (j == indexes_count && indexes_count < indexes_closest_to_cursor.Length)
+                {
+                    indexes_closest_to_cursor[j] = i;
+                    indexes_count++;
+                }
+            }
+
+            if (indexes_closest_to_cursor.Length == 0)
+            {
+                ClosestPoints = null;
+                return;
+            }
+
+            ClosestPoints = new List<PointInfo>(indexes_closest_to_cursor.Length);
+            foreach (var index in indexes_closest_to_cursor)
+            {
+                ClosestPoints.Add(new PointInfo
+                {
+                    distance = CoordinatesCache[index],
+                    index = index - DistancesStartingIndex,
+                    vector_from_correction_to_cursor = GetSubtractionResult(index - DistancesStartingIndex),
+                    weight = 1
+                });
+            }
+        }
         public double[] GetSubtractionResult(int cache_index)
         {
                 Debug.Assert(cache_index >= 0);
