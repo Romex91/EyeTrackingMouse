@@ -162,6 +162,41 @@ namespace BlindConfigurationTester
             return TestCalibrationManager(SetupCalibrationManager(calibration_mode), data_points, calibration_mode.additional_dimensions_configuration);
         }
 
+        public static TestResult RunPerfTest(
+            eye_tracking_mouse.ICalibrationManager calibration_manager,
+            List<DataPoint> data_points,
+            eye_tracking_mouse.AdditionalDimensionsConfguration config,
+            out int avg_ms)
+        {
+            var time_before = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+            var result = Helpers.TestCalibrationManager(calibration_manager, data_points, config);
+            var time_after = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+
+            double time_ms = (int)(time_after - time_before).TotalMilliseconds;
+
+            // Tests should run at least for 5 second.
+            int iterations_number = Math.Max(1, (int)(5000 / time_ms));
+            
+            calibration_manager.Reset();
+            GC.Collect();
+
+            time_before = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+            for (int i = 0; i < iterations_number; i++)
+            {
+                TestCalibrationManager(
+                    calibration_manager,
+                    data_points,
+                    config);
+                calibration_manager.Reset();
+                GC.Collect();
+            }
+
+            time_after = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+            double total_time_ms = (time_after - time_before).TotalMilliseconds;
+
+            avg_ms = (int)(total_time_ms / iterations_number);
+            return result;
+        }
 
         public static TestResult TestCalibrationManager(
             eye_tracking_mouse.ICalibrationManager calibration_manager,
