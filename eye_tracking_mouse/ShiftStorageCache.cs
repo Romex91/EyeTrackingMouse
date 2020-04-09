@@ -147,8 +147,14 @@ namespace eye_tracking_mouse
             for (int i = 0; i < vectors_per_point; ++i)
             {
                 cursor_position[i] = new System.Numerics.Vector<double>(
-                    CoordinatesCache, 
+                    CoordinatesCache,
                     i * vector_size);
+            }
+
+            System.Numerics.Vector<double> zero = System.Numerics.Vector<double>.Zero;
+            for (int i = 0; i < number_of_shift_positions; i += vector_size)
+            {
+                zero.CopyTo(CoordinatesCache, i + DistancesStartingIndex);
             }
 
             for (int i = 0; i < number_of_shift_positions * vectors_per_point; ++i)
@@ -161,22 +167,16 @@ namespace eye_tracking_mouse
                     saved_coordinates_index);
                 var subtract_result = (saved_coordinates - cursor_position[i % vectors_per_point]);
                 subtract_result.CopyTo(CoordinatesCache, subtract_results_index);
+
+                CoordinatesCache[DistancesStartingIndex + i / vectors_per_point] +=
+                    System.Numerics.Vector.Dot(subtract_result, subtract_result);
             }
 
-            // Length of subtract results
-            for (int i = 0; i < number_of_shift_positions; ++i)
+            for (int i = 0; i < number_of_shift_positions; i += vector_size)
             {
-                int subtract_results_index = i * AlignedCoordinatesCount + SubtractResultsStartingIndex;
-                double dot_product = 0;
-                for (int j = 0; j < AlignedCoordinatesCount; ++j)
-                {
-                    double k = CoordinatesCache[subtract_results_index + j];
-                    dot_product += k * k;
-                }
-                int distance_index = i + DistancesStartingIndex;
-                CoordinatesCache[distance_index] = Math.Sqrt(dot_product);
+                var dot_products_vec = new System.Numerics.Vector<double>(CoordinatesCache, i + DistancesStartingIndex);
+                System.Numerics.Vector.SquareRoot(dot_products_vec).CopyTo(CoordinatesCache, i + DistancesStartingIndex);
             }
-
         }
 
 
