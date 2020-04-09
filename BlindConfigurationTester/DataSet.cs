@@ -119,11 +119,10 @@ namespace BlindConfigurationTester
 
             [JsonIgnore]
             public List<Error> errors = new List<Error>();
-            public long time_ms;
 
             public string ToString()
             {
-                return " Utility: " + UtilityFunction + " Milliseconds Elapsed: " + time_ms;
+                return " Utility: " + UtilityFunction;
             }
 
             public double UtilityFunction
@@ -169,7 +168,6 @@ namespace BlindConfigurationTester
             List<DataPoint> data_points,
             eye_tracking_mouse.AdditionalDimensionsConfguration config)
         {
-            var time_before = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
 
             TestResult result = new TestResult();
             foreach (var data_point in data_points)
@@ -177,9 +175,6 @@ namespace BlindConfigurationTester
                 result.errors.Add(AddDataPoint(calibration_manager, data_point, config));
             }
 
-            var time_after = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
-
-            result.time_ms = (int)(time_after - time_before).TotalMilliseconds;
             return result;
         }
 

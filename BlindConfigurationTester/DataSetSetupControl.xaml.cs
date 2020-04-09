@@ -141,7 +141,12 @@ namespace BlindConfigurationTester
 
             var caibration_mode = Helpers.GetCalibrationMode(dialog.GetSelectedConfiguration());
             var calibration_manager = Helpers.SetupCalibrationManager(caibration_mode);
+            var time_before = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
             var result = Helpers.TestCalibrationManager(calibration_manager, SelectedDataSet.data_points, caibration_mode.additional_dimensions_configuration);
+            var time_after = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+
+            double time_ms = (int)(time_after - time_before).TotalMilliseconds;
+
             calibration_manager.SaveInDirectory(Utils.DataFolder);
 
             using (var writer = new StreamWriter(
@@ -154,17 +159,27 @@ namespace BlindConfigurationTester
                 }
             }
 
-            double total_time = result.time_ms;
-            for (int i = 1; i < 10; i++)
+            // Tests should run for 5 seconds.
+            int iterations_number = Math.Max(1, (int)(5000 / time_ms));
+
+            GC.Collect();
+            time_before = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+            for (int i = 0; i < iterations_number; i++)
             {
                 calibration_manager.Reset();
-                total_time += Helpers.TestCalibrationManager(
+                GC.Collect();
+                Helpers.TestCalibrationManager(
                     calibration_manager, 
                     SelectedDataSet.data_points, 
-                    caibration_mode.additional_dimensions_configuration).time_ms;
+                    caibration_mode.additional_dimensions_configuration);
             }
+            time_after = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+            double total_time_ms = (int)(time_after - time_before).TotalMilliseconds;
 
-            MessageBox.Show("Configuration: " + (dialog.GetSelectedConfiguration() ?? "User Data") + ". " + result.ToString() + ": Avg time:" + total_time/10);
+            MessageBox.Show(
+                "Configuration: " + (dialog.GetSelectedConfiguration() ?? "User Data") + ". " + result.ToString() + 
+                ". \nAvg time:" + (int)(total_time_ms / iterations_number) + 
+                ". Iteration number:" + iterations_number);
         }
 
         private void CreateConfiguration(
