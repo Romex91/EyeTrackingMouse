@@ -73,7 +73,6 @@ namespace eye_tracking_mouse
             get;
         }
 
-
         public int AllocateIndex()
         {
             return number_of_shift_positions++;
@@ -139,14 +138,19 @@ namespace eye_tracking_mouse
         public void ChangeCursorPosition(double[] coordinates)
         {
             SaveToCache(coordinates, -1);
-            FindDistancesFromCursor_SIMD();
+            FindDistancesFromCursor_SIMD(this);
             FindClosestPoints();
         }
 
-        private void FindDistancesFromCursor_SIMD()
+        private static void FindDistancesFromCursor_SIMD(ShiftStorageCache cache)
         {
             int vector_size = System.Numerics.Vector<double>.Count;
             int vectors_per_point = AlignedCoordinatesCount / vector_size;
+            double[] cached_data = cache.cached_data;
+            StartingIndex starting_index = cache.starting_index;
+            int number_of_shift_positions = cache.number_of_shift_positions;
+            int subtract_data_iterator = starting_index.cached_coordinates;
+            int subtract_result_iterator = starting_index.subtract_results;
 
             System.Numerics.Vector<double>[] cursor_position = new System.Numerics.Vector<double>[vectors_per_point];
             for (int i = 0; i < vectors_per_point; ++i)
@@ -156,25 +160,24 @@ namespace eye_tracking_mouse
                     i * vector_size);
             }
 
-            System.Numerics.Vector<double> zero = System.Numerics.Vector<double>.Zero;
-            for (int i = 0; i < number_of_shift_positions; i += vector_size)
+            for (int i = 0; i < number_of_shift_positions; ++i)
             {
-                zero.CopyTo(cached_data, i + starting_index.distances);
-            }
+                double dot_product = 0;
+                for (int j = 0; j < vectors_per_point; ++j)
+                {
+                    var saved_coordinates = new System.Numerics.Vector<double>(
+                    cached_data,
+                    subtract_data_iterator);
+                    var subtract_result = (saved_coordinates - cursor_position[j]);
+                    subtract_result.CopyTo(cached_data, subtract_result_iterator);
 
-            for (int i = 0; i < number_of_shift_positions * vectors_per_point; ++i)
-            {
-                int saved_coordinates_index = i * vector_size + starting_index.cached_coordinates;
-                int subtract_results_index = i * vector_size + starting_index.subtract_results;
+                    dot_product +=
+                        System.Numerics.Vector.Dot(subtract_result, subtract_result);
 
-                var saved_coordinates = new System.Numerics.Vector<double>(
-                    cached_data, 
-                    saved_coordinates_index);
-                var subtract_result = (saved_coordinates - cursor_position[i % vectors_per_point]);
-                subtract_result.CopyTo(cached_data, subtract_results_index);
-
-                cached_data[starting_index.distances + i / vectors_per_point] +=
-                    System.Numerics.Vector.Dot(subtract_result, subtract_result);
+                    subtract_data_iterator += vector_size;
+                    subtract_result_iterator += vector_size;
+                }
+                cached_data[starting_index.distances + i] = dot_product;
             }
 
             for (int i = 0; i < number_of_shift_positions; i += vector_size)
