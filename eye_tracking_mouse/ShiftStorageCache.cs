@@ -16,6 +16,11 @@ namespace eye_tracking_mouse
         public ShiftStorageCache(Options.CalibrationMode mode)
         {
             this.mode = mode;
+
+            int aligned_max_zones_count = 8;
+            for (; aligned_max_zones_count < this.mode.max_zones_count; aligned_max_zones_count *= 2) ;
+            this.mode.max_zones_count = aligned_max_zones_count;
+
             var scales_in_percents = mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
             CoordinateScales = scales_in_percents.Select(x => x/100.0).ToArray();
 
