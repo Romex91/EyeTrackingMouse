@@ -21,7 +21,20 @@ namespace PerfTestRunner
                 caibration_mode.additional_dimensions_configuration,
                 out avg_time);
 
-            return avg_time;
+            if (args.Length < 1 || args[0] == "time")
+            {
+                Console.WriteLine(avg_time);
+            }
+            else if (args[0] == "utility")
+            {
+                Console.WriteLine(result.UtilityFunction);
+            }
+            else
+            {
+                Console.Error.WriteLine("allowed arguments are 'time' and 'utility'");
+                return -1;
+            }
+            return 0;
         }
     }
 }

@@ -166,7 +166,7 @@ namespace BlindConfigurationTester
             eye_tracking_mouse.ICalibrationManager calibration_manager,
             List<DataPoint> data_points,
             eye_tracking_mouse.AdditionalDimensionsConfguration config,
-            out int avg_ms)
+            out int avg_mcs)
         {
             int iterations_number = 5000 / 70;
 
@@ -188,7 +188,7 @@ namespace BlindConfigurationTester
             var time_after = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
             double total_time_ms = (time_after - time_before).TotalMilliseconds;
 
-            avg_ms = (int)(total_time_ms / iterations_number);
+            avg_mcs = (int)(total_time_ms / iterations_number * 1000);
             return result;
         }
 
