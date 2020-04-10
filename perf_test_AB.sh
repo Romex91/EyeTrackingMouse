@@ -3,8 +3,6 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-echo utility 
-echo `./bin/PerfBinaries/A/PerfTestRunner.exe utility` , `./bin/PerfBinaries/B/PerfTestRunner.exe utility`
 echo A , B
 for run in {1..10}
 do

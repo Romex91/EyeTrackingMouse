@@ -22,14 +22,11 @@ namespace eye_tracking_mouse
         // Next 8 * mode.max_zones_count are allocated for the results of subtract operation.
         // Next mode.max_zones_count are allocated for the results of distance calculations.
         private readonly double[] cached_data;
+        private readonly double[] cached_distances;
+        private readonly double[] cursor_coordinates;
 
-        private struct StartingIndex
-        {
-            public int cached_coordinates;
-            public int subtract_results;
-            public int distances;
-        }
-        private readonly StartingIndex starting_index;
+        public int subtract_results_starting_index;  
+
         private Options.CalibrationMode mode;
         private int number_of_shift_positions = 0;
         private double[] coordinate_scales;
@@ -46,17 +43,14 @@ namespace eye_tracking_mouse
             coordinate_scales = scales_in_percents.Select(x => x/100.0).ToArray();
 
             cached_data = new double[ 
-                AlignedCoordinatesCount +                                   // cursor position
                 AlignedCoordinatesCount * mode.max_zones_count +            // cached coordinates
-                AlignedCoordinatesCount * mode.max_zones_count +            // subtruction results
-                mode.max_zones_count];                                      // distances
+                AlignedCoordinatesCount * mode.max_zones_count              // subtruction results
+                ];
 
-            starting_index = new StartingIndex
-            {
-                cached_coordinates = AlignedCoordinatesCount,
-                subtract_results = AlignedCoordinatesCount * mode.max_zones_count + AlignedCoordinatesCount,
-                distances = 2 * AlignedCoordinatesCount * mode.max_zones_count + AlignedCoordinatesCount
-            };
+            cached_distances = new double[mode.max_zones_count];
+            cursor_coordinates = new double[AlignedCoordinatesCount];
+
+            subtract_results_starting_index = AlignedCoordinatesCount * mode.max_zones_count;
         }
 
         public class PointInfo
@@ -83,7 +77,7 @@ namespace eye_tracking_mouse
             number_of_shift_positions--;
             for (int i = index; i < number_of_shift_positions; ++i)
             {
-                int saved_coordinates_index = starting_index.cached_coordinates + i * AlignedCoordinatesCount;
+                int saved_coordinates_index = i * AlignedCoordinatesCount;
                 for (int j = 0; j < AlignedCoordinatesCount; j++)
                     cached_data[saved_coordinates_index + j] =
                         cached_data[saved_coordinates_index + j + AlignedCoordinatesCount];
@@ -101,7 +95,7 @@ namespace eye_tracking_mouse
             Debug.Assert(coordinates.Length == coordinate_scales.Length);
 
             int i = 0;
-            int coordinates_shift =  starting_index.cached_coordinates + cache_index * AlignedCoordinatesCount;
+            int coordinates_shift = cache_index * AlignedCoordinatesCount;
             for (; i < coordinates.Length; ++i)
             {
                 cached_data[coordinates_shift + i] =
@@ -118,7 +112,7 @@ namespace eye_tracking_mouse
             Debug.Assert(cache_index >= 0);
 
             var retval = new double[coordinate_scales.Length];
-            int subtract_results_index = starting_index.subtract_results + cache_index * AlignedCoordinatesCount;
+            int subtract_results_index = subtract_results_starting_index + cache_index * AlignedCoordinatesCount;
             for (int i = 0; i < retval.Length; i++)
             {
                 retval[i] = cached_data[subtract_results_index + i];
@@ -130,14 +124,18 @@ namespace eye_tracking_mouse
         public double GetDistanceFromCursor(int cache_index)
         {
             Debug.Assert(cache_index >= 0);
-            return cached_data[starting_index.distances + cache_index];
+            return cached_distances[cache_index];
         }
 
         // Performs cacluclation of distance from cursor to each saved point.
         // WARNING: This is the main performance bottleneck. Measure performance before and after each change.
         public void ChangeCursorPosition(double[] coordinates)
         {
-            SaveToCache(coordinates, -1);
+            int i = 0;
+            for (; i < coordinates.Length; ++i)
+                cursor_coordinates[i] = coordinate_scales[i] * coordinates[i];
+            for (; i < cursor_coordinates.Length; ++i)
+                cursor_coordinates[i] = 0;
             FindDistancesFromCursor_SIMD(this);
             FindClosestPoints();
         }
@@ -147,130 +145,123 @@ namespace eye_tracking_mouse
             int vector_size = System.Numerics.Vector<double>.Count;
             int vectors_per_point = AlignedCoordinatesCount / vector_size;
             double[] cached_data = cache.cached_data;
-            StartingIndex starting_index = cache.starting_index;
+            double[] distances = cache.cached_distances;
+            double[] cursor_coordinates = cache.cursor_coordinates;
+            int subtract_results_starting_index = cache.subtract_results_starting_index;
             int number_of_shift_positions = cache.number_of_shift_positions;
-            int subtract_data_iterator = starting_index.cached_coordinates;
-            int subtract_result_iterator = starting_index.subtract_results;
-            int distances_iterator = starting_index.distances;
-            int distances_end = starting_index.distances + number_of_shift_positions;
+            int subtract_iterator = 0;
 
             System.Numerics.Vector<double>[] cursor_position = new System.Numerics.Vector<double>[vectors_per_point];
             for (int i = 0; i < vectors_per_point; ++i)
             {
                 cursor_position[i] = new System.Numerics.Vector<double>(
-                    cached_data,
+                    cursor_coordinates,
                     i * vector_size);
             }
 
-            for (; distances_iterator < distances_end; ++distances_iterator)
+            for (int distances_iterator = 0; distances_iterator < number_of_shift_positions; ++distances_iterator)
             {
                 double dot_product = 0;
                 for (int j = 0; j < vectors_per_point; ++j)
                 {
                     var saved_coordinates = new System.Numerics.Vector<double>(
-                    cached_data,
-                    subtract_data_iterator);
+                        cached_data,
+                        subtract_iterator);
                     var subtract_result = (saved_coordinates - cursor_position[j]);
-                    subtract_result.CopyTo(cached_data, subtract_result_iterator);
+                    subtract_result.CopyTo(cached_data, subtract_iterator + subtract_results_starting_index);
 
                     dot_product +=
                         System.Numerics.Vector.Dot(subtract_result, subtract_result);
 
-                    subtract_data_iterator += vector_size;
-                    subtract_result_iterator += vector_size;
+                    subtract_iterator += vector_size;
                 }
-                cached_data[distances_iterator] = dot_product;
+                distances[distances_iterator] = dot_product;
             }
 
             for (int i = 0; i < number_of_shift_positions; i += vector_size)
             {
-                var dot_products_vec = new System.Numerics.Vector<double>(cached_data, i + starting_index.distances);
-                System.Numerics.Vector.SquareRoot(dot_products_vec).CopyTo(cached_data, i + starting_index.distances);
+                var dot_products_vec = new System.Numerics.Vector<double>(distances, i);
+                System.Numerics.Vector.SquareRoot(dot_products_vec).CopyTo(distances, i);
             }
         }
 
 
-        private void FindDistancesFromCursor()
+        private void FindDistancesFromCursor(double[] cursor_coordinates)
         {
             // Subtract 
             for (int i = 0; i < number_of_shift_positions * AlignedCoordinatesCount; i += AlignedCoordinatesCount)
             {
-                int saved_coordinates_index = i + starting_index.cached_coordinates;
-                int subtract_results_index = i + starting_index.subtract_results;
+                int subtract_results_index = i + subtract_results_starting_index;
                 for (int j = 0; j < AlignedCoordinatesCount; ++j)
                 {
-                    cached_data[subtract_results_index + j] = cached_data[saved_coordinates_index + j] - cached_data[j];
+                    cached_data[subtract_results_index + j] = cached_data[i + j] - cursor_coordinates[j];
                 }
             }
 
             // Length of subtract results
             for (int i = 0; i < number_of_shift_positions; ++i)
             {
-                int subtract_results_index = i * AlignedCoordinatesCount + starting_index.subtract_results;
+                int subtract_results_index = i * AlignedCoordinatesCount + subtract_results_starting_index;
                 double dot_product = 0;
                 for (int j = 0; j < AlignedCoordinatesCount; ++j)
                 {
                     double k = cached_data[subtract_results_index + j];
                     dot_product += k * k;
                 }
-                int distance_index = i + starting_index.distances;
-                cached_data[distance_index] = Math.Sqrt(dot_product);
+                cached_distances[i] = Math.Sqrt(dot_product);
             }
         }
-
 
         // Find indexes of points closest to cursor position.
         private void FindClosestPoints()
         {
-            int indexes_count = 0;
-
-            int[] indexes_closest_to_cursor = new int[Math.Min(mode.considered_zones_count, number_of_shift_positions)];
-            for (int i = 0; i < indexes_closest_to_cursor.Length; i++)
-            {
-                indexes_closest_to_cursor[i] = int.MaxValue;
-            }
-            for (int i = starting_index.distances; i < starting_index.distances + number_of_shift_positions; ++i)
-            {
-                int j = 0;
-                for (; j < indexes_count; j++)
-                {
-                    if (cached_data[i] < cached_data[indexes_closest_to_cursor[j]])
-                    {
-                        for (int k = indexes_closest_to_cursor.Length - 1; k > j; k--)
-                        {
-                            indexes_closest_to_cursor[k] = indexes_closest_to_cursor[k - 1];
-                        }
-                        indexes_closest_to_cursor[j] = i;
-                        if (indexes_count < indexes_closest_to_cursor.Length)
-                            indexes_count++;
-                        j = indexes_closest_to_cursor.Length;
-                        break;
-                    }
-                }
-                if (j == indexes_count && indexes_count < indexes_closest_to_cursor.Length)
-                {
-                    indexes_closest_to_cursor[j] = i;
-                    indexes_count++;
-                }
-            }
-
-            if (indexes_closest_to_cursor.Length == 0)
+            int considered_points_count = Math.Min(mode.considered_zones_count, number_of_shift_positions);
+            if (considered_points_count == 0)
             {
                 ClosestPoints = null;
                 return;
             }
 
-            ClosestPoints = new List<PointInfo>(indexes_closest_to_cursor.Length);
-            foreach (var index in indexes_closest_to_cursor)
+            int[] indexes = new int[considered_points_count];
+            double[] distances = new double[considered_points_count];
+            int i = 0;
+            for (; i < indexes.Length; ++i)
+            {
+                indexes[i] = i;
+                distances[i] = cached_distances[i];
+            }
+
+            for (; i < number_of_shift_positions; ++i)
+            {
+                int index = i;
+                double distance = cached_distances[i];
+                
+                for (int j = 0; j < indexes.Length; j++)
+                {
+                    if (distance < distances[j])
+                    {
+                        double tmp_distance = distances[j];
+                        int tmp_index = indexes[j];
+                        distances[j] = distance;
+                        indexes[j] = index;
+                        distance = tmp_distance;
+                        index = tmp_index;
+                    }
+                }
+            }
+
+            ClosestPoints = new List<PointInfo>(indexes.Length);
+            for (i = 0; i < indexes.Length; i++)
             {
                 ClosestPoints.Add(new PointInfo
                 {
-                    distance = cached_data[index] > 0.0001 ? cached_data[index] : 0.0001,
-                    index = index - starting_index.distances,
-                    vector_from_correction_to_cursor = GetSubtractionResult(index - starting_index.distances),
+                    distance = distances[i] > 0.0001 ? distances[i] : 0.0001,
+                    index = indexes[i],
+                    vector_from_correction_to_cursor = GetSubtractionResult(indexes[i]),
                     weight = 1
                 });
             }
+            ClosestPoints.Sort((x, y) => x.distance < y.distance ? -1 : 1);
         }
     }
 }
