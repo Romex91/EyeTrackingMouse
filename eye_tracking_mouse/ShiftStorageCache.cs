@@ -151,6 +151,8 @@ namespace eye_tracking_mouse
             int number_of_shift_positions = cache.number_of_shift_positions;
             int subtract_data_iterator = starting_index.cached_coordinates;
             int subtract_result_iterator = starting_index.subtract_results;
+            int distances_iterator = starting_index.distances;
+            int distances_end = starting_index.distances + number_of_shift_positions;
 
             System.Numerics.Vector<double>[] cursor_position = new System.Numerics.Vector<double>[vectors_per_point];
             for (int i = 0; i < vectors_per_point; ++i)
@@ -160,7 +162,7 @@ namespace eye_tracking_mouse
                     i * vector_size);
             }
 
-            for (int i = 0; i < number_of_shift_positions; ++i)
+            for (; distances_iterator < distances_end; ++distances_iterator)
             {
                 double dot_product = 0;
                 for (int j = 0; j < vectors_per_point; ++j)
@@ -177,7 +179,7 @@ namespace eye_tracking_mouse
                     subtract_data_iterator += vector_size;
                     subtract_result_iterator += vector_size;
                 }
-                cached_data[starting_index.distances + i] = dot_product;
+                cached_data[distances_iterator] = dot_product;
             }
 
             for (int i = 0; i < number_of_shift_positions; i += vector_size)
