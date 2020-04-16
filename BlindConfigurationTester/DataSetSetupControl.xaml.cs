@@ -215,7 +215,7 @@ namespace BlindConfigurationTester
                 File.WriteAllText(
                     System.IO.Path.Combine(Utils.GetConfigurationDir(new_config), i == 0 ? "good_modes.json" : "good_modes_sorted.json"),
                     JsonConvert.SerializeObject(processed_results, Formatting.Indented));
-                good_modes.Sort();
+                good_modes.Sort((x, y) => { return (int)((x.Item1 - y.Item1) * 1000); }) ;
             }
         }
 
