@@ -20,9 +20,9 @@ namespace eye_tracking_mouse
 
         public static readonly string application_name = "EyeTrackingMouse";
 
-        public static double GetDistance(Point a, Point b)
+        public static float GetDistance(Point a, Point b)
         {
-            return Math.Pow(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2), 0.5);
+            return (float) Math.Pow(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2), 0.5);
         }
 
         public static Icon AppIcon { get { return Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath); } }

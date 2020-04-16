@@ -22,7 +22,7 @@ namespace eye_tracking_mouse
             shift_storage = new ShiftsStorage(calibration_mode, cache, for_testing);
         }
 
-        public Point GetShift(double[] cursor_position)
+        public Point GetShift(float[] cursor_position)
         {
             cache.ChangeCursorPosition(cursor_position);
             shift_storage.calibration_window?.OnCursorPositionUpdate(cursor_position);
@@ -34,7 +34,7 @@ namespace eye_tracking_mouse
                 return new Point(0, 0);
             }
 
-            double sum_of_reverse_distances = 0;
+            float sum_of_reverse_distances = 0;
             foreach (var index in closest_corrections)
             {
                 sum_of_reverse_distances += (1 / index.distance);
@@ -57,15 +57,15 @@ namespace eye_tracking_mouse
             Debug.Assert(calibration_mode.correction_fade_out_distance > 0);
 
 
-            double total_weight = 0;
+            float total_weight = 0;
             foreach (var correction in closest_corrections)
             {
                 var vector_from_correction_to_cursor = correction.vector_from_correction_to_cursor;
-                double XYdistance = Math.Sqrt(
+                float XYdistance = (float) Math.Sqrt(
                     vector_from_correction_to_cursor[0] * vector_from_correction_to_cursor[0] +
                     vector_from_correction_to_cursor[1] * vector_from_correction_to_cursor[1]);
 
-                double factor = 1.0 - Math.Pow(
+                float factor = 1.0f - (float)Math.Pow(
                     XYdistance / calibration_mode.correction_fade_out_distance, 2);
                 correction.weight *= factor > 0 ? factor : 0;
                 total_weight += correction.weight;
@@ -89,15 +89,15 @@ namespace eye_tracking_mouse
             return result;
         }
 
-        private double GetShadeOpacity(
+        private float GetShadeOpacity(
             ShiftStorageCache.PointInfo source_of_shade,
             ShiftStorageCache.PointInfo shaded_correction)
         {
             Debug.Assert(source_of_shade.distance <= shaded_correction.distance);
 
-            double opacity = 1;
+            float opacity = 1;
 
-            double angle_in_percents = Helpers.GetAngleBetweenVectors(source_of_shade, shaded_correction) * 100 / Math.PI;
+            float angle_in_percents =(float) (Helpers.GetAngleBetweenVectors(source_of_shade, shaded_correction) * 100 / Math.PI);
             Debug.Assert(angle_in_percents <= 100);
 
             // Opacity descendes gradualy in the sector between opaque and transparent sectors.
@@ -109,7 +109,7 @@ namespace eye_tracking_mouse
                 opacity = (angle_in_percents + calibration_mode.size_of_transparent_sector_in_percents - 100) /
                     (calibration_mode.size_of_opaque_sector_in_percents + calibration_mode.size_of_transparent_sector_in_percents - 100);
 
-            double distance_from_shade_shell_to_shaded_correction = shaded_correction.distance - source_of_shade.distance;
+            float distance_from_shade_shell_to_shaded_correction = shaded_correction.distance - source_of_shade.distance;
             if (distance_from_shade_shell_to_shaded_correction < calibration_mode.shade_thickness_in_pixels)
                 opacity *= distance_from_shade_shell_to_shaded_correction / calibration_mode.shade_thickness_in_pixels;
 
@@ -133,7 +133,7 @@ namespace eye_tracking_mouse
             }
         }
 
-        public void AddShift(double[] cursor_position, Point shift)
+        public void AddShift(float[] cursor_position, Point shift)
         {
             cache.ChangeCursorPosition(cursor_position);
             shift_storage.AddShift(cursor_position, shift);

@@ -11,7 +11,7 @@ namespace eye_tracking_mouse
 {
     public class ShiftStorageCache
     {
-        static readonly int AlignedCoordinatesCount = Math.Max(8, System.Numerics.Vector<double>.Count);
+        static readonly int AlignedCoordinatesCount = Math.Max(8, System.Numerics.Vector<float>.Count);
         // All coordinates involved in the performance bottleneck calculations are stored here.
         // Rationale is to decrease number of cache misses.
         // The coordinates count is alligned to 8-dimensions. 
@@ -19,17 +19,17 @@ namespace eye_tracking_mouse
         // First 8 * mode.max_zones_count are allocated for adjusted coordinates of saved points
         // After cursor position changes there is calculation of distance from cursor position to each saved point
         // Next 8 * mode.max_zones_count are allocated for the results of subtract operation.
-        private readonly double[] cached_data;
-        private readonly double[] cached_distances;
-        private readonly long[] distance_mask;
-        private readonly double[] cursor_coordinates;
-        private double distance_mask_treshold = 100;
+        private readonly float[] cached_data;
+        private readonly float[] cached_distances;
+        private readonly int[] distance_mask;
+        private readonly float[] cursor_coordinates;
+        private float distance_mask_treshold = 100;
 
         public int subtract_results_starting_index;
         private int number_of_shift_positions;
 
         private Options.CalibrationMode mode;
-        private double[] coordinate_scales;
+        private float[] coordinate_scales;
 
         bool fallback_to_scalar = false;
 
@@ -42,26 +42,26 @@ namespace eye_tracking_mouse
             this.mode.max_zones_count = aligned_max_zones_count;
 
             var scales_in_percents = mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
-            coordinate_scales = scales_in_percents.Select(x => x / 100.0).ToArray();
+            coordinate_scales = scales_in_percents.Select(x => x / 100.0f).ToArray();
 
-            cached_data = new double[
+            cached_data = new float[
                 AlignedCoordinatesCount * mode.max_zones_count +            // cached coordinates
                 AlignedCoordinatesCount * mode.max_zones_count              // subtruction results
                 ];
 
-            cached_distances = new double[mode.max_zones_count];
-            distance_mask = new long[mode.max_zones_count];
-            cursor_coordinates = new double[AlignedCoordinatesCount];
+            cached_distances = new float[mode.max_zones_count];
+            distance_mask = new int[mode.max_zones_count];
+            cursor_coordinates = new float[AlignedCoordinatesCount];
 
             subtract_results_starting_index = AlignedCoordinatesCount * mode.max_zones_count;
         }
 
         public class PointInfo
         {
-            public double[] vector_from_correction_to_cursor;
+            public float[] vector_from_correction_to_cursor;
             public int index;
-            public double distance;
-            public double weight;
+            public float distance;
+            public float weight;
         }
 
         public List<PointInfo> ClosestPoints
@@ -92,7 +92,7 @@ namespace eye_tracking_mouse
             number_of_shift_positions = 0;
         }
 
-        public void SaveToCache(double[] coordinates, int cache_index)
+        public void SaveToCache(float[] coordinates, int cache_index)
         {
             Debug.Assert(coordinates.Length <= AlignedCoordinatesCount);
             Debug.Assert(coordinates.Length == coordinate_scales.Length);
@@ -102,7 +102,7 @@ namespace eye_tracking_mouse
             for (; i < coordinates.Length; ++i)
             {
                 cached_data[coordinates_shift + i] =
-                    coordinate_scales[i] * coordinates[i];
+                    (float)(coordinate_scales[i] * coordinates[i]);
             }
             for (; i < AlignedCoordinatesCount; ++i)
             {
@@ -110,11 +110,11 @@ namespace eye_tracking_mouse
             }
         }
 
-        private double[] GetSubtractionResult(int cache_index)
+        private float[] GetSubtractionResult(int cache_index)
         {
             Debug.Assert(cache_index >= 0);
 
-            var retval = new double[coordinate_scales.Length];
+            var retval = new float[coordinate_scales.Length];
             int subtract_results_index = subtract_results_starting_index + cache_index * AlignedCoordinatesCount;
             for (int i = 0; i < retval.Length; i++)
             {
@@ -124,7 +124,7 @@ namespace eye_tracking_mouse
             return retval;
         }
 
-        public double GetDistanceFromCursor(int cache_index)
+        public float GetDistanceFromCursor(int cache_index)
         {
             Debug.Assert(cache_index >= 0);
             return cached_distances[cache_index];
@@ -132,11 +132,11 @@ namespace eye_tracking_mouse
 
         // Performs cacluclation of distance from cursor to each saved point.
         // WARNING: This is the main performance bottleneck. Measure performance before and after each change.
-        public void ChangeCursorPosition(double[] coordinates)
+        public void ChangeCursorPosition(float[] coordinates)
         {
             int i = 0;
             for (; i < coordinates.Length; ++i)
-                cursor_coordinates[i] = coordinate_scales[i] * coordinates[i];
+                cursor_coordinates[i] = (float)(coordinate_scales[i] * coordinates[i]);
             for (; i < cursor_coordinates.Length; ++i)
                 cursor_coordinates[i] = 0;
             if (fallback_to_scalar)
@@ -161,35 +161,35 @@ namespace eye_tracking_mouse
         // Doing so improves perf test results.
         private static void FindDistancesFromCursor_SIMD(ShiftStorageCache cache)
         {
-            int vector_size = System.Numerics.Vector<double>.Count;
+            int vector_size = System.Numerics.Vector<float>.Count;
             int vectors_per_point = AlignedCoordinatesCount / vector_size;
 
-            double[] cached_data = cache.cached_data;
-            double[] distances = cache.cached_distances;
-            long[] distance_mask = cache.distance_mask;
-            double[] cursor_coordinates = cache.cursor_coordinates;
-            double distance_mask_treshold = cache.distance_mask_treshold;
+            float[] cached_data = cache.cached_data;
+            float[] distances = cache.cached_distances;
+            int[] distance_mask = cache.distance_mask;
+            float[] cursor_coordinates = cache.cursor_coordinates;
+            float distance_mask_treshold = cache.distance_mask_treshold;
             int subtract_results_starting_index = cache.subtract_results_starting_index;
             int number_of_shift_positions = cache.number_of_shift_positions;
 
             int subtract_iterator = 0;
             int number_of_considered_points = Math.Min(cache.mode.considered_zones_count, number_of_shift_positions);
 
-            System.Numerics.Vector<double>[] cursor_position = new System.Numerics.Vector<double>[vectors_per_point];
+            System.Numerics.Vector<float>[] cursor_position = new System.Numerics.Vector<float>[vectors_per_point];
             int i = 0;
             for (i = 0; i < vectors_per_point; ++i)
             {
-                cursor_position[i] = new System.Numerics.Vector<double>(
+                cursor_position[i] = new System.Numerics.Vector<float>(
                     cursor_coordinates,
                     i * vector_size);
             }
 
             for (int distances_iterator = 0; distances_iterator < number_of_shift_positions; ++distances_iterator)
             {
-                double dot_product = 0;
+                float dot_product = 0;
                 for (int j = 0; j < vectors_per_point; ++j)
                 {
-                    var saved_coordinates = new System.Numerics.Vector<double>(
+                    var saved_coordinates = new System.Numerics.Vector<float>(
                         cached_data,
                         subtract_iterator);
                     var subtract_result = (saved_coordinates - cursor_position[j]);
@@ -203,12 +203,12 @@ namespace eye_tracking_mouse
                 distances[distances_iterator] = dot_product;
             }
 
-            System.Numerics.Vector<double> distance_filter_vector = new System.Numerics.Vector<double>(distance_mask_treshold);
+            System.Numerics.Vector<float> distance_filter_vector = new System.Numerics.Vector<float>(distance_mask_treshold);
             long points_count_after_filtering = 0;
             
             for (i = 0; i < number_of_shift_positions; i += vector_size)
             {
-                var dot_products_vec = new System.Numerics.Vector<double>(distances, i);
+                var dot_products_vec = new System.Numerics.Vector<float>(distances, i);
                 var distance_vec = System.Numerics.Vector.SquareRoot(dot_products_vec);
                 distance_vec.CopyTo(distances, i);
                 var filter_vec = System.Numerics.Vector.LessThan(distance_vec, distance_filter_vector);
@@ -223,12 +223,12 @@ namespace eye_tracking_mouse
                 cache.distance_mask_treshold *= 2;
                 for (i = 0; i < number_of_shift_positions; i += vector_size)
                 {
-                    System.Numerics.Vector<long>.One.CopyTo(distance_mask, i);
+                    System.Numerics.Vector<int>.One.CopyTo(distance_mask, i);
                 }
             }
             else if (points_count_after_filtering > number_of_considered_points * 4)
             {
-                cache.distance_mask_treshold /= 1.1;
+                cache.distance_mask_treshold /= 1.1f;
             }
         }
         private void FindDistancesFromCursor()
@@ -247,13 +247,13 @@ namespace eye_tracking_mouse
             for (int i = 0; i < number_of_shift_positions; ++i)
             {
                 int subtract_results_index = i * AlignedCoordinatesCount + subtract_results_starting_index;
-                double dot_product = 0;
+                float dot_product = 0;
                 for (int j = 0; j < AlignedCoordinatesCount; ++j)
                 {
-                    double k = cached_data[subtract_results_index + j];
+                    float k = cached_data[subtract_results_index + j];
                     dot_product += k * k;
                 }
-                cached_distances[i] = Math.Sqrt(dot_product);
+                cached_distances[i] =(float) Math.Sqrt(dot_product);
                 distance_mask[i] = 1;
             }
         }
@@ -270,7 +270,7 @@ namespace eye_tracking_mouse
 
 
             int[] indexes = new int[considered_points_count];
-            double[] distances = new double[considered_points_count];
+            float[] distances = new float[considered_points_count];
 
             int i = 0;
             for (; i < indexes.Length; ++i)
@@ -285,13 +285,13 @@ namespace eye_tracking_mouse
                     continue;
 
                 int index = i;
-                double distance = cached_distances[i];
+                float distance = cached_distances[i];
 
                 for (int j = 0; j < indexes.Length; j++)
                 {
                     if (distance < distances[j])
                     {
-                        double tmp_distance = distances[j];
+                        float tmp_distance = distances[j];
                         int tmp_index = indexes[j];
                         distances[j] = distance;
                         indexes[j] = index;
@@ -306,7 +306,7 @@ namespace eye_tracking_mouse
             {
                 ClosestPoints.Add(new PointInfo
                 {
-                    distance = distances[i] > 0.0001 ? distances[i] : 0.0001,
+                    distance = distances[i] > 0.0001f ? distances[i] : 0.0001f,
                     index = indexes[i],
                     vector_from_correction_to_cursor = GetSubtractionResult(indexes[i]),
                     weight = 1

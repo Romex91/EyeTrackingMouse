@@ -329,20 +329,20 @@ namespace eye_tracking_mouse
                     interaction_history[0].Time = DateTime.Now;
                 }
 
-                double speed_up = 1.0;
+                float speed_up = 1.0f;
 
                 if (is_repetition)
                 {
-                    speed_up = 2.0;
+                    speed_up = 2.0f;
                 }
                 else if (key_state == KeyState.Down &&
                   interaction_history[1].Key == key &&
                   interaction_history[2].Key == key)
                 {
                     if ((DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.quadriple_speed_up_press_time_ms)
-                        speed_up = 4.0;
+                        speed_up = 4.0f;
                     else if ((DateTime.Now - interaction_history[2].Time).TotalMilliseconds < Options.Instance.double_speedup_press_time_ms)
-                        speed_up = 2.0;
+                        speed_up = 2.0f;
                 }
 
                 bool is_short_modifier_press =

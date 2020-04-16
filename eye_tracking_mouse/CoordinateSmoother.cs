@@ -20,9 +20,9 @@ namespace eye_tracking_mouse
 
         public Tobii.Interaction.Vector3 SmoothPoint(Tobii.Interaction.Vector3 point)
         {
-            smoothers[0].AddPoint(point.X);
-            smoothers[1].AddPoint(point.Y);
-            smoothers[2].AddPoint(point.Z);
+            smoothers[0].AddPoint((float)point.X);
+            smoothers[1].AddPoint((float)point.Y);
+            smoothers[2].AddPoint((float)point.Z);
 
             point.X = smoothers[0].GetSmoothenedPoint();
             point.Y = smoothers[1].GetSmoothenedPoint();
@@ -64,7 +64,7 @@ namespace eye_tracking_mouse
     // Longer the user stares at one area smoother resulting gaze point.
     class CoordinateSmoother
     {
-        public void AddPoint(double point)
+        public void AddPoint(float point)
         {
             points.Insert(0, point);
             while (points.Count > Options.Instance.smothening_points_count)
@@ -76,9 +76,9 @@ namespace eye_tracking_mouse
             });
         }
 
-        public double GetSmoothenedPoint()
+        public float GetSmoothenedPoint()
         {
-            double X = 0;
+            float X = 0;
             foreach (var point in points)
             {
                 X += point;
@@ -87,6 +87,6 @@ namespace eye_tracking_mouse
             return X / points.Count;
         }
 
-        private readonly List<double> points = new List<double>();
+        private readonly List<float> points = new List<float>();
     }
 }

@@ -113,8 +113,8 @@ namespace BlindConfigurationTester
         {
             public struct Error
             {
-                public double before_correction { get; set; }
-                public double after_correction { get; set; }
+                public float before_correction { get; set; }
+                public float after_correction { get; set; }
             }
 
             [JsonIgnore]
@@ -125,11 +125,11 @@ namespace BlindConfigurationTester
                 return " Utility: " + UtilityFunction;
             }
 
-            public double UtilityFunction
+            public float UtilityFunction
             {
                 get
                 {
-                    double total_correction = 0;
+                    float total_correction = 0;
                     foreach (var error in errors)
                     {
                         total_correction += error.before_correction - error.after_correction;
@@ -223,10 +223,10 @@ namespace BlindConfigurationTester
 
             TestResult.Error error = new TestResult.Error
             {
-                before_correction = Point.Subtract(
+                before_correction = (float) Point.Subtract(
                     data_point.true_location_on_screen,
                     tobii_gaze_point).Length,
-                after_correction = Point.Subtract(
+                after_correction = (float) Point.Subtract(
                     data_point.true_location_on_screen,
                     corrected_gaze_point).Length,
             };

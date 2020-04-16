@@ -14,7 +14,7 @@ namespace eye_tracking_mouse
     // When users correct inacurate precision with W/A/S/D and then click stuff they create a |UserCorrection|.
     public class UserCorrection
     {
-        public UserCorrection(double[] coordinates, Point shift)
+        public UserCorrection(float[] coordinates, Point shift)
         {
             Coordinates = coordinates;
             Shift = shift;
@@ -25,7 +25,7 @@ namespace eye_tracking_mouse
 
         // A multidimensional vector where first two coordinates represent 2d point on the display.
         // Other dimensions represent user body position.
-        public double[] Coordinates{ get; private set; }
+        public float[] Coordinates{ get; private set; }
     }
 
     // |ShiftsStorage| is responsible for storing user corrections (shifts).
@@ -93,7 +93,7 @@ namespace eye_tracking_mouse
             OnShiftsChanged();
         }
 
-        public void AddShift(double[] cursor_position, Point shift)
+        public void AddShift(float[] cursor_position, Point shift)
         {
             var closest_shifts = cache.ClosestPoints;
             if (closest_shifts != null && closest_shifts[0].distance < calibration_mode.zone_size)
@@ -203,7 +203,7 @@ namespace eye_tracking_mouse
             calibration_window?.UpdateCorrections(Corrections);
         }
 
-        private static int GetSectorNumber(double coordinate)
+        private static int GetSectorNumber(float coordinate)
         {
             return (int)(coordinate / 500.0);
         }
@@ -245,12 +245,12 @@ namespace eye_tracking_mouse
 
 
             int index_of_closest_point = 0;
-            double min_distance = double.MaxValue;
+            float min_distance = float.MaxValue;
             for (int i = 0; i < Corrections.Count; i++)
             {
                 if (sectors[GetSectorNumber(Corrections[i], max_sector_x)] == max_points_count_in_sector)
                 {
-                    double distance = cache.GetDistanceFromCursor(i);
+                    float distance = cache.GetDistanceFromCursor(i);
                     
                     if (min_distance > distance)
                     {
@@ -269,7 +269,7 @@ namespace eye_tracking_mouse
     {
         public static void NormalizeWeights(List<ShiftStorageCache.PointInfo> corrections)
         {
-            double total_weight = 0;
+            float total_weight = 0;
             foreach (var correction in corrections)
                 total_weight += correction.weight;
 
@@ -288,7 +288,7 @@ namespace eye_tracking_mouse
             return resulting_shift;
         }
 
-        public static double GetAngleBetweenVectors(
+        public static float GetAngleBetweenVectors(
             ShiftStorageCache.PointInfo a,
             ShiftStorageCache.PointInfo b)
         {
@@ -296,17 +296,17 @@ namespace eye_tracking_mouse
                 a.vector_from_correction_to_cursor.Length ==
                 b.vector_from_correction_to_cursor.Length);
 
-            double dot_product = 0;
+            float dot_product = 0;
             for (int i = 0; i < a.vector_from_correction_to_cursor.Length; i++)
                 dot_product += a.vector_from_correction_to_cursor[i] * b.vector_from_correction_to_cursor[i];
 
-            double cos = dot_product / a.distance / b.distance;
+            float cos = dot_product / a.distance / b.distance;
             if (cos > 1.0)
-                cos = 1.0;
+                cos = 1.0f;
             else if (cos < -1.0)
-                cos = -1.0;
+                cos = -1.0f;
 
-            return Math.Acos(cos);
+            return (float)Math.Acos(cos);
         }
     }
 }

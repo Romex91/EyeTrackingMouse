@@ -29,7 +29,7 @@ namespace eye_tracking_mouse
         private Statistics statistics = Statistics.LoadFromFile(Statistics.Filepath);
 
         private TobiiCoordinatesProvider tobii_coordinates_provider;
-        private double[] current_coordinates;
+        private float[] current_coordinates;
 
         public enum MouseState
         {
@@ -108,7 +108,7 @@ namespace eye_tracking_mouse
         public bool OnKeyPressed(
             Key key,
             KeyState key_state,
-            double speed_up,
+            float speed_up,
             bool is_short_modifier_press,
             bool is_repetition,
             bool is_modifier,

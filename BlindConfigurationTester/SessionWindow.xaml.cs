@@ -25,8 +25,8 @@ namespace BlindConfigurationTester
 
         DateTime time_when_user_started_looking_at_point = DateTime.Now;
         bool is_user_looking_at_point = false;
-        double current_angle = 0;
-        double current_angle_delta = 0;
+        float current_angle = 0;
+        float current_angle_delta = 0;
         int size_of_circle;
 
         eye_tracking_mouse.TobiiCoordinatesProvider coordinatesProvider;
@@ -80,12 +80,12 @@ namespace BlindConfigurationTester
                     Circle.RenderTransform = new RotateTransform(current_angle, size_of_circle, size_of_circle / 2);
                     if ((DateTime.Now - time_when_user_started_looking_at_point).TotalMilliseconds > 500)
                     {
-                        current_angle_delta += 0.4;
+                        current_angle_delta += 0.4f;
                         if (current_angle_delta > 10)
                             current_angle_delta = 10;
                     } else
                     {
-                        current_angle_delta -= 0.4;
+                        current_angle_delta -= 0.4f;
                         if (current_angle_delta < 0)
                             current_angle_delta = 0;
                     }

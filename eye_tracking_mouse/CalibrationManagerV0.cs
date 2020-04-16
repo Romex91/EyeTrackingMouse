@@ -22,7 +22,7 @@ namespace eye_tracking_mouse
             shift_storage = new ShiftsStorage(calibration_mode, cache, for_testing);
         }
 
-        public Point GetShift(double[] cursor_position)
+        public Point GetShift(float[] cursor_position)
         {
             cache.ChangeCursorPosition(cursor_position);
             shift_storage.calibration_window?.OnCursorPositionUpdate(cursor_position);
@@ -34,7 +34,7 @@ namespace eye_tracking_mouse
                 return new Point(0, 0);
             }
 
-            double sum_of_reverse_distances = 0;
+            float sum_of_reverse_distances = 0;
             foreach (var index in closest_corrections)
             {
                 sum_of_reverse_distances += (1 / index.distance);
@@ -59,7 +59,7 @@ namespace eye_tracking_mouse
             return result;
         }
 
-        public void AddShift(double[] coordinates, Point shift)
+        public void AddShift(float[] coordinates, Point shift)
         {
             cache.ChangeCursorPosition(coordinates);
             shift_storage.AddShift(coordinates, shift);

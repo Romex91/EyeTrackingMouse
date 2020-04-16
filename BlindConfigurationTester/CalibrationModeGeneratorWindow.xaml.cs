@@ -45,10 +45,10 @@ namespace BlindConfigurationTester
             get; set;
         }
 
-        public List<Tuple<double, eye_tracking_mouse.Options.CalibrationMode>> GoodModes
-        { get; } = new List<Tuple<double, eye_tracking_mouse.Options.CalibrationMode>>();
+        public List<Tuple<float, eye_tracking_mouse.Options.CalibrationMode>> GoodModes
+        { get; } = new List<Tuple<float, eye_tracking_mouse.Options.CalibrationMode>>();
 
-        private void TryAddToGoodModes(double utility, eye_tracking_mouse.Options.CalibrationMode mode)
+        private void TryAddToGoodModes(float utility, eye_tracking_mouse.Options.CalibrationMode mode)
         {
             if (utility <= 0)
                 return;
@@ -62,10 +62,10 @@ namespace BlindConfigurationTester
                 }
             }
 
-            GoodModes.Add(new Tuple<double, eye_tracking_mouse.Options.CalibrationMode>(utility, mode));
+            GoodModes.Add(new Tuple<float, eye_tracking_mouse.Options.CalibrationMode>(utility, mode));
         }
 
-        private double global_best_utility = 0;
+        private float global_best_utility = 0;
 
         private void CalibrationModeGeneratorWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -372,11 +372,11 @@ namespace BlindConfigurationTester
             List<DataPoint> data_points, string tag)
         {
             eye_tracking_mouse.Options.CalibrationMode local_best_calibration_mode = mode;
-            double local_best_utility = 0;
+            float local_best_utility = 0;
 
             while (true)
             {
-                double old_best_utility = local_best_utility;
+                float old_best_utility = local_best_utility;
                 foreach (var field in fields)
                 {
                     if (GetFieldValue(local_best_calibration_mode, field) == -1)
@@ -423,7 +423,7 @@ namespace BlindConfigurationTester
             List<DataPoint> data_points,
             List<eye_tracking_mouse.Options.CalibrationMode> modes,
             ref eye_tracking_mouse.Options.CalibrationMode local_best_mode,
-            ref double local_best_utility)
+            ref float local_best_utility)
         {
             number_of_tests += modes.Count;
             Dispatcher.BeginInvoke((Action)(() =>
@@ -447,12 +447,12 @@ namespace BlindConfigurationTester
             }
 
             eye_tracking_mouse.Options.CalibrationMode best_mode = null;
-            double best_utility = 0;
+            float best_utility = 0;
             Helpers.TestResult best_result = null;
 
             for (int i = 0; i < tasks.Count; i++)
             {
-                double task_utility = tasks[i].Result.UtilityFunction;
+                float task_utility = tasks[i].Result.UtilityFunction;
                 if (best_mode == null || task_utility > best_utility)
                 {
                     best_utility = task_utility;
@@ -497,7 +497,7 @@ namespace BlindConfigurationTester
             string tag)
         {
             eye_tracking_mouse.Options.CalibrationMode local_best_calibration_mode = mode;
-            double local_best_utility = 0;
+            float local_best_utility = 0;
             RunTests(
                 data_points,
                 new List<eye_tracking_mouse.Options.CalibrationMode> { local_best_calibration_mode },
@@ -508,7 +508,7 @@ namespace BlindConfigurationTester
             int steps_number = 0;
             while (true)
             {
-                double old_best_utility = local_best_utility;
+                float old_best_utility = local_best_utility;
 
                 List<eye_tracking_mouse.Options.CalibrationMode> modes_to_test = new List<eye_tracking_mouse.Options.CalibrationMode>();
                 for (int i = 0; i < fields.Length; i++)

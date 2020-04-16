@@ -19,9 +19,9 @@ namespace eye_tracking_mouse
         public Tobii.Interaction.Vector3 head_position;
         public Tobii.Interaction.Vector3 head_direction;
 
-        public double[] ToCoordinates(AdditionalDimensionsConfguration config)
+        public float[] ToCoordinates(AdditionalDimensionsConfguration config)
         {
-            double[] coordinates = new double[config.CoordinatesCount];
+            float[] coordinates = new float[config.CoordinatesCount];
 
             int index = 0;
             coordinates[index++] = gaze_point.X;
@@ -35,11 +35,11 @@ namespace eye_tracking_mouse
                     new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (head_position, config.HeadPosition)})
             {
                 if (vector3.Item2.X > 0)
-                    coordinates[index++] = vector3.Item1.X;
+                    coordinates[index++] = (float)vector3.Item1.X;
                 if (vector3.Item2.Y > 0)
-                    coordinates[index++] = vector3.Item1.Y;
+                    coordinates[index++] = (float)vector3.Item1.Y;
                 if (vector3.Item2.Z > 0)
-                    coordinates[index++] = vector3.Item1.Z;
+                    coordinates[index++] = (float)vector3.Item1.Z;
             }
             return coordinates;
         }
@@ -89,9 +89,9 @@ namespace eye_tracking_mouse
         }
 
 
-        private double GetAngleBetweenVectorAndXAxis(double x, double y)
+        private float GetAngleBetweenVectorAndXAxis(float x, float y)
         {
-            return Math.Acos(x / Math.Sqrt(x * x + y * y));
+            return (float)Math.Acos(x / Math.Sqrt(x * x + y * y));
         }
 
         private void OnEyePosition(Tobii.Interaction.EyePositionData obj)
@@ -119,14 +119,14 @@ namespace eye_tracking_mouse
                     coordinates.angle_between_eyes =
                         angle_between_eyes_smoother.SmoothPoint(
                             new Tobii.Interaction.Vector3(
-                                GetAngleBetweenVectorAndXAxis(vector.Y, vector.X) * 180 / Math.PI,
-                                GetAngleBetweenVectorAndXAxis(vector.Z, vector.X) * 180 / Math.PI,
+                                GetAngleBetweenVectorAndXAxis((float)vector.Y, (float)vector.X) * 180 / Math.PI,
+                                GetAngleBetweenVectorAndXAxis((float)vector.Z, (float)vector.X) * 180 / Math.PI,
                                 0));
                 }
             }
         }
 
-        private void OnGazePoint(double x, double y, double ts)
+        private void OnGazePoint(double x, double  y, double ts)
         {
             lock (Helpers.locker)
             {

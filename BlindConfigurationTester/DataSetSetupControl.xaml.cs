@@ -168,7 +168,7 @@ namespace BlindConfigurationTester
 
         private void CreateConfiguration(
             eye_tracking_mouse.Options.CalibrationMode mode,
-            List<Tuple<double, eye_tracking_mouse.Options.CalibrationMode>> good_modes)
+            List<Tuple<float, eye_tracking_mouse.Options.CalibrationMode>> good_modes)
         {
             int generated_configs_max_index = 0;
             var existing_configurations = Utils.GetConfigurationsList();

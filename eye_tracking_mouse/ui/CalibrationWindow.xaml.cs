@@ -20,7 +20,7 @@ namespace eye_tracking_mouse
 
     class ColorCalculator
     {
-        public void AdjustColorBoundaries(double[] coordinates)
+        public void AdjustColorBoundaries(float[] coordinates)
         {
             var color = GetColorComponents(coordinates);
             if (max_color.X < color.X)
@@ -42,7 +42,7 @@ namespace eye_tracking_mouse
                 min_color.Z = color.Z;
         }
 
-        public System.Windows.Media.Color GetColor(double[] coordinates)
+        public System.Windows.Media.Color GetColor(float[] coordinates)
         {
             var color_components = GetColorComponents(coordinates);
             AdjustColorBoundaries(coordinates);
@@ -52,10 +52,10 @@ namespace eye_tracking_mouse
                 (byte)((color_components.Z - min_color.Z) / (max_color.Z - min_color.Z) * 254));
         }
 
-        private Tobii.Interaction.Vector3 min_color = new Tobii.Interaction.Vector3(Double.MaxValue, Double.MaxValue, Double.MaxValue);
-        private Tobii.Interaction.Vector3 max_color = new Tobii.Interaction.Vector3(Double.MinValue, Double.MinValue, Double.MinValue);
+        private Tobii.Interaction.Vector3 min_color = new Tobii.Interaction.Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+        private Tobii.Interaction.Vector3 max_color = new Tobii.Interaction.Vector3(float.MinValue, float.MinValue, float.MinValue);
 
-        private Tobii.Interaction.Vector3 GetColorComponents(double[] coordinates)
+        private Tobii.Interaction.Vector3 GetColorComponents(float[] coordinates)
         {
             var color_components = new Tobii.Interaction.Vector3(0, 0, 0);
             for (int i = 2; i < coordinates.Length; i++)
@@ -198,7 +198,7 @@ namespace eye_tracking_mouse
             }
         }
 
-        public void OnCursorPositionUpdate(double[] cursor_position)
+        public void OnCursorPositionUpdate(float[] cursor_position)
         {
             string head_position_description = "";
             Color color = Colors.Red;
