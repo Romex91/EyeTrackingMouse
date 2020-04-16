@@ -31,6 +31,8 @@ namespace eye_tracking_mouse
         private Options.CalibrationMode mode;
         private double[] coordinate_scales;
 
+        bool fallback_to_scalar = false;
+
         public ShiftStorageCache(Options.CalibrationMode mode)
         {
             this.mode = mode;
@@ -137,7 +139,21 @@ namespace eye_tracking_mouse
                 cursor_coordinates[i] = coordinate_scales[i] * coordinates[i];
             for (; i < cursor_coordinates.Length; ++i)
                 cursor_coordinates[i] = 0;
-            FindDistancesFromCursor_SIMD(this);
+            if (fallback_to_scalar)
+            {
+                FindDistancesFromCursor();
+            }
+            else
+            {
+                try
+                {
+                    FindDistancesFromCursor_SIMD(this);
+                } catch
+                {
+                    fallback_to_scalar = true;
+                    FindDistancesFromCursor();
+                }
+            }
             FindClosestPoints();
         }
 
@@ -215,7 +231,7 @@ namespace eye_tracking_mouse
                 cache.distance_mask_treshold /= 1.1;
             }
         }
-        private void FindDistancesFromCursor(double[] cursor_coordinates)
+        private void FindDistancesFromCursor()
         {
             // Subtract 
             for (int i = 0; i < number_of_shift_positions * AlignedCoordinatesCount; i += AlignedCoordinatesCount)
