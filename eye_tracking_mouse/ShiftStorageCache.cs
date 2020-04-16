@@ -26,9 +26,9 @@ namespace eye_tracking_mouse
         private double distance_mask_treshold = 100;
 
         public int subtract_results_starting_index;
+        private int number_of_shift_positions;
 
         private Options.CalibrationMode mode;
-        private int number_of_shift_positions = 0;
         private double[] coordinate_scales;
 
         public ShiftStorageCache(Options.CalibrationMode mode)
@@ -141,16 +141,21 @@ namespace eye_tracking_mouse
             FindClosestPoints();
         }
 
+        // This function is static to move all used class fields from heap to stack.
+        // Doing so improves perf test results.
         private static void FindDistancesFromCursor_SIMD(ShiftStorageCache cache)
         {
             int vector_size = System.Numerics.Vector<double>.Count;
             int vectors_per_point = AlignedCoordinatesCount / vector_size;
+
             double[] cached_data = cache.cached_data;
             double[] distances = cache.cached_distances;
-            long[] distance_filter = cache.distance_mask;
+            long[] distance_mask = cache.distance_mask;
             double[] cursor_coordinates = cache.cursor_coordinates;
+            double distance_mask_treshold = cache.distance_mask_treshold;
             int subtract_results_starting_index = cache.subtract_results_starting_index;
             int number_of_shift_positions = cache.number_of_shift_positions;
+
             int subtract_iterator = 0;
             int number_of_considered_points = Math.Min(cache.mode.considered_zones_count, number_of_shift_positions);
 
@@ -182,7 +187,7 @@ namespace eye_tracking_mouse
                 distances[distances_iterator] = dot_product;
             }
 
-            System.Numerics.Vector<double> distance_filter_vector = new System.Numerics.Vector<double>(cache.distance_mask_treshold);
+            System.Numerics.Vector<double> distance_filter_vector = new System.Numerics.Vector<double>(distance_mask_treshold);
             long points_count_after_filtering = 0;
             
             for (i = 0; i < number_of_shift_positions; i += vector_size)
@@ -192,7 +197,7 @@ namespace eye_tracking_mouse
                 distance_vec.CopyTo(distances, i);
                 var filter_vec = System.Numerics.Vector.LessThan(distance_vec, distance_filter_vector);
                 points_count_after_filtering += System.Numerics.Vector.Dot(filter_vec, filter_vec);
-                filter_vec.CopyTo(distance_filter, i);
+                filter_vec.CopyTo(distance_mask, i);
             }
 
             points_count_after_filtering -= i - number_of_shift_positions;
@@ -202,7 +207,7 @@ namespace eye_tracking_mouse
                 cache.distance_mask_treshold *= 2;
                 for (i = 0; i < number_of_shift_positions; i += vector_size)
                 {
-                    System.Numerics.Vector<long>.One.CopyTo(distance_filter, i);
+                    System.Numerics.Vector<long>.One.CopyTo(distance_mask, i);
                 }
             }
             else if (points_count_after_filtering > number_of_considered_points * 4)

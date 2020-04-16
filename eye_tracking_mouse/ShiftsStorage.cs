@@ -41,12 +41,13 @@ namespace eye_tracking_mouse
 
         private string DefaultPath { get; set; } 
 
-        public ShiftsStorage(Options.CalibrationMode mode, ShiftStorageCache cache)
+        public ShiftsStorage(Options.CalibrationMode mode, ShiftStorageCache cache, bool for_testing)
         {
             calibration_mode = mode;
             DefaultPath = GetFilepath(Helpers.UserDataFolder);
             this.cache = cache;
-            LoadFromFile();
+            if (!for_testing)
+                LoadFromFile();
         }
 
         public void Dispose()

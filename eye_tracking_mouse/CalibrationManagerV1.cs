@@ -15,11 +15,11 @@ namespace eye_tracking_mouse
         private readonly ShiftsStorage shift_storage;
         private readonly Options.CalibrationMode calibration_mode;
         private readonly ShiftStorageCache cache;
-        public CalibrationManagerV1(Options.CalibrationMode mode)
+        public CalibrationManagerV1(Options.CalibrationMode mode, bool for_testing)
         {
             calibration_mode = mode;
             cache = new ShiftStorageCache(mode);
-            shift_storage = new ShiftsStorage(calibration_mode, cache);
+            shift_storage = new ShiftsStorage(calibration_mode, cache, for_testing);
         }
 
         public Point GetShift(double[] cursor_position)

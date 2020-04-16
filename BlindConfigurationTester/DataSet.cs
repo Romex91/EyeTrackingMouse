@@ -168,7 +168,7 @@ namespace BlindConfigurationTester
             eye_tracking_mouse.AdditionalDimensionsConfguration config,
             out int avg_mcs)
         {
-            int iterations_number = 5000 / 70;
+            int iterations_number = 4;
 
             var result = Helpers.TestCalibrationManager(calibration_manager, data_points, config);
             calibration_manager.Reset();

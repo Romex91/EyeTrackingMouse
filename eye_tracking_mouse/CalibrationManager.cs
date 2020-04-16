@@ -70,20 +70,20 @@ namespace eye_tracking_mouse
 
         static public ICalibrationManager BuildCalibrationManagerForTesting(Options.CalibrationMode calibration_mode)
         {
-            return BuildCalibrationManager(calibration_mode);
+            return BuildCalibrationManager(calibration_mode, true);
         }
 
         static private ICalibrationManager instance;
 
-        static private ICalibrationManager BuildCalibrationManager(Options.CalibrationMode calibration_mode)
+        static private ICalibrationManager BuildCalibrationManager(Options.CalibrationMode calibration_mode, bool for_testing)
         {
 
             if (calibration_mode.algorithm == "V0")
-                return new CalibrationManagerV0(calibration_mode);
+                return new CalibrationManagerV0(calibration_mode, for_testing);
             else if (calibration_mode.algorithm == "V1")
-                return new CalibrationManagerV1(calibration_mode);
+                return new CalibrationManagerV1(calibration_mode, for_testing);
             else if (calibration_mode.algorithm == "V2")
-                return new CalibrationManagerV2(calibration_mode);
+                return new CalibrationManagerV2(calibration_mode, for_testing);
             else if (calibration_mode.algorithm == "NO")
                 return new NoCalibrationManager();
             else
@@ -96,10 +96,10 @@ namespace eye_tracking_mouse
 
         static private void ReloadInstance(object sender, EventArgs args)
         {
-            lock(Helpers.locker)
+            lock (Helpers.locker)
             {
                 instance?.Dispose();
-                instance = BuildCalibrationManager(Options.Instance.calibration_mode);
+                instance = BuildCalibrationManager(Options.Instance.calibration_mode, false);
             }
         }
     }
