@@ -125,6 +125,16 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                     cache.Add(key, plot_data);
                 }
 
+                {
+                    // Show current configuration point.
+                    double x = enabled_fields[0].GetFieldValue(iterator.CalibrationMode), 
+                        y = enabled_fields[1].GetFieldValue(iterator.CalibrationMode), 
+                        z = Helpers.TestCalibrationMode(data_points, iterator.CalibrationMode).UtilityFunction;
+
+                    GnuPlot.Unset("label 1");
+                    GnuPlot.Set(string.Format("label 1 at {0}, {1}, {2} \"{2}\" point pt 7", x, y, z));
+                }
+
                 GnuPlot.SPlot(plot_data.X, plot_data.Y, plot_data.Z);
             }
         }

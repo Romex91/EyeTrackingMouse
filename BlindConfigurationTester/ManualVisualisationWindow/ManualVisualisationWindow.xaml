@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BlindConfigurationTester.ManualVisualisationWindow"
         mc:Ignorable="d"
-        Title="ManualVisualisationWindow" Height="450" Width="800" SizeToContent="WidthAndHeight">
+        Title="ManualVisualisationWindow" Height="450" Width="800" SizeToContent="WidthAndHeight" Topmost="True">
     <Grid Name="Grid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition></ColumnDefinition>
