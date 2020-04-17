@@ -262,13 +262,14 @@ namespace BlindConfigurationTester
                     if (cancellation.Token.IsCancellationRequested)
                         return;
 
-                    eye_tracking_mouse.Options.CalibrationMode calibration_mode;
-                    if ((calibration_mode = field.Increment(local_best_calibration_mode, steps_number)) != null)
+                    eye_tracking_mouse.Options.CalibrationMode calibration_mode = local_best_calibration_mode.Clone();
+                    if (field.Increment(calibration_mode, steps_number))
                     {
                         modes_to_test.Add(calibration_mode);
                     }
 
-                    if ((calibration_mode = field.Increment(local_best_calibration_mode, -steps_number)) != null)
+                    calibration_mode = local_best_calibration_mode.Clone();
+                    if (field.Increment(calibration_mode, -steps_number))
                     {
                         modes_to_test.Add(calibration_mode);
                     }

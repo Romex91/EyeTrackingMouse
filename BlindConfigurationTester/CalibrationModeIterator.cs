@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace BlindConfigurationTester
 {
-    class CalibrationModeIterator
+    public class CalibrationModeIterator
     {
-        public eye_tracking_mouse.Options.CalibrationMode CalibrationMode {
-            private set;
+        public eye_tracking_mouse.Options.CalibrationMode CalibrationMode
+        {
+            set;
             get;
         }
 
@@ -40,7 +41,7 @@ namespace BlindConfigurationTester
                 OptionsField.BuildHardcoded(field_name : "coordinate 9", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
             };
 
-            foreach(var field in fields)
+            foreach (var field in fields)
             {
                 if (field.GetFieldValue(CalibrationMode) != -1)
                 {
@@ -58,6 +59,21 @@ namespace BlindConfigurationTester
         {
             public string field_name;
             public IntRange range;
+
+            public int Count
+            {
+                get
+                {
+                    return range.GetRange().Count;
+                }
+            }
+            public int Min
+            {
+                get
+                {
+                    return range.GetRange().First();
+                }
+            }
 
             public static OptionsField BuildLinear(string field_name, int min, int max, int step)
             {
@@ -124,23 +140,21 @@ namespace BlindConfigurationTester
                 }
             }
 
-            public eye_tracking_mouse.Options.CalibrationMode Increment(
+            public bool Increment(
                 eye_tracking_mouse.Options.CalibrationMode calibration_mode,
                 int steps_number)
             {
-                var new_calibration_mode = calibration_mode.Clone();
-
-                int value = GetFieldValue(new_calibration_mode);
+                int value = GetFieldValue(calibration_mode);
                 if (value == -1)
                 {
-                    return null;
+                    return false;
                 }
 
                 var range = this.range.GetRange();
                 int i = 0;
                 for (; i < range.Count; i++)
                 {
-                    if (range[i] > value)
+                    if (range[i] >= value)
                     {
                         break;
                     }
@@ -148,10 +162,10 @@ namespace BlindConfigurationTester
 
                 i += steps_number;
                 if (i < 0 || i >= range.Count)
-                    return null;
+                    return false;
 
-                SetFieldValue(new_calibration_mode, range[i]);
-                return new_calibration_mode;
+                SetFieldValue(calibration_mode, range[i]);
+                return true;
             }
         }
 

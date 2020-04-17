@@ -132,6 +132,18 @@ namespace BlindConfigurationTester
             data_visualisation_window.ShowDialog();
         }
 
+        private void Button_GenerateConfigurationManually_Click(object sender, RoutedEventArgs e)
+        {
+            var configuration_selection_dialog = new ConfigurationSelectionDialog();
+
+            if (configuration_selection_dialog.ShowDialog() != true)
+                return;
+
+            new ManualVisualisationWindow.ManualVisualisationWindow(
+                Helpers.GetCalibrationMode(
+                    configuration_selection_dialog.GetSelectedConfiguration())).ShowDialog();
+        }
+
         private void Button_TestConfiguration_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new ConfigurationSelectionDialog();
@@ -219,6 +231,7 @@ namespace BlindConfigurationTester
             }
         }
 
+
         private void Button_GenerateConfigurationOnData_Click(object sender, RoutedEventArgs e)
         {
             if (SelectedDataSet == null)
@@ -230,6 +243,7 @@ namespace BlindConfigurationTester
                 return;
             CreateConfiguration(window.BestCalibrationMode, window.GoodModes);
         }
+
 
         private void Button_RunExplorer_Click(object sender, RoutedEventArgs e)
         {
