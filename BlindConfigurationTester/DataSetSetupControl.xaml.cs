@@ -134,14 +134,8 @@ namespace BlindConfigurationTester
 
         private void Button_GenerateConfigurationManually_Click(object sender, RoutedEventArgs e)
         {
-            var configuration_selection_dialog = new ConfigurationSelectionDialog();
-
-            if (configuration_selection_dialog.ShowDialog() != true)
-                return;
-
             new ManualVisualisationWindow.ManualVisualisationWindow(
-                Helpers.GetCalibrationMode(
-                    configuration_selection_dialog.GetSelectedConfiguration())).ShowDialog();
+                Helpers.GetCalibrationMode(null)).ShowDialog();
         }
 
         private void Button_TestConfiguration_Click(object sender, RoutedEventArgs e)
@@ -182,26 +176,7 @@ namespace BlindConfigurationTester
             eye_tracking_mouse.Options.CalibrationMode mode,
             List<Tuple<float, eye_tracking_mouse.Options.CalibrationMode>> good_modes)
         {
-            int generated_configs_max_index = 0;
-            var existing_configurations = Utils.GetConfigurationsList();
-            foreach (var existing_config in existing_configurations)
-            {
-                if (existing_config == null)
-                    continue;
-
-                var tokens = existing_config.Split('_');
-                int index = 0;
-                if (tokens.Length > 1 &&
-                    tokens[0] == "gen" &&
-                    int.TryParse(tokens[1], out index) &&
-                    index > generated_configs_max_index)
-                {
-                    generated_configs_max_index = index;
-                }
-            }
-
-            string new_config = "gen_" +
-                (generated_configs_max_index + 1) + "_" +
+            string new_config = Utils.GenerateNewConfigurationName("gen") + "_" +
                 Helpers.TestCalibrationMode(SelectedDataSet.data_points, mode).UtilityFunction;
 
             Utils.CreateConfiguration(new_config);

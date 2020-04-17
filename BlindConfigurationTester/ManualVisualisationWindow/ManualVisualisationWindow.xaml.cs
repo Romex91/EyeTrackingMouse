@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using AwokeKnowing.GnuplotCSharp;
+using System.Threading;
 
 namespace BlindConfigurationTester.ManualVisualisationWindow
 {
@@ -51,6 +52,54 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
 
         Dictionary<string, PlotData> cache = new Dictionary<string, PlotData>();
 
+        private static string GetKey(
+            eye_tracking_mouse.Options.CalibrationMode mode,
+            CalibrationModeIterator.OptionsField[] enabled_fields)
+        {
+            return enabled_fields[0].field_name + " " +
+                    enabled_fields[1].field_name + " " +
+                    JsonConvert.SerializeObject(mode, Formatting.None);
+        }
+
+        private static PlotData CalculatePlotData(
+            eye_tracking_mouse.Options.CalibrationMode mode,
+            CalibrationModeIterator.OptionsField[] enabled_fields,
+            List<DataPoint> data_points)
+        {
+            var plot_data = new PlotData
+            {
+                X = new double[enabled_fields[0].Count * enabled_fields[1].Count],
+                Y = new double[enabled_fields[0].Count * enabled_fields[1].Count],
+                Z = new double[enabled_fields[0].Count * enabled_fields[1].Count]
+            };
+
+            var range = enabled_fields[0].range.GetRange();
+            Task[] tasks = new Task[range.Count];
+            for (int i = range.Count - 1; i >= 0; i--)
+            {
+                int i_copy = i;
+                tasks[i_copy] = new Task(() =>
+                {
+                    var this_thread_mode_clone = mode.Clone();
+                    enabled_fields[0].SetFieldValue(this_thread_mode_clone, range[i_copy]);
+                    enabled_fields[1].SetFieldValue(this_thread_mode_clone, enabled_fields[1].Min);
+                    int j = 0;
+                    do
+                    {
+                        int index = i_copy * enabled_fields[0].Count + j++;
+                        plot_data.X[index] = enabled_fields[0].GetFieldValue(this_thread_mode_clone);
+                        plot_data.Y[index] = enabled_fields[1].GetFieldValue(this_thread_mode_clone);
+                        plot_data.Z[index] = Helpers.TestCalibrationMode(data_points, this_thread_mode_clone).UtilityFunction;
+                    }
+                    while (enabled_fields[1].Increment(this_thread_mode_clone, 1));
+                });
+                tasks[i_copy].Start();
+            }
+
+            Task.WaitAll(tasks);
+            return plot_data;
+        }
+
         private void Redraw()
         {
             int enabled_checkbox_count = option_controls.Count((x) =>
@@ -64,92 +113,56 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                 {
                     control.CheckBox_Visualize.IsEnabled = true;
                 }
+                return;
             }
-            else
+
+            eye_tracking_mouse.Options.CalibrationMode mode = iterator.CalibrationMode.Clone();
+            CalibrationModeIterator.OptionsField[] enabled_fields = new CalibrationModeIterator.OptionsField[2];
             {
-                eye_tracking_mouse.Options.CalibrationMode mode = iterator.CalibrationMode.Clone();
-                CalibrationModeIterator.OptionsField[] enabled_fields = new CalibrationModeIterator.OptionsField[2];
+                int j = 0;
+                foreach (var control in option_controls)
                 {
-                    int j = 0;
-                    foreach (var control in option_controls)
+                    if (control.CheckBox_Visualize.IsChecked == true)
                     {
-                        if (control.CheckBox_Visualize.IsChecked == true)
-                        {
-                            enabled_fields[j++] = control.Field;
-                            control.CheckBox_Visualize.IsEnabled = true;
-                        }
-                        else
-                        {
-                            control.CheckBox_Visualize.IsEnabled = false;
-                        }
+                        enabled_fields[j++] = control.Field;
+                        control.CheckBox_Visualize.IsEnabled = true;
+                    }
+                    else
+                    {
+                        control.CheckBox_Visualize.IsEnabled = false;
                     }
                 }
-
-                var data_points = DataSet.Load("0roman").data_points;
-
-                enabled_fields[0].SetFieldValue(mode, enabled_fields[0].Min);
-                enabled_fields[1].SetFieldValue(mode, enabled_fields[1].Min);
-                string key =
-                    enabled_fields[0].field_name + " " +
-                    enabled_fields[1].field_name + " " +
-                    JsonConvert.SerializeObject(mode, Formatting.None);
-
-
-                PlotData plot_data;
-
-                if (cache.ContainsKey(key))
-                {
-                    plot_data = cache[key];
-                }
-                else
-                {
-                    plot_data = new PlotData
-                    {
-                        X = new double[enabled_fields[0].Count * enabled_fields[1].Count],
-                        Y = new double[enabled_fields[0].Count * enabled_fields[1].Count],
-                        Z = new double[enabled_fields[0].Count * enabled_fields[1].Count]
-                    };
-
-                    var range = enabled_fields[0].range.GetRange();
-                    Task[] tasks = new Task[range.Count];
-                    for (int i = range.Count - 1; i >= 0 ; i--)
-                    {
-                        int i_copy = i;
-                        tasks[i_copy] = new Task(() =>
-                        {
-                            var this_thread_mode_clone = mode.Clone();
-                            enabled_fields[0].SetFieldValue(this_thread_mode_clone, range[i_copy]);
-                            enabled_fields[1].SetFieldValue(this_thread_mode_clone, enabled_fields[1].Min);
-                            int j = 0;
-                            do
-                            {
-                                int index = i_copy * enabled_fields[0].Count + j++;
-                                plot_data.X[index] = enabled_fields[0].GetFieldValue(this_thread_mode_clone);
-                                plot_data.Y[index] = enabled_fields[1].GetFieldValue(this_thread_mode_clone);
-                                plot_data.Z[index] = Helpers.TestCalibrationMode(data_points, this_thread_mode_clone).UtilityFunction;
-                            }
-                            while (enabled_fields[1].Increment(this_thread_mode_clone, 1));
-                        });
-                        tasks[i_copy].Start();
-                    }
-
-                    Task.WaitAll(tasks);
-
-                    cache.Add(key, plot_data);
-                }
-
-                {
-                    // Show current configuration point.
-                    double x = enabled_fields[0].GetFieldValue(iterator.CalibrationMode), 
-                        y = enabled_fields[1].GetFieldValue(iterator.CalibrationMode), 
-                        z = Helpers.TestCalibrationMode(data_points, iterator.CalibrationMode).UtilityFunction;
-
-                    GnuPlot.Unset("label 1");
-                    GnuPlot.Set(string.Format("label 1 at {0}, {1}, {2} \"{2}\" point pt 7", x, y, z));
-                }
-
-                GnuPlot.SPlot(plot_data.X, plot_data.Y, plot_data.Z);
             }
+
+            var data_points = DataSet.Load("0roman").data_points;
+
+            enabled_fields[0].SetFieldValue(mode, enabled_fields[0].Min);
+            enabled_fields[1].SetFieldValue(mode, enabled_fields[1].Min);
+
+            string key = GetKey(mode, enabled_fields);
+
+            PlotData plot_data = null;
+
+            if (cache.ContainsKey(key))
+            {
+                plot_data = cache[key];
+            }
+            if (plot_data == null)
+            {
+                plot_data = CalculatePlotData(mode, enabled_fields, data_points);
+                    if (!cache.ContainsKey(key))
+                        cache.Add(key, plot_data);
+            }
+
+            {
+                // Show current configuration point.
+                double x = enabled_fields[0].GetFieldValue(iterator.CalibrationMode),
+                    y = enabled_fields[1].GetFieldValue(iterator.CalibrationMode),
+                    z = Helpers.TestCalibrationMode(data_points, iterator.CalibrationMode).UtilityFunction;
+                GnuPlot.Unset("label 1");
+                GnuPlot.Set(string.Format("label 1 at {0}, {1}, {2} \"{2}\" point pt 7", x, y, z));
+            }
+            GnuPlot.SPlot(plot_data.X, plot_data.Y, plot_data.Z);
         }
     }
 }

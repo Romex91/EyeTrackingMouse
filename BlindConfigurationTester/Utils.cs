@@ -83,6 +83,30 @@ namespace BlindConfigurationTester
             CopyDir(configuration_path, eye_tracking_mouse.Helpers.UserDataFolder);
         }
 
+        public static string GenerateNewConfigurationName(
+            string tag)
+        {
+            int generated_configs_max_index = 0;
+            var existing_configurations = Utils.GetConfigurationsList();
+            foreach (var existing_config in existing_configurations)
+            {
+                if (existing_config == null)
+                    continue;
+
+                var tokens = existing_config.Split('_');
+                int index = 0;
+                if (tokens.Length > 1 &&
+                    tokens[0] == tag &&
+                    int.TryParse(tokens[1], out index) &&
+                    index > generated_configs_max_index)
+                {
+                    generated_configs_max_index = index;
+                }
+            }
+
+            return tag+"_" +
+                (generated_configs_max_index + 1);
+        }
         public static void LoadFromUserData(string configuration)
         {
             string configuration_path = GetConfigurationDir(configuration);
