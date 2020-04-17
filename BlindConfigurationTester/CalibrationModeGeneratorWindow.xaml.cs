@@ -88,283 +88,28 @@ namespace BlindConfigurationTester
 
             foreach (var mode in CalibrationModesForTesting.Short)
             {
-                ForModeAndItsVariations(mode, (x,tag) => { 
+                CalibrationModeIterator iterator = new CalibrationModeIterator(mode);
+                Dispatcher.Invoke((Action)(() =>
+                {
+                    Text_CurrentPermutation.Text = JsonConvert.SerializeObject(mode, Formatting.Indented);
+                }));
+                iterator.ForModeAndItsVariations(mode, (x,tag) => {
+                    Dispatcher.Invoke((Action)(() =>
+                    {
+                        Text_CurrentPermutation.Text = JsonConvert.SerializeObject(mode, Formatting.Indented);
+                    }));
                     MaxOutEachDimension(x.Clone(), data_points, tag); 
                     IncrementalImprove(x.Clone(), data_points, tag); });
-                //ForEachMinMaxPermutation(mode, x => IncrementalImprove(x, data_points));
+
+                //iterator.ForEachMinMaxPermutation(mode, x => {
+                //    Dispatcher.Invoke((Action)(() =>
+                //    {
+                //        Text_CurrentPermutation.Text = JsonConvert.SerializeObject(mode, Formatting.Indented);
+                //    }));
+                //    remaining_min_max_permutations++;
+                //    IncrementalImprove(x, data_points, tag); });
                 number_of_global_iterations++;
             }
-        }
-
-        private interface IntRange
-        {
-            List<int> GetRange();
-        }
-
-        private struct OptionsField
-        {
-            public string field_name;
-            public IntRange range;
-
-            public static OptionsField BuildLinear(string field_name, int min, int max, int step)
-            {
-                return new OptionsField
-                {
-                    field_name = field_name,
-                    range = new IteartionRange { min_value = min, max_value = max, step = step, exponential = false }
-                };
-            }
-            public static OptionsField BuildExponential(string field_name, int min, int max, int step)
-            {
-                return new OptionsField
-                {
-                    field_name = field_name,
-                    range = new IteartionRange { min_value = min, max_value = max, step = step, exponential = true }
-                };
-            }
-            public static OptionsField BuildHardcoded(string field_name, List<int> range)
-            {
-                return new OptionsField
-                {
-                    field_name = field_name,
-                    range = new HardcodedIntRange { range = range }
-                };
-            }
-        }
-
-        private struct IteartionRange : IntRange
-        {
-            public int min_value;
-            public int max_value;
-            public int step;
-            public bool exponential;
-
-            public List<int> GetRange()
-            {
-                List<int> range = new List<int>();
-
-
-                int i = min_value;
-                while (true)
-                {
-                    range.Add(i >= max_value ? max_value : i);
-
-                    if (i >= max_value)
-                    {
-                        break;
-                    }
-                    if (exponential)
-                    {
-                        i *= step;
-                    }
-                    else
-                    {
-                        i += step;
-                    }
-                }
-
-                return range;
-            }
-        }
-
-        private struct HardcodedIntRange : IntRange
-        {
-            public List<int> range;
-            public List<int> GetRange()
-            {
-                return range;
-            }
-        }
-
-        private static OptionsField[] fields = new OptionsField[]
-        {
-            //OptionsField.BuildHardcoded(field_name : "zone_size", new List<int>{ 10, 15, 25, 50, 75, 100, 150, 200, 250, 350, 500, 800 }),
-            //OptionsField.BuildHardcoded(field_name : "considered_zones_count", new List<int>{ 3,  6, 10, 20 }),
-            //OptionsField.BuildLinear(field_name : "size_of_opaque_sector_in_percents", max : 70, min : 30, step: 10),
-            //OptionsField.BuildLinear(field_name : "size_of_transparent_sector_in_percents", max : 60, min : 0, step: 10),
-            //OptionsField.BuildHardcoded(field_name : "correction_fade_out_distance", new List<int>{ 50, 75, 100, 150, 200, 250, 350, 500, 800 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 2", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 3", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 4", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 5", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-            OptionsField.BuildHardcoded(field_name : "coordinate 6", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-            //OptionsField.BuildHardcoded(field_name : "coordinate 7", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-            //OptionsField.BuildHardcoded(field_name : "coordinate 8", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-            //OptionsField.BuildHardcoded(field_name : "coordinate 9", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-        };
-
-        private void ForModeAndItsVariations(
-            eye_tracking_mouse.Options.CalibrationMode starting_mode,
-            Action<eye_tracking_mouse.Options.CalibrationMode, string> callback)
-        {
-            Dispatcher.Invoke((Action)(() =>
-            {
-                Text_CurrentPermutation.Text = JsonConvert.SerializeObject(starting_mode, Formatting.Indented);
-            }));
-            callback(starting_mode, "mid");
-            List<OptionsField> enabled_fields = new List<OptionsField>();
-            foreach (var field in fields)
-            {
-                if (GetFieldValue(starting_mode, field) != -1)
-                {
-                    enabled_fields.Add(field);
-                }
-            }
-
-            for (int i = 0; i < 2; i++)
-            {
-                eye_tracking_mouse.Options.CalibrationMode mode = starting_mode.Clone();
-                for (int field_number = 0; field_number < enabled_fields.Count; field_number++)
-                {
-                    if (i == 0)
-                    {
-                        SetFieldValue(mode, enabled_fields[field_number], enabled_fields[field_number].range.GetRange().Last());
-                    }
-                    else
-                    {
-                        SetFieldValue(mode, enabled_fields[field_number], enabled_fields[field_number].range.GetRange().First());
-                    }
-                }
-                Dispatcher.Invoke((Action)(() =>
-                {
-                    Text_CurrentPermutation.Text = JsonConvert.SerializeObject(mode, Formatting.Indented);
-                }));
-                if (cancellation.Token.IsCancellationRequested)
-                    return;
-                callback(mode, i == 0 ? "max" : "min" );
-            }
-        }
-
-        private void ForEachMinMaxPermutation(
-            eye_tracking_mouse.Options.CalibrationMode starting_mode,
-            Action<eye_tracking_mouse.Options.CalibrationMode> callback)
-        {
-            callback(starting_mode);
-            List<OptionsField> enabled_fields = new List<OptionsField>();
-
-            long iterator = 1;
-
-            foreach (var field in fields)
-            {
-                if (GetFieldValue(starting_mode, field) != -1)
-                {
-                    enabled_fields.Add(field);
-                    // two additional permutations
-                    iterator *= 2;
-                }
-            }
-
-            total_min_max_permutations = iterator;
-            remaining_min_max_permutations = 0;
-            List<long> permutations = new List<long>();
-
-            while (iterator > 0)
-            {
-                permutations.Add(iterator--);
-            }
-            permutations.Shuffle(new Random((int)(DateTime.Now.ToBinary() % int.MaxValue)));
-
-            foreach (var permutation in permutations)
-            {
-                if (cancellation.Token.IsCancellationRequested)
-                    return;
-
-                eye_tracking_mouse.Options.CalibrationMode mode = starting_mode.Clone();
-
-                for (int field_number = 0; field_number < enabled_fields.Count; field_number++)
-                {
-                    if ((permutation & (1 << field_number)) == 0)
-                    {
-                        SetFieldValue(mode, enabled_fields[field_number], enabled_fields[field_number].range.GetRange().Last());
-                    }
-                    else
-                    {
-                        SetFieldValue(mode, enabled_fields[field_number], enabled_fields[field_number].range.GetRange().First());
-                    }
-                }
-
-                Dispatcher.Invoke((Action)(() =>
-                {
-                    Text_CurrentPermutation.Text = JsonConvert.SerializeObject(mode, Formatting.Indented);
-                }));
-
-                callback(mode);
-
-                remaining_min_max_permutations++;
-            }
-        }
-
-        private static int GetFieldValue(
-            eye_tracking_mouse.Options.CalibrationMode calibration_mode,
-            OptionsField options_field)
-        {
-            if (options_field.field_name.StartsWith("coordinate"))
-            {
-                int coordinate_index = int.Parse(options_field.field_name.Split(' ')[1]);
-                if (coordinate_index >= calibration_mode.additional_dimensions_configuration.CoordinatesCount)
-                {
-                    return -1;
-                }
-                return calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents[coordinate_index];
-            }
-            else
-            {
-                var field = calibration_mode.GetType().GetField(options_field.field_name);
-                return (int)field.GetValue(calibration_mode);
-            }
-        }
-
-        private static void SetFieldValue(
-            eye_tracking_mouse.Options.CalibrationMode calibration_mode,
-            OptionsField options_field, int value)
-        {
-            if (options_field.field_name.StartsWith("coordinate"))
-            {
-                int coordinate_index = int.Parse(options_field.field_name.Split(' ')[1]);
-                if (coordinate_index >= calibration_mode.additional_dimensions_configuration.CoordinatesCount)
-                {
-                    return;
-                }
-                int[] coordinates_scales = calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
-                coordinates_scales[coordinate_index] = value;
-                calibration_mode.additional_dimensions_configuration.CoordinatesScalesInPercents = coordinates_scales;
-            }
-            else
-            {
-                var field = calibration_mode.GetType().GetField(options_field.field_name);
-                field.SetValue(calibration_mode, value);
-            }
-        }
-
-        private static eye_tracking_mouse.Options.CalibrationMode ChangeField(
-            eye_tracking_mouse.Options.CalibrationMode calibration_mode,
-            OptionsField field, 
-            int steps_number)
-        {
-            var new_calibration_mode = calibration_mode.Clone();
-
-            int value = GetFieldValue(new_calibration_mode, field);
-            if (value == -1)
-            {
-                return null;
-            }
-
-            var range = field.range.GetRange();
-            int i = 0;
-            for (; i < range.Count; i++)
-            {
-                if (range[i] > value)
-                {
-                    break;
-                }
-            }
-
-            i += steps_number;
-            if (i < 0 || i >= range.Count)
-                return null;
-
-            SetFieldValue(new_calibration_mode, field, range[i]);
-            return new_calibration_mode;
         }
 
         private void MaxOutEachDimension(
@@ -374,22 +119,20 @@ namespace BlindConfigurationTester
             eye_tracking_mouse.Options.CalibrationMode local_best_calibration_mode = mode;
             float local_best_utility = 0;
 
+            CalibrationModeIterator iterator = new CalibrationModeIterator(mode);
+
             while (true)
             {
                 float old_best_utility = local_best_utility;
-                foreach (var field in fields)
+                foreach (var field in iterator.Fields)
                 {
-                    if (GetFieldValue(local_best_calibration_mode, field) == -1)
-                        continue;
-
                     var range = field.range.GetRange();
-
 
                     List<eye_tracking_mouse.Options.CalibrationMode> modes_to_test = new List<eye_tracking_mouse.Options.CalibrationMode>();
                     for (int i = 0; i < range.Count; i++)
                     {
                         eye_tracking_mouse.Options.CalibrationMode calibration_mode = local_best_calibration_mode.Clone();
-                        SetFieldValue(calibration_mode, field, range[i]);
+                        field.SetFieldValue(calibration_mode, range[i]);
 
                         if (cancellation.Token.IsCancellationRequested)
                             return;
@@ -504,6 +247,7 @@ namespace BlindConfigurationTester
                 ref local_best_calibration_mode,
                 ref local_best_utility);
 
+            CalibrationModeIterator iterator = new CalibrationModeIterator(mode);
 
             int steps_number = 0;
             while (true)
@@ -511,24 +255,20 @@ namespace BlindConfigurationTester
                 float old_best_utility = local_best_utility;
 
                 List<eye_tracking_mouse.Options.CalibrationMode> modes_to_test = new List<eye_tracking_mouse.Options.CalibrationMode>();
-                for (int i = 0; i < fields.Length; i++)
+                for (int i = 0; i < iterator.Fields.Count; i++)
                 {
-                    var field = fields[i];
-                    if (GetFieldValue(local_best_calibration_mode, field) == -1)
-                    {
-                        continue;
-                    }
+                    var field = iterator.Fields[i];
 
                     if (cancellation.Token.IsCancellationRequested)
                         return;
 
                     eye_tracking_mouse.Options.CalibrationMode calibration_mode;
-                    if ((calibration_mode = ChangeField(local_best_calibration_mode, field, steps_number)) != null)
+                    if ((calibration_mode = field.Increment(local_best_calibration_mode, steps_number)) != null)
                     {
                         modes_to_test.Add(calibration_mode);
                     }
 
-                    if ((calibration_mode = ChangeField(local_best_calibration_mode, field, -steps_number)) != null)
+                    if ((calibration_mode = field.Increment(local_best_calibration_mode, -steps_number)) != null)
                     {
                         modes_to_test.Add(calibration_mode);
                     }
