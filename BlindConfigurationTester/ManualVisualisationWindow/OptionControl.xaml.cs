@@ -35,6 +35,8 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             redraw = redraw_callback;
             Text_OptionName.Text = field.field_name;
             Text_Value.Text = field.GetFieldValue(iterator.CalibrationMode).ToString();
+            if (field.field_name == "coordinate 2" || field.field_name == "coordinate 3")
+                CheckBox_Visualize.IsChecked = true;
         }
 
         private void Button_Increment_Click(object sender, RoutedEventArgs e)

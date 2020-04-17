@@ -38,6 +38,8 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                 Grid.Children.Add(control);
                 Grid.SetRow(control, row_number++);
             }
+
+            Redraw();
         }
 
         class PlotData
