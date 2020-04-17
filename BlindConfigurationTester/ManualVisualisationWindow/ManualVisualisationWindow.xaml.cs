@@ -87,7 +87,6 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
 
                 var data_points = DataSet.Load("0roman").data_points;
 
-                int i = 0;
                 enabled_fields[0].SetFieldValue(mode, enabled_fields[0].Min);
                 enabled_fields[1].SetFieldValue(mode, enabled_fields[1].Min);
                 string key =
@@ -110,19 +109,31 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                         Y = new double[enabled_fields[0].Count * enabled_fields[1].Count],
                         Z = new double[enabled_fields[0].Count * enabled_fields[1].Count]
                     };
-                    do
+
+                    var range = enabled_fields[0].range.GetRange();
+                    Task[] tasks = new Task[range.Count];
+                    for (int i = range.Count - 1; i >= 0 ; i--)
                     {
-                        enabled_fields[1].SetFieldValue(mode, enabled_fields[1].Min);
-                        do
+                        int i_copy = i;
+                        tasks[i_copy] = new Task(() =>
                         {
-                            plot_data.X[i] = enabled_fields[0].GetFieldValue(mode);
-                            plot_data.Y[i] = enabled_fields[1].GetFieldValue(mode);
-                            plot_data.Z[i] = Helpers.TestCalibrationMode(data_points, mode).UtilityFunction;
-                            i++;
-                        }
-                        while (enabled_fields[1].Increment(mode, 1));
+                            var this_thread_mode_clone = mode.Clone();
+                            enabled_fields[0].SetFieldValue(this_thread_mode_clone, range[i_copy]);
+                            enabled_fields[1].SetFieldValue(this_thread_mode_clone, enabled_fields[1].Min);
+                            int j = 0;
+                            do
+                            {
+                                int index = i_copy * enabled_fields[0].Count + j++;
+                                plot_data.X[index] = enabled_fields[0].GetFieldValue(this_thread_mode_clone);
+                                plot_data.Y[index] = enabled_fields[1].GetFieldValue(this_thread_mode_clone);
+                                plot_data.Z[index] = Helpers.TestCalibrationMode(data_points, this_thread_mode_clone).UtilityFunction;
+                            }
+                            while (enabled_fields[1].Increment(this_thread_mode_clone, 1));
+                        });
+                        tasks[i_copy].Start();
                     }
-                    while (enabled_fields[0].Increment(mode, 1));
+
+                    Task.WaitAll(tasks);
 
                     cache.Add(key, plot_data);
                 }
