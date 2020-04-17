@@ -25,10 +25,22 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         private CalibrationModeIterator iterator;
         List<OptionControl> option_controls = new List<OptionControl>();
 
+        eye_tracking_mouse.Options.CalibrationMode backup = null;
+
         public ManualVisualisationWindow(eye_tracking_mouse.Options.CalibrationMode mode)
         {
             InitializeComponent();
+            Reset(mode);
+        }
+
+        private void Reset(eye_tracking_mouse.Options.CalibrationMode mode)
+        {
             iterator = new CalibrationModeIterator(mode);
+            foreach (var option_control in option_controls)
+            {
+                Grid.Children.Remove(option_control);
+            }
+            option_controls.Clear();
 
             int row_number = 0;
             foreach (var field in iterator.Fields)
@@ -163,6 +175,51 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                 GnuPlot.Set(string.Format("label 1 at {0}, {1}, {2} \"{2}\" point pt 7", x, y, z));
             }
             GnuPlot.SPlot(plot_data.X, plot_data.Y, plot_data.Z);
+        }
+
+        private void SaveToConfig(string config_name)
+        {
+            (new eye_tracking_mouse.Options
+            {
+                calibration_mode = iterator.CalibrationMode
+            }).SaveToFile(System.IO.Path.Combine(Utils.GetConfigurationDir(config_name), "options.json"));
+
+        }
+
+        private void Button_SaveToExistingConfig_Click(object sender, RoutedEventArgs e)
+        {
+            var configuration_selection_dialog = new ConfigurationSelectionDialog();
+            if (configuration_selection_dialog.ShowDialog() != true)
+                return;
+            SaveToConfig(configuration_selection_dialog.GetSelectedConfiguration());
+        }
+
+        private void Button_SaveToNewConfig_Click(object sender, RoutedEventArgs e)
+        {
+            string new_config = Utils.GenerateNewConfigurationName("0manual");
+            Utils.CreateConfiguration(new_config);
+            SaveToConfig(new_config);
+        }
+
+        private void Button_LoadConfig_Click(object sender, RoutedEventArgs e)
+        {
+            var configuration_selection_dialog = new ConfigurationSelectionDialog();
+            if (configuration_selection_dialog.ShowDialog() != true)
+                return;
+            Reset(Helpers.GetCalibrationMode(
+                configuration_selection_dialog.GetSelectedConfiguration()));
+        }
+
+        private void Button_SetBackup_Click(object sender, RoutedEventArgs e)
+        {
+            backup = iterator.CalibrationMode;
+        }
+
+        private void Button_RestoreBackup_Click(object sender, RoutedEventArgs e)
+        {
+            if (backup != null)
+                iterator.CalibrationMode = backup;
+            Reset(backup);
         }
     }
 }

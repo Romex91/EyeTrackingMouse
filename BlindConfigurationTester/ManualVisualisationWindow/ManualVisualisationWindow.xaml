@@ -37,6 +37,13 @@
             <RowDefinition></RowDefinition>
             <RowDefinition></RowDefinition>
             <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
+
+        <Button Grid.Row="21" Click="Button_SaveToExistingConfig_Click" Name="Button_SaveToExistingConfig">Save to Existing Config</Button>
+        <Button Grid.Row="22" Click="Button_SaveToNewConfig_Click" Name="Button_SaveToNewConfig">Save to New Config</Button>
+        <Button Grid.Row="23" Click="Button_LoadConfig_Click" Name="Button_LoadConfig">Load config</Button>
+        <Button Grid.Row="24" Click="Button_SetBackup_Click" Name="Button_SetBackup">Set backup</Button>
+        <Button Grid.Row="25" Click="Button_RestoreBackup_Click" Name="Button_RestoreBackup">Restore backup</Button>
     </Grid>
 </Window>

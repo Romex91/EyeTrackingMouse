@@ -185,7 +185,6 @@ namespace BlindConfigurationTester
                 calibration_mode = mode
             }).SaveToFile(System.IO.Path.Combine(Utils.GetConfigurationDir(new_config), "options.json"));
 
-
             for (int i = 0; i < 2; i++)
             {
                 var processed_results = new List<Tuple<Helpers.TestResult, eye_tracking_mouse.Options.CalibrationMode>>();

@@ -159,7 +159,8 @@ namespace BlindConfigurationTester
 
         public static Helpers.TestResult TestCalibrationMode(List<DataPoint> data_points, eye_tracking_mouse.Options.CalibrationMode calibration_mode)
         {
-            return TestCalibrationManager(SetupCalibrationManager(calibration_mode), data_points, calibration_mode.additional_dimensions_configuration);
+            return TestCalibrationManager(SetupCalibrationManager(calibration_mode), 
+                data_points, calibration_mode.additional_dimensions_configuration);
         }
 
         public static TestResult RunPerfTest(
