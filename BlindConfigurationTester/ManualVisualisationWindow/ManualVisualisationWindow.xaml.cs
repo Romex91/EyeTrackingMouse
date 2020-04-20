@@ -166,6 +166,13 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                         cache.Add(key, plot_data);
             }
 
+            double max_z = 0;
+            foreach (double z in plot_data.Z)
+            {
+                if (z > max_z)
+                    max_z = z;
+            }
+
             {
                 // Show current configuration point.
                 double x = enabled_fields[0].GetFieldValue(iterator.CalibrationMode),
@@ -173,7 +180,21 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                     z = Helpers.TestCalibrationMode(data_points, iterator.CalibrationMode).UtilityFunction;
                 GnuPlot.Unset("label 1");
                 GnuPlot.Set(string.Format("label 1 at {0}, {1}, {2} \"{2}\" point pt 7", x, y, z));
+                // Show current configuration point.
+
+                GnuPlot.Unset("label 3");
+                GnuPlot.Set(string.Format("label 3 at {0}, {1}, {2} \"{2}\" point pt 7", x, y, max_z));
             }
+
+            if (backup != null)
+            {
+                double x = enabled_fields[0].GetFieldValue(backup),
+                    y = enabled_fields[1].GetFieldValue(backup),
+                    z = Helpers.TestCalibrationMode(data_points, backup).UtilityFunction;
+                GnuPlot.Unset("label 2");
+                GnuPlot.Set(string.Format("label 2 at {0}, {1}, {2} point pt 7", x, y, z));
+            }
+
             GnuPlot.SPlot(plot_data.X, plot_data.Y, plot_data.Z);
         }
 
@@ -212,13 +233,13 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
 
         private void Button_SetBackup_Click(object sender, RoutedEventArgs e)
         {
-            backup = iterator.CalibrationMode;
+            backup = iterator.CalibrationMode.Clone();
         }
 
         private void Button_RestoreBackup_Click(object sender, RoutedEventArgs e)
         {
             if (backup != null)
-                iterator.CalibrationMode = backup;
+                iterator.CalibrationMode = backup.Clone();
             Reset(backup);
         }
     }
