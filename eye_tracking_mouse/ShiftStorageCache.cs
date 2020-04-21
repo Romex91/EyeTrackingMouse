@@ -43,6 +43,10 @@ namespace eye_tracking_mouse
 
             var scales_in_percents = mode.additional_dimensions_configuration.CoordinatesScalesInPercents;
             coordinate_scales = scales_in_percents.Select(x => x / 100.0f).ToArray();
+            for (int i = 2; i < scales_in_percents.Length; i++)
+            {
+                coordinate_scales[i] *= mode.zone_size / 150f;
+            }
 
             cached_data = new float[
                 AlignedCoordinatesCount * mode.max_zones_count +            // cached coordinates
