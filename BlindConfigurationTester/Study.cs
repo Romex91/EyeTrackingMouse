@@ -12,7 +12,7 @@ using System.Dynamic;
 
 namespace BlindConfigurationTester
 {
-    public static class Extensions
+    public static partial class Extensions
     {
         public static void Shuffle<T>(this IList<T> list, Random rng)
         {

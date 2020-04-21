@@ -80,25 +80,24 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         {
             var plot_data = new PlotData
             {
-                X = new double[enabled_fields[0].Count * enabled_fields[1].Count],
-                Y = new double[enabled_fields[0].Count * enabled_fields[1].Count],
-                Z = new double[enabled_fields[0].Count * enabled_fields[1].Count]
+                X = new double[enabled_fields[0].Range.Length* enabled_fields[1].Range.Length],
+                Y = new double[enabled_fields[0].Range.Length* enabled_fields[1].Range.Length],
+                Z = new double[enabled_fields[0].Range.Length* enabled_fields[1].Range.Length]
             };
 
-            var range = enabled_fields[0].range.GetRange();
-            Task[] tasks = new Task[range.Count];
-            for (int i = range.Count - 1; i >= 0; i--)
+            Task[] tasks = new Task[enabled_fields[0].Range.Length];
+            for (int i = tasks.Length - 1; i >= 0; i--)
             {
                 int i_copy = i;
                 tasks[i_copy] = new Task(() =>
                 {
                     var this_thread_mode_clone = mode.Clone();
-                    enabled_fields[0].SetFieldValue(this_thread_mode_clone, range[i_copy]);
+                    enabled_fields[0].SetFieldValue(this_thread_mode_clone, enabled_fields[0].Range[i_copy]);
                     enabled_fields[1].SetFieldValue(this_thread_mode_clone, enabled_fields[1].Min);
                     int j = 0;
                     do
                     {
-                        int index = i_copy * enabled_fields[0].Count + j++;
+                        int index = i_copy * enabled_fields[1].Range.Length + j++;
                         plot_data.X[index] = enabled_fields[0].GetFieldValue(this_thread_mode_clone);
                         plot_data.Y[index] = enabled_fields[1].GetFieldValue(this_thread_mode_clone);
                         plot_data.Z[index] = Helpers.TestCalibrationMode(data_points, this_thread_mode_clone).UtilityFunction;

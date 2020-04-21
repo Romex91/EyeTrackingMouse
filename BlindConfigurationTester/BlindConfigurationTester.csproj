@@ -115,6 +115,7 @@
     <Compile Include="ManualVisualisationWindow\OptionControl.xaml.cs">
       <DependentUpon>OptionControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ExtremumSearcher.cs" />
     <Compile Include="NameInput.xaml.cs">
       <DependentUpon>NameInput.xaml</DependentUpon>
     </Compile>

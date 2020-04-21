@@ -82,24 +82,34 @@ namespace BlindConfigurationTester
         private long remaining_min_max_permutations = 0;
         private void GenerateConfiguration(List<DataPoint> data_points)
         {
-            eye_tracking_mouse.FilesSavingQueue.DisabledForTesting = true;
-
             eye_tracking_mouse.Options.Instance = new eye_tracking_mouse.Options();
 
             foreach (var mode in CalibrationModesForTesting.Short)
             {
-                CalibrationModeIterator iterator = new CalibrationModeIterator(mode);
                 Dispatcher.Invoke((Action)(() =>
                 {
                     Text_CurrentPermutation.Text = JsonConvert.SerializeObject(mode, Formatting.Indented);
                 }));
-                iterator.ForModeAndItsVariations(mode, (x,tag) => {
+
+                //GoodModes.AddRange(new ExtremumSearcher(mode, data_points,
+                //    (string a, string b) => {
+                //        Dispatcher.Invoke((Action)(() =>
+                //        {
+                //            Text_ProgressInfo.Text = a;
+                //            Text_GlobalBestModeInfo.Text = b;
+                //        }));
+                //    }).Extremums);
+
+                CalibrationModeIterator iterator = new CalibrationModeIterator(mode);
+                iterator.ForModeAndItsVariations(mode, (x, tag) =>
+                {
                     Dispatcher.Invoke((Action)(() =>
                     {
                         Text_CurrentPermutation.Text = JsonConvert.SerializeObject(mode, Formatting.Indented);
                     }));
-                    MaxOutEachDimension(x.Clone(), data_points, tag); 
-                    IncrementalImprove(x.Clone(), data_points, tag); });
+                    MaxOutEachDimension(x.Clone(), data_points, tag);
+                    IncrementalImprove(x.Clone(), data_points, tag);
+                });
 
                 //iterator.ForEachMinMaxPermutation(mode, x => {
                 //    Dispatcher.Invoke((Action)(() =>
@@ -126,10 +136,10 @@ namespace BlindConfigurationTester
                 float old_best_utility = local_best_utility;
                 foreach (var field in iterator.Fields)
                 {
-                    var range = field.range.GetRange();
+                    var range = field.Range;
 
                     List<eye_tracking_mouse.Options.CalibrationMode> modes_to_test = new List<eye_tracking_mouse.Options.CalibrationMode>();
-                    for (int i = 0; i < range.Count; i++)
+                    for (int i = 0; i < range.Length; i++)
                     {
                         eye_tracking_mouse.Options.CalibrationMode calibration_mode = local_best_calibration_mode.Clone();
                         field.SetFieldValue(calibration_mode, range[i]);
@@ -156,12 +166,6 @@ namespace BlindConfigurationTester
             TryAddToGoodModes(local_best_utility, local_best_calibration_mode);
         }
 
-        private bool IsModeCorrect(eye_tracking_mouse.Options.CalibrationMode mode)
-        {
-            return
-                mode.size_of_opaque_sector_in_percents + mode.size_of_transparent_sector_in_percents < 91;
-        }
-
         private void RunTests(
             List<DataPoint> data_points,
             List<eye_tracking_mouse.Options.CalibrationMode> modes,
@@ -183,8 +187,6 @@ namespace BlindConfigurationTester
             {
                 tasks.Add(Task.Factory.StartNew<Helpers.TestResult>(() =>
                 {
-                    if (!IsModeCorrect(mode))
-                        return new Helpers.TestResult();
                     return Helpers.TestCalibrationMode(data_points, mode);
                 }));
             }

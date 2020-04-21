@@ -22,6 +22,7 @@ namespace BlindConfigurationTester
     {
         public MainWindow()
         {
+            eye_tracking_mouse.FilesSavingQueue.DisabledForTesting = true;
             InitializeComponent();
         }
   

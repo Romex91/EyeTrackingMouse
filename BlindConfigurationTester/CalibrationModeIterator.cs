@@ -27,6 +27,7 @@ namespace BlindConfigurationTester
             var fields = new OptionsField[]
             {
                 OptionsField.BuildHardcoded(field_name : "zone_size", new List<int>{ 10, 15, 25, 50, 75, 100, 150, 200, 250, 350, 500, 800 }),
+                OptionsField.BuildExponential(field_name : "max_zones_count", 8, 2048, 2),
                 OptionsField.BuildHardcoded(field_name : "considered_zones_count", new List<int>{ 3,  6, 10, 20 }),
                 OptionsField.BuildLinear(field_name : "size_of_opaque_sector_in_percents", max : 70, min : 30, step: 10),
                 OptionsField.BuildLinear(field_name : "size_of_transparent_sector_in_percents", max : 60, min : 0, step: 10),
@@ -55,18 +56,19 @@ namespace BlindConfigurationTester
             List<int> GetRange();
         }
 
-        public struct OptionsField
+        public class OptionsField
         {
             public string field_name;
-            public IntRange range;
+            private IntRange range;
 
-            public int Count
+            public int[] Range
             {
                 get
                 {
-                    return range.GetRange().Count;
+                    return range.GetRange().ToArray();
                 }
             }
+
             public int Min
             {
                 get
@@ -226,11 +228,11 @@ namespace BlindConfigurationTester
                 {
                     if (i == 0)
                     {
-                        Fields[field_number].SetFieldValue(mode, Fields[field_number].range.GetRange().Last());
+                        Fields[field_number].SetFieldValue(mode, Fields[field_number].Range.Last());
                     }
                     else
                     {
-                        Fields[field_number].SetFieldValue(mode, Fields[field_number].range.GetRange().First());
+                        Fields[field_number].SetFieldValue(mode, Fields[field_number].Range.First());
                     }
                 }
 
@@ -268,11 +270,11 @@ namespace BlindConfigurationTester
                 {
                     if ((permutation & (1 << field_number)) == 0)
                     {
-                        Fields[field_number].SetFieldValue(mode, Fields[field_number].range.GetRange().Last());
+                        Fields[field_number].SetFieldValue(mode, Fields[field_number].Range.Last());
                     }
                     else
                     {
-                        Fields[field_number].SetFieldValue(mode, Fields[field_number].range.GetRange().First());
+                        Fields[field_number].SetFieldValue(mode, Fields[field_number].Range.First());
                     }
                 }
 
