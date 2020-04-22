@@ -324,10 +324,16 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             }
 
             double max_z = 0;
-            foreach (double z in plot_data.Z)
+            double max_x = 0;
+            double max_y = 0;
+            for ( int i = 0; i < plot_data.Z.Length; i++)
             {
-                if (z > max_z)
-                    max_z = z;
+                if (plot_data.Z[i] > max_z)
+                {
+                    max_z = plot_data.Z[i];
+                    max_x = plot_data.X[i];
+                    max_y = plot_data.Y[i];
+                }
             }
 
             {
@@ -340,7 +346,11 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                 // Show current configuration point.
 
                 GnuPlot.Unset("label 3");
-                GnuPlot.Set(string.Format("label 3 at {0}, {1}, {2} \"{2}\" point pt 7", x, y, max_z));
+                GnuPlot.Set(string.Format("label 3 at {0}, {1}, {2} point pt 7", x, y, max_z));
+
+                GnuPlot.Unset("label 4");
+                GnuPlot.Set(string.Format("label 4 at {0}, {1}, {2} \"{2}\" point pt 7", max_x, max_y, max_z));
+
             }
 
             if (backup != null)
