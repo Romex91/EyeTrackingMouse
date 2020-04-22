@@ -14,9 +14,140 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using AwokeKnowing.GnuplotCSharp;
 using System.Threading;
+using System.Linq.Expressions;
 
 namespace BlindConfigurationTester.ManualVisualisationWindow
 {
+    class DataSetControlModel : IControlModel
+    {
+        string[] names;
+        List<DataPoint>[] data_sets;
+        int selected_data_set = 0;
+        private Action redraw;
+
+        public List<DataPoint> DataPoints
+        {
+            get { return data_sets[selected_data_set]; }
+        }
+
+        public DataSetControlModel(Action redraw_callback)
+        {
+            redraw = redraw_callback;
+            names = DataSet.ListDataSetsNames();
+            data_sets = new List<DataPoint>[names.Length];
+            for(int i = 0; i < names.Length; i++)
+            {
+                data_sets[i] = DataSet.Load(names[i]).data_points;
+            }
+        }
+
+        public string Name => "data_set";
+
+        public string Value => names[selected_data_set];
+
+        public bool IsCheckboxChecked { get => false; set => throw new NotImplementedException(); }
+
+        public bool IsCheckboxVisible => false;
+
+        public void Decrement()
+        {
+            if (selected_data_set > 0)
+                selected_data_set--;
+            redraw.Invoke();
+        }
+
+        public void Increment()
+        {
+            if (selected_data_set < names.Length - 1)
+              selected_data_set++;
+            redraw.Invoke();
+        }
+    }
+
+    class AlgorithmVersionControlModel : IControlModel
+    {
+        string[] algorithms = new string[] { "V0", "V1", "V2" };
+        int selected_algorithm = 2;
+        private Action redraw;
+        private eye_tracking_mouse.Options.CalibrationMode calibration_mode;
+
+        public AlgorithmVersionControlModel(Action redraw_callback,
+            eye_tracking_mouse.Options.CalibrationMode mode)
+        {
+            calibration_mode = mode;
+            for (int i = 0; i < algorithms.Length; i++)
+            {
+                if (algorithms[i] == mode.algorithm)
+                    selected_algorithm = i;
+            }
+            redraw = redraw_callback;
+        }
+
+        public string Name => "algorithm";
+
+        public string Value => algorithms[selected_algorithm];
+
+        public bool IsCheckboxChecked { get => false; set => throw new NotImplementedException(); }
+
+        public bool IsCheckboxVisible => false;
+
+        public void Decrement()
+        {
+            if (selected_algorithm > 0)
+                selected_algorithm--;
+            calibration_mode.algorithm = algorithms[selected_algorithm];
+            redraw.Invoke();
+        }
+
+        public void Increment()
+        {
+            if (selected_algorithm < algorithms.Length - 1)
+                selected_algorithm++;
+            calibration_mode.algorithm = algorithms[selected_algorithm];
+            redraw.Invoke();
+        }
+    }
+    class IteratorOptionControlModel : IControlModel
+    {
+        public CalibrationModeIterator.OptionsField Field;
+        private CalibrationModeIterator iterator;
+        private Action redraw;
+        private bool is_checkbox_enabled;
+
+        public IteratorOptionControlModel(
+           CalibrationModeIterator.OptionsField field,
+           CalibrationModeIterator iterator,
+           Action redraw_callback)
+        {
+            this.Field = field;
+            this.iterator = iterator;
+            redraw = redraw_callback;
+        }
+        public string Name => Field.field_name;
+        public string Value => Field.GetFieldValue(iterator.CalibrationMode).ToString();
+        public bool IsCheckboxVisible { get; set; } = true;
+
+        public bool IsCheckboxChecked
+        {
+            get => is_checkbox_enabled; set
+            {
+                is_checkbox_enabled = value;
+                redraw.Invoke();
+            }
+        }
+
+        public void Decrement()
+        {
+            Field.Increment(iterator.CalibrationMode, -1);
+            redraw.Invoke();
+        }
+        public void Increment()
+        {
+            Field.Increment(iterator.CalibrationMode, 1);
+            redraw.Invoke();
+        }
+    }
+
     /// <summary>
     /// Interaction logic for ManualVisualisationWindow.xaml
     /// </summary>
@@ -24,6 +155,10 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
     {
         private CalibrationModeIterator iterator;
         List<OptionControl> option_controls = new List<OptionControl>();
+        List<IteratorOptionControlModel> iterator_option_control_models = new List<IteratorOptionControlModel>();
+        DataSetControlModel data_set_control_model;
+        AlgorithmVersionControlModel algorithm_control_model;
+
 
         eye_tracking_mouse.Options.CalibrationMode backup = null;
 
@@ -41,13 +176,28 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                 Grid.Children.Remove(option_control);
             }
             option_controls.Clear();
+            iterator_option_control_models.Clear();
 
-            int row_number = 0;
+            List<IControlModel> models = new List<IControlModel>();
             foreach (var field in iterator.Fields)
             {
-                var control = new OptionControl(field, iterator, Redraw);
-                option_controls.Add(control);
+                var model = new IteratorOptionControlModel(field, iterator, Redraw);
+                if (model.Name == "coordinate 2" || model.Name == "coordinate 3")
+                    model.IsCheckboxChecked = true;
+                models.Add(model);
+                iterator_option_control_models.Add(model);
+            }
 
+            data_set_control_model = new DataSetControlModel(Redraw);
+            algorithm_control_model = new AlgorithmVersionControlModel(Redraw, mode);
+            models.Add(data_set_control_model);
+            models.Add(algorithm_control_model);
+
+            int row_number = 0;
+            foreach (var model in models)
+            {
+                var control = new OptionControl(model);
+                option_controls.Add(control);
                 Grid.Children.Add(control);
                 Grid.SetRow(control, row_number++);
             }
@@ -66,11 +216,11 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
 
         private static string GetKey(
             eye_tracking_mouse.Options.CalibrationMode mode,
+            string data_point_name,
             CalibrationModeIterator.OptionsField[] enabled_fields)
         {
-            return enabled_fields[0].field_name + " " +
-                    enabled_fields[1].field_name + " " +
-                    JsonConvert.SerializeObject(mode, Formatting.None);
+            return data_point_name + enabled_fields[0].field_name + " " +
+                  enabled_fields[1].field_name + " " + mode.GetUniqueKey();
         }
 
         private static PlotData CalculatePlotData(
@@ -80,9 +230,9 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         {
             var plot_data = new PlotData
             {
-                X = new double[enabled_fields[0].Range.Length* enabled_fields[1].Range.Length],
-                Y = new double[enabled_fields[0].Range.Length* enabled_fields[1].Range.Length],
-                Z = new double[enabled_fields[0].Range.Length* enabled_fields[1].Range.Length]
+                X = new double[enabled_fields[0].Range.Length * enabled_fields[1].Range.Length],
+                Y = new double[enabled_fields[0].Range.Length * enabled_fields[1].Range.Length],
+                Z = new double[enabled_fields[0].Range.Length * enabled_fields[1].Range.Length]
             };
 
             Task[] tasks = new Task[enabled_fields[0].Range.Length];
@@ -110,20 +260,28 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             Task.WaitAll(tasks);
             return plot_data;
         }
+        private void UpdateControls ()
+        {
+            foreach (var control in option_controls)
+            {
+                control.Update();
+            }
+        }
 
         private void Redraw()
         {
-            int enabled_checkbox_count = option_controls.Count((x) =>
+            int enabled_checkbox_count = iterator_option_control_models.Count((x) =>
             {
-                return x.CheckBox_Visualize.IsChecked == true;
+                return x.IsCheckboxChecked;
             });
 
             if (enabled_checkbox_count < 2)
             {
-                foreach (var control in option_controls)
+                foreach (var model in iterator_option_control_models)
                 {
-                    control.CheckBox_Visualize.IsEnabled = true;
+                    model.IsCheckboxVisible = true;
                 }
+                UpdateControls();
                 return;
             }
 
@@ -131,26 +289,26 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             CalibrationModeIterator.OptionsField[] enabled_fields = new CalibrationModeIterator.OptionsField[2];
             {
                 int j = 0;
-                foreach (var control in option_controls)
+                foreach (var model in iterator_option_control_models)
                 {
-                    if (control.CheckBox_Visualize.IsChecked == true)
+                    if (model.IsCheckboxChecked)
                     {
-                        enabled_fields[j++] = control.Field;
-                        control.CheckBox_Visualize.IsEnabled = true;
+                        enabled_fields[j++] = model.Field;
+                        model.IsCheckboxVisible = true;
                     }
                     else
                     {
-                        control.CheckBox_Visualize.IsEnabled = false;
+                        model.IsCheckboxVisible = false;
                     }
                 }
             }
 
-            var data_points = DataSet.Load("0roman").data_points;
+            UpdateControls();
 
             enabled_fields[0].SetFieldValue(mode, enabled_fields[0].Min);
             enabled_fields[1].SetFieldValue(mode, enabled_fields[1].Min);
 
-            string key = GetKey(mode, enabled_fields);
+            string key = GetKey(mode, data_set_control_model.Value, enabled_fields);
 
             PlotData plot_data = null;
 
@@ -160,9 +318,9 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             }
             if (plot_data == null)
             {
-                plot_data = CalculatePlotData(mode, enabled_fields, data_points);
-                    if (!cache.ContainsKey(key))
-                        cache.Add(key, plot_data);
+                plot_data = CalculatePlotData(mode, enabled_fields, data_set_control_model.DataPoints);
+                if (!cache.ContainsKey(key))
+                    cache.Add(key, plot_data);
             }
 
             double max_z = 0;
@@ -176,7 +334,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                 // Show current configuration point.
                 double x = enabled_fields[0].GetFieldValue(iterator.CalibrationMode),
                     y = enabled_fields[1].GetFieldValue(iterator.CalibrationMode),
-                    z = Helpers.TestCalibrationMode(data_points, iterator.CalibrationMode).UtilityFunction;
+                    z = Helpers.TestCalibrationMode(data_set_control_model.DataPoints, iterator.CalibrationMode).UtilityFunction;
                 GnuPlot.Unset("label 1");
                 GnuPlot.Set(string.Format("label 1 at {0}, {1}, {2} \"{2}\" point pt 7", x, y, z));
                 // Show current configuration point.
@@ -189,7 +347,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             {
                 double x = enabled_fields[0].GetFieldValue(backup),
                     y = enabled_fields[1].GetFieldValue(backup),
-                    z = Helpers.TestCalibrationMode(data_points, backup).UtilityFunction;
+                    z = Helpers.TestCalibrationMode(data_set_control_model.DataPoints, backup).UtilityFunction;
                 GnuPlot.Unset("label 2");
                 GnuPlot.Set(string.Format("label 2 at {0}, {1}, {2} point pt 7", x, y, z));
             }
@@ -216,7 +374,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
 
         private void Button_SaveToNewConfig_Click(object sender, RoutedEventArgs e)
         {
-            string new_config = Utils.GenerateNewConfigurationName("0manual");
+            string new_config = Utils.GenerateNewConfigurationName("manual");
             Utils.CreateConfiguration(new_config);
             SaveToConfig(new_config);
         }

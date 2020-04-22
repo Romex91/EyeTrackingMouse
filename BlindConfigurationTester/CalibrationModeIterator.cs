@@ -32,14 +32,22 @@ namespace BlindConfigurationTester
                 OptionsField.BuildLinear(field_name : "size_of_opaque_sector_in_percents", max : 70, min : 30, step: 10),
                 OptionsField.BuildLinear(field_name : "size_of_transparent_sector_in_percents", max : 60, min : 0, step: 10),
                 OptionsField.BuildHardcoded(field_name : "correction_fade_out_distance", new List<int>{ 50, 75, 100, 150, 200, 250, 350, 500, 800 }),
-                OptionsField.BuildHardcoded(field_name : "coordinate 2", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-                OptionsField.BuildHardcoded(field_name : "coordinate 3", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-                OptionsField.BuildHardcoded(field_name : "coordinate 4", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-                OptionsField.BuildHardcoded(field_name : "coordinate 5", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-                OptionsField.BuildHardcoded(field_name : "coordinate 6", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-                OptionsField.BuildHardcoded(field_name : "coordinate 7", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-                OptionsField.BuildHardcoded(field_name : "coordinate 8", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
-                OptionsField.BuildHardcoded(field_name : "coordinate 9", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+                OptionsField.BuildExponential(field_name : "coordinate 2", 50, 30000, 1.6f),
+                OptionsField.BuildExponential(field_name : "coordinate 3", 50, 30000, 1.6f),
+                OptionsField.BuildExponential(field_name : "coordinate 4", 50, 30000, 1.6f),
+                OptionsField.BuildExponential(field_name : "coordinate 5", 50, 30000, 1.6f),
+                OptionsField.BuildExponential(field_name : "coordinate 6", 50, 30000, 1.6f),
+                OptionsField.BuildExponential(field_name : "coordinate 7", 50, 30000, 1.6f),
+                OptionsField.BuildExponential(field_name : "coordinate 8", 50, 30000, 1.6f),
+                OptionsField.BuildExponential(field_name : "coordinate 9", 50, 30000, 1.6f),
+                //OptionsField.BuildHardcoded(field_name : "coordinate 2", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+                //OptionsField.BuildHardcoded(field_name : "coordinate 3", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+                //OptionsField.BuildHardcoded(field_name : "coordinate 4", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+                //OptionsField.BuildHardcoded(field_name : "coordinate 5", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+                //OptionsField.BuildHardcoded(field_name : "coordinate 6", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+                //OptionsField.BuildHardcoded(field_name : "coordinate 7", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+                //OptionsField.BuildHardcoded(field_name : "coordinate 8", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
+                //OptionsField.BuildHardcoded(field_name : "coordinate 9", new List<int> {50, 100, 250, 400, 600, 800, 1000, 1300, 1700, 2500, 5000, 7500, 10000, 12000 }),
             };
 
             foreach (var field in fields)
@@ -85,7 +93,7 @@ namespace BlindConfigurationTester
                     range = new IteartionRange { min_value = min, max_value = max, step = step, exponential = false }
                 };
             }
-            public static OptionsField BuildExponential(string field_name, int min, int max, int step)
+            public static OptionsField BuildExponential(string field_name, int min, int max, float step)
             {
                 return new OptionsField
                 {
@@ -175,7 +183,7 @@ namespace BlindConfigurationTester
         {
             public int min_value;
             public int max_value;
-            public int step;
+            public float step;
             public bool exponential;
 
             public List<int> GetRange()
@@ -186,19 +194,18 @@ namespace BlindConfigurationTester
                 int i = min_value;
                 while (true)
                 {
-                    range.Add(i >= max_value ? max_value : i);
-
-                    if (i >= max_value)
-                    {
+                    if (i <= max_value)
+                        range.Add(i);
+                    else
                         break;
-                    }
+
                     if (exponential)
                     {
-                        i *= step;
+                        i = (int)(i * step);
                     }
                     else
                     {
-                        i += step;
+                        i = (int)(i + step);
                     }
                 }
 

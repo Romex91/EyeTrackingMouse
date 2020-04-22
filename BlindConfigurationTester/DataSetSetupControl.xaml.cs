@@ -59,16 +59,11 @@ namespace BlindConfigurationTester
             Combo_DataSet.Items.Clear();
             if (!Directory.Exists(DataSet.DataSetsFolder))
                 Directory.CreateDirectory(DataSet.DataSetsFolder);
-            string[] studies = Directory.GetDirectories(DataSet.DataSetsFolder);
-            for (int i = 0; i < studies.Length; i++)
-            {
-                studies[i] = System.IO.Path.GetFileName(studies[i]);
-            }
 
-            foreach (var DataSet in studies)
+            foreach (var data_set in DataSet.ListDataSetsNames())
             {
-                Combo_DataSet.Items.Add(DataSet);
-                if (DataSet == current_DataSet || Combo_DataSet.Items.Count == 1)
+                Combo_DataSet.Items.Add(data_set);
+                if (data_set == current_DataSet || Combo_DataSet.Items.Count == 1)
                     Combo_DataSet.SelectedIndex = Combo_DataSet.Items.Count - 1;
             }
         }

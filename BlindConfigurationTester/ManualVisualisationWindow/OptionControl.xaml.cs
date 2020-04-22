@@ -15,49 +15,61 @@ using System.Windows.Shapes;
 
 namespace BlindConfigurationTester.ManualVisualisationWindow
 {
+    public interface IControlModel
+    {
+        string Name { get; }
+        string Value { get; }
+
+        bool IsCheckboxChecked { get; set; }
+
+        bool IsCheckboxVisible { get; }
+
+        void Increment();
+        void Decrement();
+    }
+
     /// <summary>
     /// Interaction logic for OptionControl.xaml
     /// </summary>
     public partial class OptionControl : UserControl
     {
-        public CalibrationModeIterator.OptionsField Field;
-        private CalibrationModeIterator iterator;
-        private Action redraw;
+        IControlModel model;
 
         public OptionControl(
-            CalibrationModeIterator.OptionsField field,
-            CalibrationModeIterator iterator,
-            Action redraw_callback)
+            IControlModel model)
         {
+            this.model = model;
             InitializeComponent();
-            this.Field = field;
-            this.iterator = iterator;
-            redraw = redraw_callback;
-            Text_OptionName.Text = field.field_name;
-            Text_Value.Text = field.GetFieldValue(iterator.CalibrationMode).ToString();
-            if (field.field_name == "coordinate 2" || field.field_name == "coordinate 3")
-                CheckBox_Visualize.IsChecked = true;
+            Update();
+        }
+
+        public void Update()
+        {
+            Text_OptionName.Text = model.Name;
+            Text_Value.Text = model.Value;
+
+            CheckBox_Visualize.IsChecked = model.IsCheckboxChecked;
+            CheckBox_Visualize.Visibility = model.IsCheckboxVisible ? Visibility.Visible : Visibility.Hidden;
         }
 
         private void Button_Increment_Click(object sender, RoutedEventArgs e)
         {
-            if (!Field.Increment(iterator.CalibrationMode, 1))
-                return;
-            Text_Value.Text = Field.GetFieldValue(iterator.CalibrationMode).ToString();
-            redraw.Invoke();
+            model.Increment();
+            Text_Value.Text = model.Value;
+            Update();
         }
 
         private void Button_Decrement_Click(object sender, RoutedEventArgs e)
         {
-            if (!Field.Increment(iterator.CalibrationMode, -1))
-                return;
-            Text_Value.Text = Field.GetFieldValue(iterator.CalibrationMode).ToString();
-            redraw.Invoke();
+            model.Decrement();
+            Text_Value.Text = model.Value;
+            Update();
         }
 
         private void CheckBox_Changed(object sender, RoutedEventArgs e)
         {
-            redraw.Invoke();
+            model.IsCheckboxChecked = CheckBox_Visualize.IsChecked == true;
+            Update();
         }
     }
 }

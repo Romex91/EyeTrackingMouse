@@ -34,9 +34,19 @@ namespace BlindConfigurationTester
         [JsonIgnore]
         public string DataSetResultsFolder { get { return GetDataSetFolder(name); } }
 
-        public static string GetDataSetFolder(string study_name)
+        public static string[] ListDataSetsNames()
         {
-            return Path.Combine(DataSetsFolder, study_name);
+            string[] data_sets = Directory.GetDirectories(DataSet.DataSetsFolder);
+            for (int i = 0; i < data_sets.Length; i++)
+            {
+                data_sets[i] = System.IO.Path.GetFileName(data_sets[i]);
+            }
+            return data_sets;
+        }
+
+        public static string GetDataSetFolder(string data_set_name)
+        {
+            return Path.Combine(DataSetsFolder, data_set_name);
         }
 
         public static DataSet Load(string data_set_name)
