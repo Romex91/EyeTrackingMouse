@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -15,10 +16,30 @@ namespace eye_tracking_mouse
         public Point gaze_point;
         public Tobii.Interaction.Vector3 left_eye;
         public Tobii.Interaction.Vector3 right_eye;
-        public Tobii.Interaction.Vector3 angle_between_eyes;
         public Tobii.Interaction.Vector3 head_position;
         public Tobii.Interaction.Vector3 head_direction;
+        [JsonIgnore]
+        public Tobii.Interaction.Vector3 AngleBetweenEyes
+        {
+            get
+            {
+                var vector = new Tobii.Interaction.Vector3(
+                    (left_eye.X - right_eye.X) / 200,
+                    (left_eye.Y - right_eye.Y) / 100,
+                    (left_eye.Z - right_eye.Z) / 10);
 
+                return new Tobii.Interaction.Vector3(
+                                GetAngleBetweenVectorAndXAxis(vector.Y, vector.X) * 180 / Math.PI,
+                                GetAngleBetweenVectorAndXAxis(vector.Z, vector.X) * 180 / Math.PI,
+                                0);
+            }
+        }
+
+
+        private double GetAngleBetweenVectorAndXAxis(double x, double y)
+        {
+            return Math.Acos(x / Math.Sqrt(x * x + y * y));
+        }
         public float[] ToCoordinates(AdditionalDimensionsConfguration config)
         {
             float[] coordinates = new float[config.CoordinatesCount];
@@ -30,7 +51,7 @@ namespace eye_tracking_mouse
             foreach (var vector3 in new List<Tuple<Tobii.Interaction.Vector3, Vector3Percents>> {
                     new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (left_eye, config.LeftEye),
                     new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (right_eye, config.RightEye),
-                    new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (angle_between_eyes, config.AngleBetweenEyes),
+                    new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (AngleBetweenEyes, config.AngleBetweenEyes),
                     new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (head_direction, config.HeadDirection),
                     new Tuple<Tobii.Interaction.Vector3, Vector3Percents> (head_position, config.HeadPosition)})
             {
@@ -61,7 +82,6 @@ namespace eye_tracking_mouse
             gaze_point = new Point(),
             left_eye = new Tobii.Interaction.Vector3(),
             right_eye = new Tobii.Interaction.Vector3(),
-            angle_between_eyes = new Tobii.Interaction.Vector3(),
             head_position = new Tobii.Interaction.Vector3(),
             head_direction = new Tobii.Interaction.Vector3()
         };
@@ -69,7 +89,6 @@ namespace eye_tracking_mouse
         PointSmoother gaze_point_smoother = new PointSmoother();
         Vector3Smoother left_eye_smoother = new Vector3Smoother();
         Vector3Smoother right_eye_smoother = new Vector3Smoother();
-        Vector3Smoother angle_between_eyes_smoother = new Vector3Smoother();
         Vector3Smoother head_position_smoother = new Vector3Smoother();
         Vector3Smoother head_direction_smoother = new Vector3Smoother();
 
@@ -88,12 +107,6 @@ namespace eye_tracking_mouse
             }
         }
 
-
-        private float GetAngleBetweenVectorAndXAxis(float x, float y)
-        {
-            return (float)Math.Acos(x / Math.Sqrt(x * x + y * y));
-        }
-
         private void OnEyePosition(Tobii.Interaction.EyePositionData obj)
         {
             lock (Helpers.locker)
@@ -108,25 +121,10 @@ namespace eye_tracking_mouse
                     var v = obj.RightEyeNormalized;
                     coordinates.right_eye = right_eye_smoother.SmoothPoint(new Tobii.Interaction.Vector3(v.X * 200, v.Y * 100, v.Z * 500));
                 }
-
-
-                if (obj.HasRightEyePosition && obj.HasLeftEyePosition)
-                {
-                    var vector = new Tobii.Interaction.Vector3(
-                        obj.LeftEyeNormalized.X - obj.RightEyeNormalized.X,
-                        obj.LeftEyeNormalized.Y - obj.RightEyeNormalized.Y,
-                        (obj.LeftEyeNormalized.Z - obj.RightEyeNormalized.Z) * 50);
-                    coordinates.angle_between_eyes =
-                        angle_between_eyes_smoother.SmoothPoint(
-                            new Tobii.Interaction.Vector3(
-                                GetAngleBetweenVectorAndXAxis((float)vector.Y, (float)vector.X) * 180 / Math.PI,
-                                GetAngleBetweenVectorAndXAxis((float)vector.Z, (float)vector.X) * 180 / Math.PI,
-                                0));
-                }
             }
         }
 
-        private void OnGazePoint(double x, double  y, double ts)
+        private void OnGazePoint(double x, double y, double ts)
         {
             lock (Helpers.locker)
             {
