@@ -41,7 +41,7 @@ namespace BlindConfigurationTester
                 HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 70, Y = 70, Z = 70 },
                 LeftEye = new eye_tracking_mouse.Vector3Percents { X = 70, Y = 70, Z = 70 },
                 RightEye = new eye_tracking_mouse.Vector3Percents { X = 70, Y = 70, Z = 70 },
-                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 70, Y = 70, Z = 0 }
+                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 70, Y = 70, Z = null }
             };
 
             this.points = points;

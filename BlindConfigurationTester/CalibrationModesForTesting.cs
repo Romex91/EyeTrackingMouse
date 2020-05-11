@@ -30,10 +30,10 @@ namespace BlindConfigurationTester
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
                                 LeftEye = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                                RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 0 },
-                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
+                                RightEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = null },
+                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null }
                             }
                     }
                  };
@@ -60,10 +60,10 @@ namespace BlindConfigurationTester
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
                                 LeftEye = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                                RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 0 },
-                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
+                                RightEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = null},
+                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null }
                             }
                     },
                     new eye_tracking_mouse.Options.CalibrationMode
@@ -81,10 +81,10 @@ namespace BlindConfigurationTester
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
                                 RightEye = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                                LeftEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 0 },
-                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
+                                LeftEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z =null },
+                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = null },
+                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = null, Y =null, Z = null },
+                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = null, Y =null, Z = null }
                             }
                     },
                     new eye_tracking_mouse.Options.CalibrationMode
@@ -101,11 +101,11 @@ namespace BlindConfigurationTester
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
-                                LeftEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 0 },
+                                LeftEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                RightEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = null },
                                 HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
+                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null}
                             }
                     },
                     new eye_tracking_mouse.Options.CalibrationMode
@@ -122,9 +122,9 @@ namespace BlindConfigurationTester
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
-                                LeftEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0  },
+                                LeftEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                RightEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
                                 HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
                                 HeadDirection = new eye_tracking_mouse.Vector3Percents {X = 600, Y = 600, Z = 600}
                             }
@@ -144,10 +144,10 @@ namespace BlindConfigurationTester
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
                                 LeftEye = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                                RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
+                                RightEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null }
                             }
                     },
                     new eye_tracking_mouse.Options.CalibrationMode
@@ -165,9 +165,9 @@ namespace BlindConfigurationTester
                         new eye_tracking_mouse.AdditionalDimensionsConfguration
                         {
                             LeftEye = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                            RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                            AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                            HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
+                            RightEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                            AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                            HeadPosition = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
                             HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 }
                         }
                     },
@@ -186,9 +186,9 @@ namespace BlindConfigurationTester
                         new eye_tracking_mouse.AdditionalDimensionsConfguration
                         {
                             RightEye = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                            LeftEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                            AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                            HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
+                            LeftEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                            AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                            HeadPosition = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
                             HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 }
                         }
                     },
@@ -208,10 +208,10 @@ namespace BlindConfigurationTester
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
                                 LeftEye = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                                RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 0 },
-                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
+                                RightEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600,  Z = null },
+                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null }
                             }
                     },
                     new eye_tracking_mouse.Options.CalibrationMode
@@ -229,10 +229,10 @@ namespace BlindConfigurationTester
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
                                 RightEye = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                                LeftEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 0 },
-                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
+                                LeftEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600,  Z = null },
+                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null }
                             }
                     },
                     new eye_tracking_mouse.Options.CalibrationMode
@@ -249,11 +249,11 @@ namespace BlindConfigurationTester
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
-                                LeftEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 0 },
+                                LeftEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                RightEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600,  Z = null },
                                 HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
+                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null }
                             }
                     },
                     new eye_tracking_mouse.Options.CalibrationMode
@@ -270,9 +270,9 @@ namespace BlindConfigurationTester
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
-                                LeftEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0  },
+                                LeftEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                RightEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0,  Z = null  },
                                 HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
                                 HeadDirection = new eye_tracking_mouse.Vector3Percents {X = 600, Y = 600, Z = 600}
                             }
@@ -292,10 +292,10 @@ namespace BlindConfigurationTester
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
                                 LeftEye = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                                RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 }
+                                RightEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                HeadPosition = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                                HeadDirection = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null }
                             }
                     },
                     new eye_tracking_mouse.Options.CalibrationMode
@@ -313,9 +313,9 @@ namespace BlindConfigurationTester
                         new eye_tracking_mouse.AdditionalDimensionsConfguration
                         {
                             LeftEye = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                            RightEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                            AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                            HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
+                            RightEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                            AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                            HeadPosition = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
                             HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 }
                         }
                     },
@@ -334,9 +334,9 @@ namespace BlindConfigurationTester
                         new eye_tracking_mouse.AdditionalDimensionsConfguration
                         {
                             RightEye = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 },
-                            LeftEye = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                            AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
-                            HeadPosition = new eye_tracking_mouse.Vector3Percents { X = 0, Y = 0, Z = 0 },
+                            LeftEye = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                            AngleBetweenEyes = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
+                            HeadPosition = new eye_tracking_mouse.Vector3Percents { X = null, Y = null, Z = null },
                             HeadDirection = new eye_tracking_mouse.Vector3Percents { X = 600, Y = 600, Z = 600 }
                         }
                     }

@@ -27,12 +27,12 @@ namespace eye_tracking_mouse
     }
 
     // Determines how spatial each new dimension will be.
-    // 0 percents means dimension is disabled.
+    // null means dimension is disabled.
     public class Vector3Percents
     {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public int Z { get; set; }
+        public int? X { get; set; }
+        public int? Y { get; set; }
+        public int? Z { get; set; }
 
         public Vector3Percents Clone()
         {
@@ -48,7 +48,7 @@ namespace eye_tracking_mouse
         {
             get
             {
-                return new Vector3Percents { X = 0, Y = 0, Z = 0 };
+                return new Vector3Percents { X = null, Y = null, Z = null };
             }
         }
     }
@@ -57,7 +57,7 @@ namespace eye_tracking_mouse
     {
         public Vector3Percents LeftEye;
         public Vector3Percents RightEye;
-        public Vector3Percents AngleBetweenEyes; // Z is always 0!
+        public Vector3Percents AngleBetweenEyes; // Z is always null
         public Vector3Percents HeadPosition;
         public Vector3Percents HeadDirection;
 
@@ -77,12 +77,12 @@ namespace eye_tracking_mouse
                 int coordinates_count = 2;
                 foreach (var vector3 in Vectors)
                 {
-                    if (vector3.X > 0)
-                        results[coordinates_count++] = vector3.X;
-                    if (vector3.Y > 0)
-                        results[coordinates_count++] = vector3.Y;
-                    if (vector3.Z > 0)
-                        results[coordinates_count++] = vector3.Z;
+                    if (vector3.X.HasValue)
+                        results[coordinates_count++] = vector3.X.Value;
+                    if (vector3.Y.HasValue)
+                        results[coordinates_count++] = vector3.Y.Value;
+                    if (vector3.Z.HasValue)
+                        results[coordinates_count++] = vector3.Z.Value;
                 }
 
                 return results;
@@ -95,15 +95,15 @@ namespace eye_tracking_mouse
                 int index = 2;
                 foreach (var vector3 in Vectors)
                 {
-                    if (vector3.X > 0)
+                    if (vector3.X.HasValue)
                     {
                         vector3.X = value[index++];
                     }
-                    if (vector3.Y > 0)
+                    if (vector3.Y.HasValue)
                     {
                         vector3.Y = value[index++];
                     }
-                    if (vector3.Z > 0)
+                    if (vector3.Z.HasValue)
                     {
                         vector3.Z = value[index++];
                     }
@@ -132,11 +132,11 @@ namespace eye_tracking_mouse
                 int coordinates_count = 2;
                 foreach (var vector3 in Vectors)
                 {
-                    if (vector3.X > 0)
+                    if (vector3.X.HasValue)
                         coordinates_count++;
-                    if (vector3.Y > 0)
+                    if (vector3.Y.HasValue)
                         coordinates_count++;
-                    if (vector3.Z > 0)
+                    if (vector3.Z.HasValue)
                         coordinates_count++;
                 }
                 return coordinates_count;
@@ -296,7 +296,7 @@ namespace eye_tracking_mouse
                         {
                             LeftEye = new Vector3Percents { X = 700, Y = 700, Z = 700 },
                             RightEye = Vector3Percents.Disabled,
-                            AngleBetweenEyes = new Vector3Percents { X = 700, Y = 700, Z = 0 },
+                            AngleBetweenEyes = new Vector3Percents { X = 700, Y = 700, Z = null },
                             HeadPosition = Vector3Percents.Disabled,
                             HeadDirection = Vector3Percents.Disabled
                         },
