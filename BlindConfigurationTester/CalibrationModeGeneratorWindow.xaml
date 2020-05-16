@@ -8,21 +8,25 @@
         Title="CalibrationModeGeneratorWindow" Height="450" Width="800" SizeToContent="WidthAndHeight">
     <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
         <Grid.RowDefinitions>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
             <RowDefinition Height="auto"></RowDefinition>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition></ColumnDefinition>
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
-    <TextBlock Name="Text_ProgressInfo"></TextBlock>
-        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Name="Text_GlobalBestModeInfo"></TextBlock>
-        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Name="Text_LocalBestModeInfo"></TextBlock>
-        <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Name="Text_LastIterationUtilityDelta"></TextBlock>
-        <TextBlock Grid.Row="4" Grid.Column="1" Name="Text_LastTestResult" Background="LightBlue"></TextBlock>
-        <TextBlock Grid.Row="4" Grid.Column="0" Name="Text_CurrentPermutation" Background="LightGray"></TextBlock>
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Name="Text_ExtremumsQueueInfo"></TextBlock>
+        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Name="Text_ExtremumsProgressInfo"></TextBlock>
+        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Name="Text_ProgressInfo"></TextBlock>
+        <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Name="Text_GlobalBestModeInfo"></TextBlock>
+        <TextBlock Grid.Row="4" Grid.ColumnSpan="2" Name="Text_LocalBestModeInfo"></TextBlock>
+        <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Name="Text_LastIterationUtilityDelta"></TextBlock>
+        <TextBlock Grid.Row="6" Grid.Column="1" Name="Text_LastTestResult" Background="LightBlue"></TextBlock>
+        <TextBlock Grid.Row="6" Grid.Column="0" Name="Text_CurrentPermutation" Background="LightGray"></TextBlock>
     </Grid>
 </Window>

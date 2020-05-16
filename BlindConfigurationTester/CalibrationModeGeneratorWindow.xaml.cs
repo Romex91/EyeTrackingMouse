@@ -12,6 +12,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace BlindConfigurationTester
@@ -25,52 +26,64 @@ namespace BlindConfigurationTester
         {
             InitializeComponent();
 
-            mode_generation_background_task = Task.Factory.StartNew(() =>
+            mode_generation_background_task = Task.Factory.StartNew(async () =>
             {
-
                 var watch = new System.Diagnostics.Stopwatch();
                 watch.Start();
-
-                GenerateConfiguration(data_points);
-                watch.Stop();
-
-                MessageBox.Show("Finished! Elapsed time:" + watch.Elapsed.ToString());
+                try
+                {
+                   await GenerateConfiguration(data_points);
+                } finally
+                {
+                    watch.Stop();
+                    MessageBox.Show("Finished! Elapsed time:" + watch.Elapsed.ToString());
+                }
             }, cancellation.Token);
 
             Closing += CalibrationModeGeneratorWindow_Closing;
         }
 
-        public eye_tracking_mouse.Options.CalibrationMode BestCalibrationMode
+        public class Results 
         {
-            get; set;
+            public UtilityAndModePair best_calibration_mode = new UtilityAndModePair (0, null);
+            public List<UtilityAndModePair> linear_search_results = new List<UtilityAndModePair>();
+            public List<UtilityAndModePair> extremum_search_results = new List<UtilityAndModePair>();
         }
 
-        public List<Tuple<float, eye_tracking_mouse.Options.CalibrationMode>> GoodModes
-        { get; } = new List<Tuple<float, eye_tracking_mouse.Options.CalibrationMode>>();
+        private Results results = new Results();
 
-        private void TryAddToGoodModes(float utility, eye_tracking_mouse.Options.CalibrationMode mode)
+        public async Task<Results> GetResults()
+        {
+            try
+            {
+                await mode_generation_background_task.ConfigureAwait(true);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            return results;
+        }
+
+        private void TryAddToLinearResults(float utility, eye_tracking_mouse.Options.CalibrationMode mode)
         {
             if (utility <= 0)
                 return;
 
-            foreach(var good_mode in GoodModes)
+            foreach(var good_mode in results.linear_search_results)
             {
-                if (good_mode.Item2.Equals(mode))
+                if (good_mode.mode.Equals(mode))
                 {
-                    good_mode.Item2.tag_for_testing += "+" + mode.tag_for_testing;
+                    good_mode.mode.tag_for_testing += "+" + mode.tag_for_testing;
                     return;
                 }
             }
 
-            GoodModes.Add(new Tuple<float, eye_tracking_mouse.Options.CalibrationMode>(utility, mode));
+            results.linear_search_results.Add(new UtilityAndModePair(utility, mode));
         }
 
-        private float global_best_utility = 0;
-
-        private void CalibrationModeGeneratorWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void CalibrationModeGeneratorWindow_Closing(object sender, System.ComponentModel.CancelEventArgs event_args)
         {
             cancellation.Cancel();
-            mode_generation_background_task.Wait();
         }
 
         System.Threading.CancellationTokenSource cancellation = new System.Threading.CancellationTokenSource();
@@ -80,7 +93,8 @@ namespace BlindConfigurationTester
         private long number_of_global_iterations = 0;
         private long total_min_max_permutations = 0;
         private long remaining_min_max_permutations = 0;
-        private void GenerateConfiguration(List<DataPoint> data_points)
+
+        private async Task GenerateConfiguration(List<DataPoint> data_points)
         {
             eye_tracking_mouse.Options.Instance = new eye_tracking_mouse.Options();
 
@@ -90,15 +104,6 @@ namespace BlindConfigurationTester
                 {
                     Text_CurrentPermutation.Text = JsonConvert.SerializeObject(mode, Formatting.Indented);
                 }));
-
-                //GoodModes.AddRange(new ExtremumSearcher(mode, data_points,
-                //    (string a, string b) => {
-                //        Dispatcher.Invoke((Action)(() =>
-                //        {
-                //            Text_ProgressInfo.Text = a;
-                //            Text_GlobalBestModeInfo.Text = b;
-                //        }));
-                //    }).Extremums);
 
                 CalibrationModeIterator iterator = new CalibrationModeIterator(mode);
                 iterator.ForModeAndItsVariations(mode, (x, tag) =>
@@ -119,6 +124,62 @@ namespace BlindConfigurationTester
                 //    remaining_min_max_permutations++;
                 //    IncrementalImprove(x, data_points, tag); });
                 number_of_global_iterations++;
+            }
+
+            if (results.best_calibration_mode == null)
+                return;
+
+            number_of_local_iterations = 0;
+
+            var extremum_searcher = new ExtremumSearcher(
+                results.best_calibration_mode.mode, 
+                data_points,
+                (ExtremumSearcher.TestResultsInfo info) =>
+                {
+                    Dispatcher.BeginInvoke((Action)(() =>
+                    {
+                        number_of_local_iterations += info.modes_tested;
+                        Text_ExtremumsProgressInfo.Text = 
+                            "number of tests during extremums search: " + 
+                            number_of_local_iterations;
+                    }));
+                },
+                cancellation.Token);
+
+            while(true)
+            {
+                var new_extremums = await extremum_searcher.SearchNext();
+                if (new_extremums == null)
+                    break;
+
+                results.extremum_search_results.AddRange(new_extremums);
+                results.extremum_search_results.Sort((x, y) => {
+                    if (x.utility < y.utility)
+                        return 1;
+                    else return -1;
+                });
+                if (results.extremum_search_results.Count > 1000)
+                {
+                    results.extremum_search_results.RemoveRange(
+                        0,
+                        results.extremum_search_results.Count - 1000);
+                }
+                if (results.best_calibration_mode.utility < results.extremum_search_results.First().utility)
+                    results.best_calibration_mode = results.extremum_search_results.First();
+
+                string progress_info = extremum_searcher.QueueInfo;
+                Dispatcher.Invoke((Action)(() =>
+                {
+                    progress_info += "Top extremums.: ";
+                    for (int i = 0; 
+                         i < results.extremum_search_results.Count && i < 10;
+                         i++)
+                    {
+                        progress_info += results.extremum_search_results[i].utility + " ";
+                    }
+
+                    Text_ExtremumsQueueInfo.Text = progress_info;
+                }));
             }
         }
 
@@ -144,9 +205,6 @@ namespace BlindConfigurationTester
                         eye_tracking_mouse.Options.CalibrationMode calibration_mode = local_best_calibration_mode.Clone();
                         field.SetFieldValue(calibration_mode, range[i]);
 
-                        if (cancellation.Token.IsCancellationRequested)
-                            return;
-
                         modes_to_test.Add(calibration_mode);
                     }
 
@@ -163,7 +221,7 @@ namespace BlindConfigurationTester
                     break;
             }
             local_best_calibration_mode.tag_for_testing = tag + "_max_out";
-            TryAddToGoodModes(local_best_utility, local_best_calibration_mode);
+            TryAddToLinearResults(local_best_utility, local_best_calibration_mode);
         }
 
         private void RunTests(
@@ -182,9 +240,12 @@ namespace BlindConfigurationTester
                     ". MinMax Permutations " + remaining_min_max_permutations + "/" + total_min_max_permutations;
             }));
 
+            cancellation.Token.ThrowIfCancellationRequested();
+
             List<Task<Helpers.TestResult>> tasks = new List<Task<Helpers.TestResult>>();
             foreach (var mode in modes)
             {
+                cancellation.Token.ThrowIfCancellationRequested();
                 tasks.Add(Task.Factory.StartNew<Helpers.TestResult>(() =>
                 {
                     return Helpers.TestCalibrationMode(data_points, mode);
@@ -211,12 +272,11 @@ namespace BlindConfigurationTester
                 Text_LastTestResult.Text = "Last test results " + best_result.ToString() + " \n" + JsonConvert.SerializeObject(best_mode, Formatting.Indented);
             }));
 
-            Debug.Assert(global_best_utility >= local_best_utility);
+            Debug.Assert(results.best_calibration_mode.utility >= local_best_utility);
 
-            if (best_utility > global_best_utility)
+            if (best_utility > results.best_calibration_mode.utility)
             {
-                global_best_utility = best_utility;
-                BestCalibrationMode = best_mode;
+                results.best_calibration_mode = new UtilityAndModePair(best_utility, best_mode);
 
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
@@ -261,9 +321,6 @@ namespace BlindConfigurationTester
                 {
                     var field = iterator.Fields[i];
 
-                    if (cancellation.Token.IsCancellationRequested)
-                        return;
-
                     eye_tracking_mouse.Options.CalibrationMode calibration_mode = local_best_calibration_mode.Clone();
                     if (field.Increment(calibration_mode, steps_number))
                     {
@@ -295,7 +352,7 @@ namespace BlindConfigurationTester
             }
 
             local_best_calibration_mode.tag_for_testing = tag + "_incremental";
-            TryAddToGoodModes(local_best_utility, local_best_calibration_mode);
+            TryAddToLinearResults(local_best_utility, local_best_calibration_mode);
         }
     }
 }

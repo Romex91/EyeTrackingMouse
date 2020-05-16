@@ -169,7 +169,8 @@ namespace BlindConfigurationTester
 
         private void CreateConfiguration(
             eye_tracking_mouse.Options.CalibrationMode mode,
-            List<Tuple<float, eye_tracking_mouse.Options.CalibrationMode>> good_modes)
+            List<UtilityAndModePair> linear_search_reasults,
+            List<UtilityAndModePair> extremum_search_results)
         {
             string new_config = Utils.GenerateNewConfigurationName("gen") + "_" +
                 Helpers.TestCalibrationMode(SelectedDataSet.data_points, mode).UtilityFunction;
@@ -182,35 +183,41 @@ namespace BlindConfigurationTester
 
             for (int i = 0; i < 2; i++)
             {
-                var processed_results = new List<Tuple<Helpers.TestResult, eye_tracking_mouse.Options.CalibrationMode>>();
-                foreach (var good_mode in good_modes)
-                {
-                    var calibration_manager = Helpers.SetupCalibrationManager(good_mode.Item2);
-                    var test_result = Helpers.TestCalibrationManager(
-                        calibration_manager,
-                        SelectedDataSet.data_points,
-                        good_mode.Item2.additional_dimensions_configuration);
-
-                    processed_results.Add(new Tuple<Helpers.TestResult, eye_tracking_mouse.Options.CalibrationMode>(test_result, good_mode.Item2));
-                }
                 File.WriteAllText(
-                    System.IO.Path.Combine(Utils.GetConfigurationDir(new_config), i == 0 ? "good_modes.json" : "good_modes_sorted.json"),
-                    JsonConvert.SerializeObject(processed_results, Formatting.Indented));
-                good_modes.Sort((x, y) => { return (int)((x.Item1 - y.Item1) * 1000); }) ;
+                    System.IO.Path.Combine(
+                        Utils.GetConfigurationDir(new_config), 
+                        i == 0 ? "linear_results.json" : "linear_results_sorted.json"),
+                    JsonConvert.SerializeObject(linear_search_reasults, Formatting.Indented));
+                linear_search_reasults.Sort((x, y) => { return (int)((x.utility - y.utility) * 1000); }) ;
             }
+
+            if (extremum_search_results== null)
+                return;
+
+            File.WriteAllText(
+                System.IO.Path.Combine(
+                    Utils.GetConfigurationDir(new_config),
+                    "extremum_search_results.json"),
+                JsonConvert.SerializeObject(extremum_search_results, Formatting.Indented));
         }
 
 
-        private void Button_GenerateConfigurationOnData_Click(object sender, RoutedEventArgs e)
+        private async void Button_GenerateConfigurationOnData_Click(object sender, RoutedEventArgs e)
         {
             if (SelectedDataSet == null)
                 return;
 
             var window = new CalibrationModeGeneratorWindow(SelectedDataSet.data_points);
             window.ShowDialog();
-            if (window.BestCalibrationMode == null)
+
+            var results = await window.GetResults();
+
+            if (results.best_calibration_mode.mode == null)
                 return;
-            CreateConfiguration(window.BestCalibrationMode, window.GoodModes);
+            CreateConfiguration(
+                results.best_calibration_mode.mode,
+                results.linear_search_results,
+                results.extremum_search_results);
         }
 
 

@@ -11,7 +11,19 @@ using System.Threading.Tasks;
 
 namespace BlindConfigurationTester
 {
-    using UtilityAndModePair = Tuple<float, eye_tracking_mouse.Options.CalibrationMode>;
+    public class UtilityAndModePair
+    {
+        public UtilityAndModePair(
+            float utility, 
+            eye_tracking_mouse.Options.CalibrationMode mode)
+        {
+            this.utility = utility;
+            this.mode = mode;
+        }
+
+        public float utility;
+        public eye_tracking_mouse.Options.CalibrationMode mode;
+    }
     public static partial class Extensions
     {
         public static string GetUniqueKey(this eye_tracking_mouse.Options.CalibrationMode mode)
@@ -22,280 +34,192 @@ namespace BlindConfigurationTester
 
     class ExtremumSearcher
     {
-        readonly object mutex = new object();
         HashSet<string> handled_extremums = new HashSet<string>();
         List<UtilityAndModePair> extremums_queue =
             new List<UtilityAndModePair>();
-
+        CancellationToken cancellation_token;
         List<DataPoint> data_points;
-
-        Action<string, string> progress_info_callback;
-
-        public List<UtilityAndModePair> Extremums { get; } = new List<UtilityAndModePair>();
+        Action<TestResultsInfo> test_results_info_callback;
+        public struct TestResultsInfo
+        {
+            public int modes_tested;
+            public int cached_results_reused;
+        }
 
         public ExtremumSearcher(
             eye_tracking_mouse.Options.CalibrationMode starting_mode,
             List<DataPoint> data_points,
-            Action<string, string> progress_info_callback)
+            Action<TestResultsInfo> test_results_info_callback,
+            CancellationToken cancellation_token)
         {
             this.data_points = data_points;
-            this.progress_info_callback = progress_info_callback;
-            extremums_queue.Add(new UtilityAndModePair(0, starting_mode));
+            this.cancellation_token = cancellation_token;
+            this.test_results_info_callback = test_results_info_callback;
 
-            Task[] tasks = new Task[16];
+            extremums_queue.Add(new UtilityAndModePair(0, starting_mode));
+        }
+
+        public string QueueInfo { get; private set; }
+
+        public async Task<List<UtilityAndModePair>> SearchNext()
+        {
+            if (extremums_queue.Count == 0)
+                return null;
+
+            var retval = new List<UtilityAndModePair>();
+
+            const int max_tasks_count = 4;
+            var tasks = new Task<List<UtilityAndModePair>>[Math.Min(max_tasks_count, extremums_queue.Count)];
             for (int i = 0; i < tasks.Length; i++)
             {
-                tasks[i] = new Task(() =>
+                var mode = extremums_queue[i].mode;
+                tasks[i] = Task.Factory.StartNew<List<UtilityAndModePair>>(() =>
                 {
-                    TaskLoop();
-                });
-                tasks[i].Start();
+                    return FindNeighbourExtremums(mode);
+                }, cancellation_token);
             }
-            Task.WaitAll(tasks);
-        }
 
-        private void TaskLoop()
-        {
-            while (true)
+            extremums_queue.RemoveRange(0, tasks.Length);
+
+            List<UtilityAndModePair> new_extremums = new List<UtilityAndModePair>();
+            for (int i = 0; i < tasks.Length; i++)
             {
-                eye_tracking_mouse.Options.CalibrationMode queued_extremum = null;
-                lock (mutex)
-                {
-                    if (extremums_queue.Count > 0)
-                    {
-                        queued_extremum = extremums_queue.Last().Item2;
-                        extremums_queue.RemoveAt(extremums_queue.Count - 1);
-                    }
-                    else if (handled_extremums.Count > 0)
-                    {
-                        return;
-                    }
-                }
+                new_extremums.InsertRange(new_extremums.Count, await tasks[i]);
+            }
 
-                if (queued_extremum == null)
-                {
-                    Thread.Sleep(500);
+            foreach (var extremum in new_extremums)
+            {
+                string key = extremum.mode.GetUniqueKey();
+                if (handled_extremums.Contains(key))
                     continue;
-                }
-
-                List<UtilityAndModePair> extremums = FindExtremums(queued_extremum, 2);
-
-                lock (mutex)
-                {
-                    foreach (var extremum in extremums)
-                    {
-                        string key = extremum.Item2.GetUniqueKey();
-                        if (handled_extremums.Contains(key))
-                            continue;
-                        handled_extremums.Add(key);
-                        extremums_queue.Add(extremum);
-                        Extremums.Add(extremum);
-                    }
-                    Extremums.Sort((x, y) => {
-                        if (x.Item1 > y.Item1)
-                            return 1;
-                        else return -1;
-                    });
-                    extremums_queue.Sort((x, y) => {
-                        if (x.Item1 > y.Item1)
-                            return 1;
-                        else return -1;
-                    });
-                    if (extremums_queue.Count > 30)
-                        extremums_queue.RemoveRange(0, extremums_queue.Count - 30);
-
-                    if (Extremums.Count > 100)
-                        Extremums.RemoveRange(0, Extremums.Count - 100);
-
-                    string progress_info = "Queue. Size: "  + extremums_queue.Count + " \nContent: ";
-                    for (int i = extremums_queue.Count - 10; i < extremums_queue.Count; i++)
-                    {
-                        progress_info += extremums_queue[i].Item1 + " ";
-                    }
-                    progress_info += "\n Extremums handled: " + handled_extremums.Count() + "\n";
-
-                    progress_info += "Top extremums.: ";
-                    for (int i = Extremums.Count - 10; i < Extremums.Count; i++)
-                    {
-                        progress_info += Extremums[i].Item1 + " ";
-                    }
-
-                    string current_best_extremum = JsonConvert.SerializeObject(
-                        Extremums.Last().Item2, 
-                        Formatting.Indented);
-                    progress_info_callback(progress_info, current_best_extremum);
-                }
+                handled_extremums.Add(key);
+                extremums_queue.Add(extremum);
+                retval.Add(extremum);
             }
-        }
-        int ConvertIndexesToSingleInt(int[] indexes, int[] range_sizes)
-        {
-            Debug.Assert(indexes.Length == range_sizes.Length);
-            int[] index_scales = new int[indexes.Length];
+
+            extremums_queue.Sort((x, y) => {
+                if (x.utility < y.utility)
+                    return 1;
+                else return -1;
+            });
+
+            QueueInfo = "Queue. Size: " + extremums_queue.Count + " \nContent: ";
+            for (int i = 0; i < extremums_queue.Count && i < 10; i++)
             {
-                int index_scale = 1;
-                for (int i = 0; i < indexes.Length; i++)
-                {
-                    index_scales[i] = index_scale;
-                    index_scale *= range_sizes[i];
-                }
+                QueueInfo += extremums_queue[i].utility + " ";
             }
+            QueueInfo += "\n Extremums handled: " + handled_extremums.Count() + "\n";
 
-            int retval = 0;
-            for (int i = 0; i < indexes.Length; i++)
-            {
-                retval += indexes[i] * index_scales[i];
-            }
             return retval;
         }
 
-        void ForEachIndexesCombination(
-            int[] indexes,
-            int[] range_sizes,
-            int starting_range,
-            Action<int[]> callback)
+        int ConvertIndexesToSingleInt(int i, int j, int k, int i_max, int j_max)
         {
-            Debug.Assert(indexes.Length == range_sizes.Length);
-            for (int i = 0; i < range_sizes[starting_range]; i++)
-            {
-                indexes[starting_range] = i;
-                if (starting_range + 1 < indexes.Length)
-                    ForEachIndexesCombination(indexes, range_sizes, starting_range + 1, callback);
-                else
-                    callback(indexes);
-            }
+            return i + j * i_max + k * j_max;
         }
 
-        Dictionary<int, UtilityAndModePair>  LaunchTests(
+        List<UtilityAndModePair> FindNeighbourExtremums(
             eye_tracking_mouse.Options.CalibrationMode starting_mode,
             List<CalibrationModeIterator.OptionsField> options_to_iterate)
         {
-            Dictionary<int, UtilityAndModePair> test_results = new Dictionary<int, UtilityAndModePair>();
+            TestResultsInfo test_results_info = new TestResultsInfo { cached_results_reused = 0, modes_tested = 0 };
+            int i_max = options_to_iterate[0].Range.Length;
+            int j_max = options_to_iterate[1].Range.Length;
+            int k_max = options_to_iterate[2].Range.Length;
 
-            int[] starting_indexes = new int[options_to_iterate.Count];
-            int[] range_sizes = new int[options_to_iterate.Count];
-            for (int i = 0; i < options_to_iterate.Count; i++)
-            {
-                starting_indexes[i] = 0;
-                range_sizes[i] = options_to_iterate[i].Range.Length;
-            }
+            Debug.Assert(options_to_iterate.Count == 3);
+            var test_results = new UtilityAndModePair[i_max, j_max, k_max];
 
-            ForEachIndexesCombination(starting_indexes, range_sizes, 0, (indexes) =>
+            for (int i = 0; i < i_max; i++)
             {
-                var mode = starting_mode.Clone();
-                for (int i = 0; i < options_to_iterate.Count; i++)
+                for(int j = 0; j < j_max; j++)
                 {
-                    options_to_iterate[i].SetFieldValue(mode, options_to_iterate[i].Range[indexes[i]]);
+                    for (int k = 0; k < k_max; k++)
+                    {
+                        var mode = starting_mode.Clone();
+                        options_to_iterate[0].SetFieldValue(mode, options_to_iterate[0].Range[i]);
+                        options_to_iterate[1].SetFieldValue(mode, options_to_iterate[1].Range[j]);
+                        options_to_iterate[2].SetFieldValue(mode, options_to_iterate[2].Range[k]);
+
+                        cancellation_token.ThrowIfCancellationRequested();
+                        test_results[i, j, k] = 
+                            new UtilityAndModePair(
+                                Helpers.TestCalibrationMode(data_points, mode).UtilityFunction,
+                                mode);
+                        test_results_info.modes_tested++;
+                    }
                 }
-
-                test_results.Add(ConvertIndexesToSingleInt(indexes, range_sizes),
-                    new UtilityAndModePair(
-                        Helpers.TestCalibrationMode(data_points, mode).UtilityFunction,
-                        mode));
-            });
-
-            return test_results;
-        }
-
-        List<UtilityAndModePair> FindExtremums(
-            eye_tracking_mouse.Options.CalibrationMode starting_mode,
-            List<CalibrationModeIterator.OptionsField> options_to_iterate)
-        {
-            Dictionary<int, UtilityAndModePair> test_results = LaunchTests(starting_mode, options_to_iterate);
-            int[] starting_indexes = new int[options_to_iterate.Count];
-            int[] range_sizes = new int[options_to_iterate.Count];
-            for (int i = 0; i < options_to_iterate.Count; i++)
-            {
-                starting_indexes[i] = 0;
-                range_sizes[i] = options_to_iterate[i].Range.Length;
             }
+
+            test_results_info_callback(test_results_info);
 
             HashSet<int> non_extremum_indexes = new HashSet<int>();
             List<UtilityAndModePair> extremums = new List<UtilityAndModePair>();
-            ForEachIndexesCombination(starting_indexes, range_sizes, 0, (indexes) =>
+            for (int i = 0; i < i_max; i++)
             {
-                bool is_extremum = true;
-                if (non_extremum_indexes.Contains(ConvertIndexesToSingleInt(indexes, range_sizes)))
+                for (int j = 0; j < j_max; j++)
                 {
-                    is_extremum = false;
-                }
+                    for (int k = 0; k < k_max; k++)
+                    {
+                        bool is_extremum = true;
+                        if (non_extremum_indexes.Contains(ConvertIndexesToSingleInt(i, j, k, i_max, j_max)))
+                        {
+                            is_extremum = false;
+                        }
 
-                var utility_and_mode_pair = test_results[ConvertIndexesToSingleInt(indexes, range_sizes)];
-                Action<int[]> compare_to_neighbors_action = (cloned_indexes) =>
-                {
-                    double utility = test_results[ConvertIndexesToSingleInt(cloned_indexes, range_sizes)].Item1;
-                    if (utility > utility_and_mode_pair.Item1)
-                    {
-                        is_extremum = false;
-                    }
-                    else if (utility == utility_and_mode_pair.Item1)
-                    {
-                        non_extremum_indexes.Add(ConvertIndexesToSingleInt(cloned_indexes, range_sizes));
-                    }
-                };
 
-                for (int i = 0; i < indexes.Length; i++)
-                {
-                    if (indexes[i] > 0)
-                    {
-                        int[] cloned_indexes = (int[])indexes.Clone();
-                        cloned_indexes[i]--;
-                        compare_to_neighbors_action(cloned_indexes);
-                    } 
-                    
-                    if (indexes[i] < range_sizes[i] - 1)
-                    {
-                        int[] cloned_indexes = (int[])indexes.Clone();
-                        cloned_indexes[i]++;
-                        compare_to_neighbors_action(cloned_indexes);
+                        // n means neighbor
+                        for (int n_i = Math.Max(0, i - 1); n_i <= i + 1 && n_i < i_max; n_i++)
+                        {
+                            for (int n_j = Math.Max(0, j - 1); n_j <= j + 1 && n_j < j_max; n_j++)
+                            {
+                                for (int n_k = Math.Max(0, k - 1); n_k <= k + 1 && n_k < k_max; n_k++)
+                                {
+                                    if (i == n_i && j == n_j && k == n_k)
+                                        continue;
+                                    if (test_results[i,j,k].utility < test_results[n_i, n_j, n_k].utility)
+                                    {
+                                        is_extremum = false;
+                                    } else if (test_results[i, j, k].utility == test_results[n_i, n_j, n_k].utility)
+                                    {
+                                        non_extremum_indexes.Add(ConvertIndexesToSingleInt(
+                                            n_i, 
+                                            n_j, 
+                                            n_k, 
+                                            i_max, 
+                                            j_max));
+                                    }
+                                }
+                            }
+                        }
+
+                        if (is_extremum)
+                        {
+                            extremums.Add(test_results[i, j, k]);
+                        }
                     }
                 }
-
-                if (is_extremum)
-                {
-                    extremums.Add(utility_and_mode_pair);
-                }
-            });
+            }
 
             return extremums;
         }
 
-        static IEnumerable<IEnumerable<T>>
-          GetKCombs<T>(IEnumerable<T> list, int length) where T : IComparable
-        {
-            if (length == 1) return list.Select(t => new T[] { t });
-            return GetKCombs(list, length - 1)
-                .SelectMany(t => list.Where(o => o.CompareTo(t.Last()) > 0),
-                    (t1, t2) => t1.Concat(new T[] { t2 }));
-        }
-
-        List<UtilityAndModePair> FindExtremums(
-            eye_tracking_mouse.Options.CalibrationMode starting_mode,
-            int dimensions_count_per_step)
+        List<UtilityAndModePair> FindNeighbourExtremums(
+            eye_tracking_mouse.Options.CalibrationMode starting_mode)
         {
             var iterator = new CalibrationModeIterator(starting_mode);
-            int[] fields_indexes = new int[iterator.Fields.Count];
-            for (int i = 0; i < fields_indexes.Length; i++)
-            {
-                fields_indexes[i] = i;
-            }
-            var fields_indexes_permutations = GetKCombs(fields_indexes, dimensions_count_per_step);
 
             List<UtilityAndModePair> retval = new List<UtilityAndModePair>();
 
-            foreach (var indexes_permutation in fields_indexes_permutations)
+            for(int i = 0; i < iterator.Fields.Count - 2; i++)
             {
-                Debug.Assert(dimensions_count_per_step == indexes_permutation.Count());
-                var selected_fields = new List<CalibrationModeIterator.OptionsField>(dimensions_count_per_step);
-                foreach(var index in indexes_permutation)
-                {
-                    selected_fields.Add(iterator.Fields[index]);
-                }
-                foreach (var index in indexes_permutation)
-                {
-                    retval.InsertRange(retval.Count, FindExtremums(starting_mode, selected_fields));
-                }
+                var selected_fields = new List<CalibrationModeIterator.OptionsField> {
+                   iterator.Fields[i],
+                   iterator.Fields[i+1],
+                   iterator.Fields[i+2],
+                };
+                retval.InsertRange(retval.Count, FindNeighbourExtremums(starting_mode, selected_fields));
             }
-
             return retval;
         }
     }
