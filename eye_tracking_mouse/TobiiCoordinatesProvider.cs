@@ -148,7 +148,7 @@ namespace eye_tracking_mouse
                     !config.RightEye.Equals(Vector3Percents.Disabled) ||
                     !config.AngleBetweenEyes.Equals(Vector3Percents.Disabled);
 
-                Debug.Assert(config.AngleBetweenEyes.Z == 0);
+                Debug.Assert(config.AngleBetweenEyes.Z == null);
             }
         }
 
