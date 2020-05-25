@@ -97,7 +97,6 @@ namespace BlindConfigurationTester
         private async Task GenerateConfiguration(List<DataPoint> data_points)
         {
             eye_tracking_mouse.Options.Instance = new eye_tracking_mouse.Options();
-            CalibrationModeIterator iterator;
 
             foreach (var mode in CalibrationModesForTesting.Short)
             {
@@ -106,7 +105,7 @@ namespace BlindConfigurationTester
                     Text_CurrentPermutation.Text = JsonConvert.SerializeObject(mode, Formatting.Indented);
                 }));
 
-                iterator = new CalibrationModeIterator(mode);
+                CalibrationModeIterator iterator = new CalibrationModeIterator(mode);
                 iterator.ForModeAndItsVariations(mode, (x, tag) =>
                 {
                     Dispatcher.Invoke((Action)(() =>
@@ -132,8 +131,6 @@ namespace BlindConfigurationTester
 
             number_of_local_iterations = 0;
 
-            iterator = new CalibrationModeIterator(results.best_calibration_mode.mode);
-
             var extremum_searcher = new ExtremumSearcher(
                 results.best_calibration_mode.mode, 
                 data_points,
@@ -144,8 +141,7 @@ namespace BlindConfigurationTester
                         number_of_local_iterations += info.modes_tested;
                         Text_ExtremumsProgressInfo.Text = 
                             "number of tests during extremums search: " + 
-                            number_of_local_iterations + 
-                            " max tests number:"  + iterator.NumberOfDifferentModes;
+                            number_of_local_iterations;
                     }));
                 },
                 cancellation.Token);

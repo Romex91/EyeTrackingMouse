@@ -240,17 +240,7 @@ namespace eye_tracking_mouse
                 }
 
                 if (key == Key.Modifier && key_bindings.is_modifier_e0 != is_e0_key)
-                {
                     key = Key.Unbound;
-                    if (key_bindings.bindings[Key.Modifier] == Interceptor.Keys.CapsLock ||
-                        key_bindings.bindings[Key.Modifier] == Interceptor.Keys.NumLock)
-                    {
-                        // AFAIK nobody uses CapsLock as a modifier. This will prevent CapsLock triggering
-                        // when user misclicks keybindings.
-                        e.Handled = true;
-                        return;
-                    }
-                }
 
                 e.Handled = receiver.OnKeyPressed(key, key_state, Helpers.IsModifier(e.Key));
             }

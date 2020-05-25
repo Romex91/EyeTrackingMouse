@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace BlindConfigurationTester
 {
@@ -21,46 +19,6 @@ namespace BlindConfigurationTester
             private set;
             get;
         } = new List<OptionsField>();
-
-        public long GetUniqueKey(eye_tracking_mouse.Options.CalibrationMode mode)
-        {
-            long retval = 0;
-            long current_step = 1;
-            foreach(var field in Fields)
-            {
-                int field_value = field.GetFieldValue(mode);
-                int i = 0;
-                for (; i < field.Range.Length; i++)
-                {
-                    if (field.Range[i] == field_value)
-                        break;
-                }
-                if (i == field.Range.Length)
-                {
-                    MessageBox.Show("tried getting unique key for invalid mode");
-                    Application.Current.Shutdown();
-                }
-
-                retval += current_step * i;
-                current_step *= field.Range.Length;
-            }
-
-            Debug.Assert(retval < NumberOfDifferentModes);
-            return retval;
-        }
-
-        public long NumberOfDifferentModes
-        {
-            get
-            {
-                long retval = 1;
-                foreach(var field in Fields)
-                {
-                    retval *= field.Range.Length;
-                }
-                return retval;
-            }
-        }
 
         public CalibrationModeIterator(eye_tracking_mouse.Options.CalibrationMode mode)
         {
