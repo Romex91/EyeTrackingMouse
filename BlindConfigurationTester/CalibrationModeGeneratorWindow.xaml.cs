@@ -97,6 +97,9 @@ namespace BlindConfigurationTester
 
         private async Task GenerateConfiguration(List<DataPoint> data_points)
         {
+            // VS unit tests don't work and I don't want to fix them.
+            IteratorTest.UniqueKeysAreUnique(CalibrationModesForTesting.Short.First());
+
             eye_tracking_mouse.Options.Instance = new eye_tracking_mouse.Options();
             CalibrationModeIterator iterator;
 

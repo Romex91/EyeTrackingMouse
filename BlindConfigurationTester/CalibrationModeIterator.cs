@@ -305,4 +305,109 @@ namespace BlindConfigurationTester
             }
         }
     }
+
+    public class IteratorTest
+    {
+        private static void Assert(bool x)
+        {
+            // VS unit tests don't work and I don't want to fix them.
+            if (!x)
+                MessageBox.Show("Tests fail");
+        }
+
+        static void ForEachFieldValue(
+            int field_index,
+            List<CalibrationModeIterator.OptionsField> fields,
+            eye_tracking_mouse.Options.CalibrationMode mode,
+            Action<eye_tracking_mouse.Options.CalibrationMode> action)
+        {
+            var field = fields[field_index];
+            field.SetFieldValue(mode, field.Min);
+            while (field.Increment(mode, 1))
+            {
+                if (field_index < fields.Count - 1)
+                    ForEachFieldValue(field_index + 1, fields, mode, action);
+                else
+                    action(mode);
+            }
+        }
+
+        public static void UniqueKeysAreUnique(eye_tracking_mouse.Options.CalibrationMode mode)
+        {
+            var unique_keys = new HashSet<long>();
+            var iterator = new CalibrationModeIterator(mode);
+
+            foreach(var field in iterator.Fields)
+            {
+                field.SetFieldValue(mode, field.Min);
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                foreach (var field in iterator.Fields)
+                {
+                    if (field.Increment(mode, 1))
+                    {
+                        long key = iterator.GetUniqueKey(mode);
+                        Assert(!unique_keys.Contains(key));
+                        unique_keys.Add(key);
+                    }
+                }
+            }
+
+            unique_keys.Clear();
+
+            foreach(var field in iterator.Fields)
+            {
+                field.SetFieldValue(mode, field.Min);
+            }
+            long tests_to_run = 1000000;
+            try
+            {
+                ForEachFieldValue(0, iterator.Fields, mode, (x) => {
+                    if (--tests_to_run < 0)
+                    {
+                        throw new NotImplementedException("Удалые пляски на костылях.");
+                    }
+                    else {
+                        long key = iterator.GetUniqueKey(x);
+                        Assert(!unique_keys.Contains(key));
+                        unique_keys.Add(key);
+                    }
+            });
+            } catch (NotImplementedException)
+            {
+                Assert(tests_to_run < 0);
+            }
+
+
+            foreach (var field in iterator.Fields)
+            {
+                field.SetFieldValue(mode, field.Min);
+            }
+            tests_to_run = 1000001;
+            try
+            {
+                ForEachFieldValue(0, iterator.Fields, mode, (x) => {
+                    if (--tests_to_run < 0)
+                    {
+                        throw new NotImplementedException("Удалые пляски на костылях.");
+                    } else if (tests_to_run == 0){
+                        long key = iterator.GetUniqueKey(x);
+                        Assert(!unique_keys.Contains(key));
+                    }
+                    else 
+                    {
+                        long key = iterator.GetUniqueKey(x);
+                        Assert(unique_keys.Contains(key));
+                    }
+                });
+            }
+            catch (NotImplementedException)
+            {
+                Assert(tests_to_run < 0);
+            }
+        }
+    }
+
 }
