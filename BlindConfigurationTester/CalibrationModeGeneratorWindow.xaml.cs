@@ -89,6 +89,7 @@ namespace BlindConfigurationTester
         System.Threading.CancellationTokenSource cancellation = new System.Threading.CancellationTokenSource();
         private Task mode_generation_background_task = null;
         private long number_of_tests = 0;
+        private long number_of_cached_results_reused = 0;
         private long number_of_local_iterations = 0;
         private long number_of_global_iterations = 0;
         private long total_min_max_permutations = 0;
@@ -97,6 +98,7 @@ namespace BlindConfigurationTester
         private async Task GenerateConfiguration(List<DataPoint> data_points)
         {
             eye_tracking_mouse.Options.Instance = new eye_tracking_mouse.Options();
+            CalibrationModeIterator iterator;
 
             foreach (var mode in CalibrationModesForTesting.Short)
             {
@@ -105,7 +107,7 @@ namespace BlindConfigurationTester
                     Text_CurrentPermutation.Text = JsonConvert.SerializeObject(mode, Formatting.Indented);
                 }));
 
-                CalibrationModeIterator iterator = new CalibrationModeIterator(mode);
+                iterator = new CalibrationModeIterator(mode);
                 iterator.ForModeAndItsVariations(mode, (x, tag) =>
                 {
                     Dispatcher.Invoke((Action)(() =>
@@ -129,7 +131,9 @@ namespace BlindConfigurationTester
             if (results.best_calibration_mode == null)
                 return;
 
-            number_of_local_iterations = 0;
+            number_of_tests = 0;
+
+            iterator = new CalibrationModeIterator(results.best_calibration_mode.mode);
 
             var extremum_searcher = new ExtremumSearcher(
                 results.best_calibration_mode.mode, 
@@ -138,10 +142,12 @@ namespace BlindConfigurationTester
                 {
                     Dispatcher.BeginInvoke((Action)(() =>
                     {
-                        number_of_local_iterations += info.modes_tested;
+                        number_of_cached_results_reused += info.cached_results_reused;
+                        number_of_tests += info.modes_tested;
                         Text_ExtremumsProgressInfo.Text = 
-                            "number of tests during extremums search: " + 
-                            number_of_local_iterations;
+                            "number of tests during extremums search: " + number_of_tests + 
+                            " max tests number:"  + iterator.NumberOfDifferentModes  +
+                            " number of cached results reused " + number_of_cached_results_reused;
                     }));
                 },
                 cancellation.Token);
@@ -161,8 +167,7 @@ namespace BlindConfigurationTester
                 if (results.extremum_search_results.Count > 1000)
                 {
                     results.extremum_search_results.RemoveRange(
-                        0,
-                        results.extremum_search_results.Count - 1000);
+                        1000, results.extremum_search_results.Count - 1000);
                 }
                 if (results.best_calibration_mode.utility < results.extremum_search_results.First().utility)
                     results.best_calibration_mode = results.extremum_search_results.First();

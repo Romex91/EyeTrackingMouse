@@ -214,13 +214,13 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
 
         Dictionary<string, PlotData> cache = new Dictionary<string, PlotData>();
 
-        private static string GetKey(
+        private string GetKey(
             eye_tracking_mouse.Options.CalibrationMode mode,
             string data_point_name,
             CalibrationModeIterator.OptionsField[] enabled_fields)
         {
             return data_point_name + enabled_fields[0].field_name + " " +
-                  enabled_fields[1].field_name + " " + mode.GetUniqueKey();
+                  enabled_fields[1].field_name + " " + iterator.GetUniqueKey(mode);
         }
 
         private static PlotData CalculatePlotData(

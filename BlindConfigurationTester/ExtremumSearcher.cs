@@ -8,6 +8,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace BlindConfigurationTester
 {
@@ -24,23 +25,22 @@ namespace BlindConfigurationTester
         public float utility;
         public eye_tracking_mouse.Options.CalibrationMode mode;
     }
-    public static partial class Extensions
-    {
-        public static string GetUniqueKey(this eye_tracking_mouse.Options.CalibrationMode mode)
-        {
-            return JsonConvert.SerializeObject(mode, Formatting.None);
-        }
-    }
 
     class ExtremumSearcher
     {
-        HashSet<string> handled_extremums = new HashSet<string>();
+        HashSet<long> handled_extremums = new HashSet<long>();
         List<UtilityAndModePair> extremums_queue =
             new List<UtilityAndModePair>();
         CancellationToken cancellation_token;
         List<DataPoint> data_points;
         Action<TestResultsInfo> test_results_info_callback;
-        public struct TestResultsInfo
+
+        // Subtasks can only read this field. Each task has separate |new_test_results| to write test results.
+        // After each search iteration when each task finishes its job |new_test_results| are merged to |previous_test_results|.
+        Dictionary<long, float> previous_test_results = new Dictionary<long, float>();
+
+        CalibrationModeIterator iterator;
+        public class TestResultsInfo
         {
             public int modes_tested;
             public int cached_results_reused;
@@ -56,6 +56,8 @@ namespace BlindConfigurationTester
             this.cancellation_token = cancellation_token;
             this.test_results_info_callback = test_results_info_callback;
 
+            iterator = new CalibrationModeIterator(starting_mode);
+            handled_extremums.Add(iterator.GetUniqueKey(starting_mode));
             extremums_queue.Add(new UtilityAndModePair(0, starting_mode));
         }
 
@@ -68,14 +70,17 @@ namespace BlindConfigurationTester
 
             var retval = new List<UtilityAndModePair>();
 
-            const int max_tasks_count = 4;
+            const int max_tasks_count = 32;
             var tasks = new Task<List<UtilityAndModePair>>[Math.Min(max_tasks_count, extremums_queue.Count)];
+            var new_test_results_array = new Dictionary<long, float>[tasks.Length];
             for (int i = 0; i < tasks.Length; i++)
             {
+                new_test_results_array[i] = new Dictionary<long, float>();
+                var new_test_results = new_test_results_array[i];
                 var mode = extremums_queue[i].mode;
                 tasks[i] = Task.Factory.StartNew<List<UtilityAndModePair>>(() =>
                 {
-                    return FindNeighbourExtremums(mode);
+                    return FindNeighbourExtremums(mode, new_test_results);
                 }, cancellation_token);
             }
 
@@ -87,9 +92,21 @@ namespace BlindConfigurationTester
                 new_extremums.InsertRange(new_extremums.Count, await tasks[i]);
             }
 
+            // merge cached results
+            foreach(var new_test_results in new_test_results_array)
+            {
+                new_test_results.ToList().ForEach(x =>
+                {
+                    if (!previous_test_results.ContainsKey(x.Key))
+                    {
+                        previous_test_results.Add(x.Key, x.Value);
+                    }
+                });
+            }
+
             foreach (var extremum in new_extremums)
             {
-                string key = extremum.mode.GetUniqueKey();
+                long key = iterator.GetUniqueKey(extremum.mode);
                 if (handled_extremums.Contains(key))
                     continue;
                 handled_extremums.Add(key);
@@ -113,6 +130,33 @@ namespace BlindConfigurationTester
             return retval;
         }
 
+        float ComputeModeUtility(
+            eye_tracking_mouse.Options.CalibrationMode mode,
+            Dictionary<long, float> new_test_results,
+            TestResultsInfo info)
+        {
+            long key = iterator.GetUniqueKey(mode);
+
+
+            if (previous_test_results.ContainsKey(key))
+            {
+                info.cached_results_reused++;
+                return previous_test_results[key];
+            }
+
+            if (new_test_results.ContainsKey(key))
+            {
+                info.cached_results_reused++;
+                return new_test_results[key];
+            }
+
+            info.modes_tested++;
+            float utility = Helpers.TestCalibrationMode(data_points, mode).UtilityFunction;
+            new_test_results.Add(key, utility);
+
+            return utility;
+        }
+
         int ConvertIndexesToSingleInt(int i, int j, int k, int i_max, int j_max)
         {
             return i + j * i_max + k * j_max;
@@ -120,7 +164,8 @@ namespace BlindConfigurationTester
 
         List<UtilityAndModePair> FindNeighbourExtremums(
             eye_tracking_mouse.Options.CalibrationMode starting_mode,
-            List<CalibrationModeIterator.OptionsField> options_to_iterate)
+            List<CalibrationModeIterator.OptionsField> options_to_iterate,
+            Dictionary<long, float> new_test_results)
         {
             TestResultsInfo test_results_info = new TestResultsInfo { cached_results_reused = 0, modes_tested = 0 };
             int i_max = options_to_iterate[0].Range.Length;
@@ -144,9 +189,8 @@ namespace BlindConfigurationTester
                         cancellation_token.ThrowIfCancellationRequested();
                         test_results[i, j, k] = 
                             new UtilityAndModePair(
-                                Helpers.TestCalibrationMode(data_points, mode).UtilityFunction,
+                                ComputeModeUtility(mode, new_test_results, test_results_info),
                                 mode);
-                        test_results_info.modes_tested++;
                     }
                 }
             }
@@ -205,10 +249,9 @@ namespace BlindConfigurationTester
         }
 
         List<UtilityAndModePair> FindNeighbourExtremums(
-            eye_tracking_mouse.Options.CalibrationMode starting_mode)
+            eye_tracking_mouse.Options.CalibrationMode starting_mode,
+            Dictionary<long, float> new_test_results )
         {
-            var iterator = new CalibrationModeIterator(starting_mode);
-
             List<UtilityAndModePair> retval = new List<UtilityAndModePair>();
 
             for(int i = 0; i < iterator.Fields.Count - 2; i++)
@@ -218,7 +261,7 @@ namespace BlindConfigurationTester
                    iterator.Fields[i+1],
                    iterator.Fields[i+2],
                 };
-                retval.InsertRange(retval.Count, FindNeighbourExtremums(starting_mode, selected_fields));
+                retval.InsertRange(retval.Count, FindNeighbourExtremums(starting_mode, selected_fields, new_test_results));
             }
             return retval;
         }
