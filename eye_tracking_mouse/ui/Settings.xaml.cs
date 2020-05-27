@@ -55,7 +55,7 @@ namespace eye_tracking_mouse
                     + key_bindings[Key.ScrollUp].ToString() + "/"
                     + key_bindings[Key.ScrollDown].ToString();
 
-                HorizontalScrollStep.ToolTip = "How fast mouse wheel 'spins' when you press "
+                HorizontalScrollStep.ToolTip = "How fast mouse wheel 'spins' horizontally when you press "
                     + key_bindings[Key.ScrollLeft].ToString() + "/"
                     + key_bindings[Key.ScrollRight].ToString();
 
@@ -104,29 +104,29 @@ namespace eye_tracking_mouse
                 string calibration_view_hotkeys = Helpers.GetModifierString() + " + " +
                     Options.Instance.key_bindings[Key.ShowCalibrationView].ToString();
 
-                CalibrationModeLabel.ToolTip = CalibrationModeCombo.ToolTip =
+                CalibrationMode_RightEye.ToolTip =
+                CalibrationMode_PoorFixation.ToolTip = 
+                CalibrationMode_Default.ToolTip = 
+                CalibrationModeLabel.ToolTip = 
+                CalibrationModeCombo.ToolTip =
                 "When you use " + calibration_buttons + " " + Helpers.application_name + " slowly gathers data to increase accuracy.\n" +
                     "The algorithm is a bit tricky. It can use different data and different amounts of data.\n" +
-                    "To be honest I don't know what parameters are optimal. Trying to figure it out. \n\n" +
                     "Modes:\n" +
-                    "1.'Simple & Fast' uses as little data as reasonable. \n" +
-                    "   * Quick learning period. \n" +
-                    "   * Rough (but probably the best possible) precision. \n" +
-                    "   * Absolutely best when the Eye Tracker device has a poor fixation. \n" +
-                    "   * No extra CPU load.\n" +
-                    "   * Recommended.\n" +
-                    "2.'Multidimensional' uses much more data than 'Simple & Fast'. \n" +
+                    "1.Default \n" +
                     "   * Tracks head position. \n" +
-                    "   * Long learning period (months of using). \n" +
+                    "   * Long learning period (weeks of using). \n" +
                     "   * Rough initial precision. \n" +
-                    "   * When learned it may provide precison better than 'Simple & Fast'. \n" +
-                    "   * This mode is experimental.\n" +
-                    "   * !!! DON'T use this mode if the Eye Tracker device has a poor fixation !!!";
-
-                AdvancedCalibrationSettings.ToolTip = 
-                    "Understanding advanced calibration settings may be challenging.\n" +
-                    "It's easy to make things worse by changing this settings.\n" +
-                    "Proceed only if you understand exactly what you are doing.";
+                    "   * When learned provides better precison. \n" +
+                    "   * Uses left eye.\n" +
+                    "2.Right eye \n"+
+                    "   * Same as Default but uses right eye.\n" +
+                    "   * Third eye isn't supported.\n" +
+                    "3.Poor tracker fixation \n" +
+                    "   * Uses as little data as reasonable. \n" +
+                    "   * Quick learning period. \n" +
+                    "   * Rough precision. \n" +
+                    "   * Doesn't distinguish left and right eyes. \n" +
+                    "   * Best when the Eye Tracker device has a poor fixation.";
 
                 System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
                 FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
@@ -164,17 +164,22 @@ namespace eye_tracking_mouse
                 if (Options.Instance.calibration_mode.Equals(Options.CalibrationMode.MultiDimensionPreset))
                 {
                     CalibrationModeCombo.SelectedIndex = 0;
-                    CustomCalibrationMode.Visibility = Visibility.Collapsed;
+                    CalibrationMode_Custom.Visibility = Visibility.Collapsed;
+                }
+                else if (Options.Instance.calibration_mode.Equals(Options.CalibrationMode.MultiDimensionPresetRightEye))
+                {
+                    CalibrationModeCombo.SelectedIndex = 1;
+                    CalibrationMode_Custom.Visibility = Visibility.Collapsed;
                 }
                 else if (Options.Instance.calibration_mode.Equals(Options.CalibrationMode.SingleDimensionPreset))
                 {
-                    CalibrationModeCombo.SelectedIndex = 1;
-                    CustomCalibrationMode.Visibility = Visibility.Collapsed;
+                    CalibrationModeCombo.SelectedIndex = 2;
+                    CalibrationMode_Custom.Visibility = Visibility.Collapsed;
                 }
                 else
                 {
-                    CustomCalibrationMode.Visibility = Visibility.Visible;
-                    CalibrationModeCombo.SelectedIndex = 2;
+                    CalibrationMode_Custom.Visibility = Visibility.Visible;
+                    CalibrationModeCombo.SelectedIndex = 3;
                 }
                 is_initialized = true;
             }
@@ -445,25 +450,23 @@ namespace eye_tracking_mouse
                 if (CalibrationModeCombo.SelectedIndex == 0)
                 {
                     Options.Instance.calibration_mode = Options.CalibrationMode.MultiDimensionPreset;
-                    CustomCalibrationMode.Visibility = Visibility.Collapsed;
+                    CalibrationMode_Custom.Visibility = Visibility.Collapsed;
                 }
-                else if (CalibrationModeCombo.SelectedIndex == 1)
+                if (CalibrationModeCombo.SelectedIndex == 1)
+                {
+                    Options.Instance.calibration_mode = Options.CalibrationMode.MultiDimensionPresetRightEye;
+                    CalibrationMode_Custom.Visibility = Visibility.Collapsed;
+                }
+                else if (CalibrationModeCombo.SelectedIndex == 2)
                 {
                     Options.Instance.calibration_mode = Options.CalibrationMode.SingleDimensionPreset;
-                    CustomCalibrationMode.Visibility = Visibility.Collapsed;
+                    CalibrationMode_Custom.Visibility = Visibility.Collapsed;
                 }
 
                 Options.CalibrationMode.Changed?.Invoke(this, null);
                 Options.Changed?.Invoke(this, new EventArgs());
                 Options.Instance.SaveToFile(Options.Filepath);
             }
-        }
-
-        private void AdvancedCalibrationSettings_Click(object sender, RoutedEventArgs e)
-        {
-            CalibrationSettings calibration_settings = new CalibrationSettings();
-            calibration_settings.ShowDialog();
-            UpdateSliders();
         }
 
         private void CheckboxAutostart_Checked(object sender, RoutedEventArgs e)

@@ -276,7 +276,7 @@ namespace eye_tracking_mouse
                     return new CalibrationMode
                     {
                         considered_zones_count = 5,
-                        max_zones_count = 25,
+                        max_zones_count = 32,
                         additional_dimensions_configuration = AdditionalDimensionsConfguration.Disabled,
                         update_period_ms = 20,
                         zone_size = 150
@@ -290,25 +290,39 @@ namespace eye_tracking_mouse
                 {
                     return new CalibrationMode
                     {
-                        considered_zones_count = 7,
-                        max_zones_count = 2000,
+                        considered_zones_count = 6,
+                        max_zones_count = 512,
+                        size_of_opaque_sector_in_percents = 30,
+                        size_of_transparent_sector_in_percents = 60,
+                        shade_thickness_in_pixels = 50,
+                        algorithm = "V2",
+                        update_period_ms = 0,
+                        zone_size = 75,
                         additional_dimensions_configuration = new AdditionalDimensionsConfguration
                         {
-                            LeftEye = new Vector3Percents { X = 700, Y = 700, Z = 700 },
+                            LeftEye = new Vector3Percents { X = 5454, Y = 8726, Z = 3409 },
                             RightEye = Vector3Percents.Disabled,
-                            AngleBetweenEyes = new Vector3Percents { X = 700, Y = 700, Z = null },
+                            AngleBetweenEyes = new Vector3Percents { X = 5454, Y = 128, Z = null },
                             HeadPosition = Vector3Percents.Disabled,
                             HeadDirection = Vector3Percents.Disabled
                         },
-
-                        update_period_ms = 20,
-                        zone_size = 150
                     };
                 }
             }
 
+            public static CalibrationMode MultiDimensionPresetRightEye
+            {
+                get
+                {
+                    var retval = MultiDimensionPreset.Clone();
+                    retval.additional_dimensions_configuration.RightEye = retval.additional_dimensions_configuration.LeftEye;
+                    retval.additional_dimensions_configuration.LeftEye = Vector3Percents.Disabled;
+                    return retval;
+                }
+            }
         }
-        public CalibrationMode calibration_mode = CalibrationMode.SingleDimensionPreset;
+
+        public CalibrationMode calibration_mode = CalibrationMode.MultiDimensionPreset;
 
         public int calibration_step = 5;
 

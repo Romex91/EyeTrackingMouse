@@ -229,7 +229,7 @@ namespace eye_tracking_mouse
                     return true;
                 }).ToList();
                 while (Corrections.Count > calibration_mode.max_zones_count)
-                    Corrections.Remove(Corrections.Last());
+                    Corrections.Remove(Corrections.First());
                 for (int i = 0; i < Corrections.Count; i++)
                 {
                     if (cache.AllocateIndex() != i)

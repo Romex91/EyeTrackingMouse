@@ -130,9 +130,6 @@
     <Compile Include="ui\Arrowheads\ArrowLineBase.cs" />
     <Compile Include="FilesSavingQueue.cs" />
     <Compile Include="Autostart.cs" />
-    <Compile Include="ui\CalibrationSettings.xaml.cs">
-      <DependentUpon>ui\CalibrationSettings.xaml</DependentUpon>
-    </Compile>
     <Compile Include="ui\CalibrationWindow.xaml.cs">
       <DependentUpon>ui\CalibrationWindow.xaml</DependentUpon>
     </Compile>
@@ -162,10 +159,6 @@
     <Compile Include="CoordinateSmoother.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="InputManager.cs" />
-    <Page Include="ui\CalibrationSettings.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="ui\CalibrationWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

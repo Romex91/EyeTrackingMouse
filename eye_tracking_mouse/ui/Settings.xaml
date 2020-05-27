@@ -6,11 +6,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:eye_tracking_mouse"
         mc:Ignorable="d"
-        Title="Settings" ResizeMode="NoResize" Height="360" Width="570">
+        Title="Settings" ResizeMode="NoResize" Height="360" Width="570" SizeToContent="WidthAndHeight">
     <Grid>
         <TabControl x:Name="TabControl">
             <TabItem Header="Application">
-                <Grid>
+                <Grid Margin="10,10,10,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
@@ -39,13 +39,12 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Key bindings">
-                <Grid>
+                <Grid Margin="10,10,10,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                         <ColumnDefinition Width="50"></ColumnDefinition>
-                        <ColumnDefinition Width="auto"></ColumnDefinition>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
 
@@ -131,16 +130,14 @@
             </TabItem>
 
             <TabItem Header="Advancced" >
-                <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Grid Margin="10,10,10,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                         <ColumnDefinition Width="20"></ColumnDefinition>
-                        <ColumnDefinition ></ColumnDefinition>
-                        <ColumnDefinition ></ColumnDefinition>
+                        <ColumnDefinition Width="150"></ColumnDefinition>
+                        <ColumnDefinition Width="auto"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
                         <RowDefinition Height="20"></RowDefinition>
                         <RowDefinition Height="20"></RowDefinition>
                         <RowDefinition Height="20"></RowDefinition>
@@ -157,84 +154,83 @@
                     </Grid.RowDefinitions>
 
                     <local:IntegerPropertyControl 
-                        Grid.Row="1" Grid.ColumnSpan="4" 
+                        Grid.Row="0" Grid.ColumnSpan="4" 
                         x:Name="VerticalScrollStep" 
                         Label="Vertical scroll step"
                         Maximum="15" Minimum="1"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
 
                     <local:IntegerPropertyControl 
-                        Grid.Row="2" Grid.ColumnSpan="4" 
+                        Grid.Row="1" Grid.ColumnSpan="4" 
                         x:Name="HorizontalScrollStep" 
                         Label="Horizontal scroll step"
                         Maximum="15" Minimum="1"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
-                        Grid.Row="3" Grid.ColumnSpan="4" 
+                        Grid.Row="2" Grid.ColumnSpan="4" 
                         x:Name="CalibrationStep" 
                         Label="Calibration step in pixels"
                         Maximum="15" Minimum="0"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
-                        Grid.Row="4" Grid.ColumnSpan="4" 
+                        Grid.Row="3" Grid.ColumnSpan="4" 
                         x:Name="ClickFreezeTimeMs" 
                         Label="Click freeze time (ms)"
                         Maximum="1000" Minimum="0"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
-                        Grid.Row="5" Grid.ColumnSpan="4" 
+                        Grid.Row="4" Grid.ColumnSpan="4" 
                         x:Name="CalibrationFreezeTimeMs" 
                         Label="Calibration freeze time (ms)"
                         Maximum="2000" Minimum="0"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
-                        Grid.Row="6" Grid.ColumnSpan="4" 
+                        Grid.Row="5" Grid.ColumnSpan="4" 
                         x:Name="DoubleSpeedUpTimeMs" 
                         Label="Double speed-up time (ms)"
                         Maximum="500" Minimum="0"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                 
                     <local:IntegerPropertyControl 
-                        Grid.Row="7" Grid.ColumnSpan="4" 
+                        Grid.Row="6" Grid.ColumnSpan="4" 
                         x:Name="QuadrupleSpeedUpTimeMs" 
                         Label="Quadruple speed-up time (ms)"
                         Maximum="500" Minimum="0"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
-                        Grid.Row="8" Grid.ColumnSpan="4" 
+                        Grid.Row="7" Grid.ColumnSpan="4" 
                         x:Name="ModifierShortPressTimeMs" 
                         Label="Modifier short press time (ms)"
                         Maximum="1000" Minimum="0"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
-                        Grid.Row="9" Grid.ColumnSpan="4" 
+                        Grid.Row="8" Grid.ColumnSpan="4" 
                         x:Name="SmootheningPointsCount" 
                         Label="Smoothening points count"
                         Maximum="200" Minimum="1"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
-                        Grid.Row="10" Grid.ColumnSpan="4" 
+                        Grid.Row="9" Grid.ColumnSpan="4" 
                         x:Name="SmotheningZoneRadius" 
                         Label="Smoothening zone radius in pixels "
                         Maximum="1000" Minimum="1"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
-                    <TextBlock Grid.Row="11" Grid.Column="0" Name="CalibrationModeLabel">Calibration mode</TextBlock>
-                    <ComboBox Grid.Row="11" Grid.Column="2" x:Name="CalibrationModeCombo" SelectionChanged="CalibrationModeCombo_SelectionChanged">
-                        <ComboBoxItem>Multidimensional</ComboBoxItem>
-                        <ComboBoxItem>Simple &amp; Fast</ComboBoxItem>
-                        <ComboBoxItem Name="CustomCalibrationMode"> Custom</ComboBoxItem>
+                    <TextBlock Grid.Row="10" Grid.Column="0" Name="CalibrationModeLabel">Calibration mode</TextBlock>
+                    <ComboBox Grid.Row="10" Grid.Column="2" x:Name="CalibrationModeCombo" SelectionChanged="CalibrationModeCombo_SelectionChanged">
+                        <ComboBoxItem Name="CalibrationMode_Default">Default</ComboBoxItem>
+                        <ComboBoxItem Name="CalibrationMode_RightEye">Right eye</ComboBoxItem>
+                        <ComboBoxItem Name="CalibrationMode_PoorFixation">Poor tracker fixation</ComboBoxItem>
+                        <ComboBoxItem Name="CalibrationMode_Custom">Custom</ComboBoxItem>
                     </ComboBox>
-                    <Button Grid.Row="11" Grid.Column="3" Grid.ColumnSpan="2" x:Name="AdvancedCalibrationSettings" Click="AdvancedCalibrationSettings_Click">Advanced calibration settings</Button>
-
-                    <Button Grid.Row="13" Grid.Column="2" Grid.ColumnSpan="1" Name="ResetDefaults" Click="ResetDefaults_Click">Reset to defaults</Button>
+                    <Button Grid.Row="12" Grid.Column="2" Grid.ColumnSpan="1" Name="ResetDefaults" Click="ResetDefaults_Click">Reset to defaults</Button>
                 </Grid>
             </TabItem>
         </TabControl>
