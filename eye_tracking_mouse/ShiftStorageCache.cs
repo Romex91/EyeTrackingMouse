@@ -65,7 +65,6 @@ namespace eye_tracking_mouse
             public float[] vector_from_correction_to_cursor;
             public int index;
             public float distance;
-            public float weight;
         }
 
         public List<PointInfo> ClosestPoints
@@ -126,12 +125,6 @@ namespace eye_tracking_mouse
             }
 
             return retval;
-        }
-
-        public float GetDistanceFromCursor(int cache_index)
-        {
-            Debug.Assert(cache_index >= 0);
-            return cached_distances[cache_index];
         }
 
         // Performs cacluclation of distance from cursor to each saved point.
@@ -313,7 +306,6 @@ namespace eye_tracking_mouse
                     distance = distances[i] > 0.0001f ? distances[i] : 0.0001f,
                     index = indexes[i],
                     vector_from_correction_to_cursor = GetSubtractionResult(indexes[i]),
-                    weight = 1
                 });
             }
             ClosestPoints.Sort((x, y) => x.distance < y.distance ? -1 : 1);

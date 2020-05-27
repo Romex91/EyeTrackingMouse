@@ -25,7 +25,7 @@ namespace eye_tracking_mouse
 
         // A multidimensional vector where first two coordinates represent 2d point on the display.
         // Other dimensions represent user body position.
-        public float[] Coordinates{ get; private set; }
+        public float[] Coordinates { get; private set; }
     }
 
     // |ShiftsStorage| is responsible for storing user corrections (shifts).
@@ -34,20 +34,30 @@ namespace eye_tracking_mouse
     public class ShiftsStorage : IDisposable
     {
         public CalibrationWindow calibration_window = null;
+
+        // WARNING: Changes will invalidate |cache|! Make sure you keep it up to date.
         public List<UserCorrection> Corrections = new List<UserCorrection>();
 
         private Options.CalibrationMode calibration_mode;
         private ShiftStorageCache cache;
 
-        private string DefaultPath { get; set; } 
+        private string DefaultPath { get; set; }
 
-        public ShiftsStorage(Options.CalibrationMode mode, ShiftStorageCache cache, bool for_testing)
+        public ShiftsStorage(Options.CalibrationMode mode, bool for_testing)
         {
             calibration_mode = mode;
             DefaultPath = GetFilepath(Helpers.UserDataFolder);
-            this.cache = cache;
+            this.cache = new ShiftStorageCache(mode);
             if (!for_testing)
                 LoadFromFile();
+        }
+
+        public class PointInfo
+        {
+            public UserCorrection correction;
+            public float distance;
+            public float[] vector_from_correction_to_cursor;
+            public float weight;
         }
 
         public void Dispose()
@@ -93,39 +103,84 @@ namespace eye_tracking_mouse
             OnShiftsChanged();
         }
 
+        public void SaveInDirectory(string directory_path)
+        {
+            File.WriteAllText(GetFilepath(directory_path), GetSerializedContent());
+        }
+
         public void AddShift(float[] cursor_position, Point shift)
         {
+            cache.ChangeCursorPosition(cursor_position);
             var closest_shifts = cache.ClosestPoints;
             if (closest_shifts != null && closest_shifts[0].distance < calibration_mode.zone_size)
             {
-                cache.SaveToCache(cursor_position, closest_shifts[0].index);
-                Corrections[closest_shifts[0].index] = new UserCorrection(cursor_position, shift);
+                cache.FreeIndex(closest_shifts[0].index);
+                Corrections.RemoveAt(closest_shifts[0].index);
                 if (closest_shifts.Count > 1 && closest_shifts[1].distance < calibration_mode.zone_size)
                 {
+                    Debug.Assert(closest_shifts[1].index != closest_shifts[0].index);
+                    if (closest_shifts[1].index > closest_shifts[0].index)
+                        closest_shifts[1].index--;
                     cache.FreeIndex(closest_shifts[1].index);
                     Corrections.RemoveAt(closest_shifts[1].index);
                 }
             }
-            else if (Corrections.Count() < calibration_mode.max_zones_count)
+            else if (Corrections.Count >= calibration_mode.max_zones_count)
             {
-                if (cache.AllocateIndex() != Corrections.Count)
-                    throw new Exception("Logic error");
-                cache.SaveToCache(cursor_position, Corrections.Count);
-                Corrections.Add(new UserCorrection(cursor_position, shift));
+                Debug.Assert(Corrections.Count == calibration_mode.max_zones_count);
+                // Remove least recently used item from the front of |Corrections|.
+                cache.FreeIndex(0);
+                Corrections.RemoveAt(0);
             }
-            else
-            {
-                var highest_density_point = GetClosestPointOfHihestDensity();
-                cache.SaveToCache(cursor_position, highest_density_point);
-                Corrections[highest_density_point] = new UserCorrection(cursor_position, shift);
-            }
+
+            if (cache.AllocateIndex() != Corrections.Count)
+                throw new Exception("Logic error");
+            cache.SaveToCache(cursor_position, Corrections.Count);
+            Corrections.Add(new UserCorrection(cursor_position, shift));
 
             OnShiftsChanged();
         }
 
-        public void SaveInDirectory(string directory_path)
+        public List<PointInfo> GetClosestCorrections(float[] cursor_position)
         {
-            File.WriteAllText(GetFilepath(directory_path), GetSerializedContent());
+            List<PointInfo> retval = new List<PointInfo>();
+
+            cache.ChangeCursorPosition(cursor_position);
+            calibration_window?.OnCursorPositionUpdate(cursor_position);
+
+            if (cache.ClosestPoints == null)
+                return null;
+
+            foreach (var point_info in cache.ClosestPoints)
+                retval.Add(new PointInfo
+                {
+                    correction = Corrections[point_info.index],
+                    distance = point_info.distance,
+                    vector_from_correction_to_cursor = point_info.vector_from_correction_to_cursor,
+                    weight = 1,
+                });
+
+            MoveClosestPointBack();
+
+            return retval;
+        }
+
+        // We move the closest point to the end of |Corrections| to enable LRU deletion.
+        private void MoveClosestPointBack()
+        {
+            int i = cache.ClosestPoints[0].index;
+
+            if (cache.ClosestPoints.Count > 0 && i > 0)
+            {
+                var tmp = Corrections[i];
+                cache.FreeIndex(i);
+                Corrections.RemoveAt(i);
+
+                if (cache.AllocateIndex()!= Corrections.Count)
+                    throw new Exception("Logic error");
+                cache.SaveToCache(tmp.Coordinates, Corrections.Count);
+                Corrections.Add(tmp);
+            }
         }
 
         private static string GetVector3PathPart(Vector3Percents vector)
@@ -202,72 +257,11 @@ namespace eye_tracking_mouse
             FilesSavingQueue.Save(DefaultPath, GetSerializedContent);
             calibration_window?.UpdateCorrections(Corrections);
         }
-
-        private static int GetSectorNumber(float coordinate)
-        {
-            return (int)(coordinate / 500.0);
-        }
-
-        private int GetSectorNumber(UserCorrection shift, int max_sector_x)
-        {
-            return GetSectorNumber(shift.Coordinates[0]) + 
-                GetSectorNumber(shift.Coordinates[1]) * (max_sector_x + 1);
-        }
-
-        private int GetClosestPointOfHihestDensity()
-        {
-            Debug.Assert(Corrections.Count > 0);
-
-            int max_sector_x = 0;
-            for (int i = 0; i < Corrections.Count; i++)
-            {
-                int sector_x = GetSectorNumber(Corrections[i].Coordinates[0]);
-                if (sector_x > max_sector_x)
-                    max_sector_x = sector_x;
-            }
-            var sectors = new Dictionary<int /*number of sector*/, int /*Count of points in sector*/>();
-            for (int i = 0; i < Corrections.Count; i++)
-            {
-                int sector_number = GetSectorNumber(Corrections[i], max_sector_x);
-                if (!sectors.ContainsKey(sector_number))
-                    sectors.Add(sector_number, 0);
-
-                sectors[sector_number]++;
-            }
-
-            int max_points_count_in_sector = 0;
-            for (int i = 0; i < sectors.Count; i++)
-            {
-                int points_number_in_sector = sectors.ElementAt(i).Value;
-                if (points_number_in_sector > max_points_count_in_sector)
-                    max_points_count_in_sector = points_number_in_sector;
-            }
-
-
-            int index_of_closest_point = 0;
-            float min_distance = float.MaxValue;
-            for (int i = 0; i < Corrections.Count; i++)
-            {
-                if (sectors[GetSectorNumber(Corrections[i], max_sector_x)] == max_points_count_in_sector)
-                {
-                    float distance = cache.GetDistanceFromCursor(i);
-                    
-                    if (min_distance > distance)
-                    {
-                        min_distance = distance;
-                        index_of_closest_point = i;
-                    }
-                }
-            }
-
-            return index_of_closest_point;
-        }
-
     }
 
     public static partial class Helpers
     {
-        public static void NormalizeWeights(List<ShiftStorageCache.PointInfo> corrections)
+        public static void NormalizeWeights(List<ShiftsStorage.PointInfo> corrections)
         {
             float total_weight = 0;
             foreach (var correction in corrections)
@@ -277,20 +271,20 @@ namespace eye_tracking_mouse
                 corrections[i].weight = corrections[i].weight / total_weight;
         }
 
-        public static Point GetWeightedAverage(ShiftsStorage shift_storage, List<ShiftStorageCache.PointInfo> corrections)
+        public static Point GetWeightedAverage(List<ShiftsStorage.PointInfo> corrections)
         {
             Point resulting_shift = new Point(0, 0);
-            foreach (var correction in corrections)
+            foreach (var point in corrections)
             {
-                resulting_shift.X += (int)(shift_storage.Corrections[correction.index].Shift.X * correction.weight);
-                resulting_shift.Y += (int)(shift_storage.Corrections[correction.index].Shift.Y * correction.weight);
+                resulting_shift.X += (int)(point.correction.Shift.X * point.weight);
+                resulting_shift.Y += (int)(point.correction.Shift.Y * point.weight);
             }
             return resulting_shift;
         }
 
         public static float GetAngleBetweenVectors(
-            ShiftStorageCache.PointInfo a,
-            ShiftStorageCache.PointInfo b)
+            ShiftsStorage.PointInfo a,
+            ShiftsStorage.PointInfo b)
         {
             Debug.Assert(
                 a.vector_from_correction_to_cursor.Length ==

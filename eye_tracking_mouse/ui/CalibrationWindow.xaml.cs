@@ -116,7 +116,7 @@ namespace eye_tracking_mouse
             }));
         }
 
-        public void UpdateCorrectionsLables(List<Tuple<string /*text*/, int /*correction index*/>> lables)
+        public void UpdateCorrectionsLables(List<Tuple<string /*text*/, Point /*correction index*/>> lables)
         {
             Dispatcher.BeginInvoke((Action)(() =>
             {
@@ -126,15 +126,12 @@ namespace eye_tracking_mouse
 
                 foreach (var lable in lables)
                 {
-                    if (lable.Item2 < arrows.Count())
-                    {
                         var arrow_lable = new TextBlock { Text = lable.Item1, Visibility = Visibility.Visible };
                         Canvas.Children.Add(arrow_lable);
 
-                        Canvas.SetTop(arrow_lable, arrows[lable.Item2].Y1);
-                        Canvas.SetLeft(arrow_lable, arrows[lable.Item2].X1);
+                        Canvas.SetTop(arrow_lable, lable.Item2.Y);
+                        Canvas.SetLeft(arrow_lable, lable.Item2.X);
                         arrows_lables.Add(arrow_lable);
-                    }
                 }
             }));
         }

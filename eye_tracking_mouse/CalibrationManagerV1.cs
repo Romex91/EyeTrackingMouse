@@ -14,20 +14,15 @@ namespace eye_tracking_mouse
     {
         private readonly ShiftsStorage shift_storage;
         private readonly Options.CalibrationMode calibration_mode;
-        private readonly ShiftStorageCache cache;
         public CalibrationManagerV1(Options.CalibrationMode mode, bool for_testing)
         {
             calibration_mode = mode;
-            cache = new ShiftStorageCache(mode);
-            shift_storage = new ShiftsStorage(calibration_mode, cache, for_testing);
+            shift_storage = new ShiftsStorage(calibration_mode, for_testing);
         }
 
         public Point GetShift(float[] cursor_position)
         {
-            cache.ChangeCursorPosition(cursor_position);
-            shift_storage.calibration_window?.OnCursorPositionUpdate(cursor_position);
-
-            var closest_corrections = cache.ClosestPoints;
+            var closest_corrections = shift_storage.GetClosestCorrections(cursor_position);
             if (closest_corrections == null)
             {
                 Debug.Assert(shift_storage.Corrections.Count() == 0);
@@ -51,13 +46,16 @@ namespace eye_tracking_mouse
 
             Helpers.NormalizeWeights(closest_corrections);
 
-            var result = Helpers.GetWeightedAverage(shift_storage, closest_corrections);
+            var result = Helpers.GetWeightedAverage(closest_corrections);
 
             if (shift_storage.calibration_window != null)
             {
-                var lables = new List<Tuple<string /*text*/, int /*correction index*/>>();
+                var lables = new List<Tuple<string /*text*/, System.Windows.Point>>();
                 foreach (var correction in closest_corrections)
-                    lables.Add(new Tuple<string, int>((int)(correction.weight * 100) + "%", correction.index));
+                    lables.Add(new Tuple<string, System.Windows.Point>((int)(correction.weight * 100) + "%",
+                        new System.Windows.Point(
+                            correction.correction.Coordinates[0],
+                            correction.correction.Coordinates[1])));
                 shift_storage.calibration_window.UpdateCorrectionsLables(lables);
                 shift_storage.calibration_window.UpdateCurrentCorrection(new UserCorrection(cursor_position, result));
             }
@@ -66,8 +64,8 @@ namespace eye_tracking_mouse
         }
 
         private float GetShadeOpacity(
-            ShiftStorageCache.PointInfo source_of_shade,
-            ShiftStorageCache.PointInfo shaded_correction)
+            ShiftsStorage.PointInfo source_of_shade,
+            ShiftsStorage.PointInfo shaded_correction)
         {
             Debug.Assert(source_of_shade.distance <= shaded_correction.distance);
 
@@ -92,7 +90,7 @@ namespace eye_tracking_mouse
             return opacity * source_of_shade.weight;
         }
 
-        private void ApplyShades(List<ShiftStorageCache.PointInfo> corrections)
+        private void ApplyShades(List<ShiftsStorage.PointInfo> corrections)
         {
             for (int i = 0; i < corrections.Count;)
             {
@@ -111,7 +109,6 @@ namespace eye_tracking_mouse
 
         public void AddShift(float[] cursor_position, Point shift)
         {
-            cache.ChangeCursorPosition(cursor_position);
             shift_storage.AddShift(cursor_position, shift);
         }
 
