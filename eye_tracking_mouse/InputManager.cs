@@ -56,7 +56,7 @@ namespace eye_tracking_mouse
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
         private LowLevelKeyboardProc win_api_callback;
 
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -179,6 +179,17 @@ namespace eye_tracking_mouse
 
         private Action<ReadKeyResult> read_key_callback;
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern short GetKeyState(int key);
+        private void UncheckCapsLock()
+        {
+            if ((GetKeyState((int)System.Windows.Forms.Keys.CapsLock) & 1) == 1)
+            {
+                driver_input.SendKey(Interceptor.Keys.CapsLock, Interceptor.KeyState.Down);
+                driver_input.SendKey(Interceptor.Keys.CapsLock, Interceptor.KeyState.Up);
+            }
+        }
+
         public void OnKeyPressed(object sender, Interceptor.KeyPressedEventArgs e)
         {
             // Console.WriteLine(e.Key);
@@ -187,6 +198,12 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 e.Handled = true;
+
+                // Make sure capslock is always disabled when it is used as a modifier.
+                if (Options.Instance.key_bindings[Key.Modifier] == Interceptor.Keys.CapsLock)
+                {
+                    UncheckCapsLock();
+                }
 
                 // Interceptor.KeyState is a mess. Different Keys produce different KeyState when pressed and released.
                 bool is_e0_key = (e.State & Interceptor.KeyState.E0) != 0;
@@ -259,6 +276,11 @@ namespace eye_tracking_mouse
 
         public override void SendModifierDown()
         {
+            // Make sure capslock is always disabled when it is used as a modifier.
+            if (Options.Instance.key_bindings[Key.Modifier] == Interceptor.Keys.CapsLock)
+            {
+                return;
+            }
             driver_input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
             Thread.Sleep(10);
         }
