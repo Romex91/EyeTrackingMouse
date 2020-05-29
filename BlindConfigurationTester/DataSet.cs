@@ -190,7 +190,7 @@ namespace BlindConfigurationTester
         {
             int iterations_number = 4;
 
-            var result = Helpers.TestCalibrationManager(calibration_manager, data_points, config);
+            Helpers.TestCalibrationManager(calibration_manager, data_points, config);
             calibration_manager.Reset();
             GC.Collect();
 
@@ -209,7 +209,7 @@ namespace BlindConfigurationTester
             double total_time_ms = (time_after - time_before).TotalMilliseconds;
 
             avg_mcs = (int)(total_time_ms / iterations_number * 1000);
-            return result;
+            return Helpers.TestCalibrationManager(calibration_manager, data_points, config);
         }
 
         public static TestResult TestCalibrationManager(
