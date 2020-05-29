@@ -79,16 +79,19 @@ namespace eye_tracking_mouse
 
         public void StopControlling()
         {
-            freeze_until = DateTime.Now;
-            mouse_state = MouseState.Idle;
+            lock (Helpers.locker)
+            {
+                freeze_until = DateTime.Now;
+                mouse_state = MouseState.Idle;
 
-            if (MouseButtons.RightPressed)
-                MouseButtons.RightUp();
-            if (MouseButtons.LeftPressed)
-                MouseButtons.LeftUp();
+                if (MouseButtons.RightPressed)
+                    MouseButtons.RightUp();
+                if (MouseButtons.LeftPressed)
+                    MouseButtons.LeftUp();
+            }
         }
 
-        private void StartControlling()
+        public void StartControlling()
         {
             lock (Helpers.locker) {
                 mouse_state = MouseState.Controlling;
@@ -109,7 +112,6 @@ namespace eye_tracking_mouse
             Key key,
             KeyState key_state,
             float speed_up,
-            bool is_short_modifier_press,
             bool is_repetition,
             bool is_modifier,
             InputProvider input_provider)
@@ -130,15 +132,8 @@ namespace eye_tracking_mouse
                         return false;
                     }
 
-                    bool handled = true;
-                    if (is_short_modifier_press)
-                    {
-                        input_provider.SendModifierDown();
-                        input_provider.SendModifierUp();
-                        handled = true;
-                    }
                     StopControlling();
-                    return handled;
+                    return true;
                 }
             }
 

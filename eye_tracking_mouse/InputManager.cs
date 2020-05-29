@@ -314,6 +314,10 @@ namespace eye_tracking_mouse
 
         private InputProvider input_provider;
 
+        private bool is_waiting_for_second_modifier_press = false;
+        private bool always_on = false;
+        private DateTime always_on_disabled_time = DateTime.Now;
+
         private struct InteractionHistoryEntry
         {
             public Key Key;
@@ -367,12 +371,70 @@ namespace eye_tracking_mouse
                         speed_up = 2.0f;
                 }
 
-                bool is_short_modifier_press =
+                // Single and double modifier presses have different functions
+                // Single press goes to OS (this allows using WINDOWS MENU)
+                // Double press enables |always_on| mode.
+                if (is_waiting_for_second_modifier_press)
+                {
+                    is_waiting_for_second_modifier_press = false;
+                    if (key == Key.Modifier && key_state == KeyState.Down &&
+                        (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < 300)
+                    {
+                        always_on = true;
+                        eye_tracking_mouse.StartControlling();
+                        return true;
+                    }
+                }
+
+                // IF user pressed and released modifier key without pressing other buttons in between...
+                if (key == Key.Modifier &&
                     key_state == KeyState.Up &&
                     interaction_history[1].Key == key &&
-                    (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < Options.Instance.modifier_short_press_duration_ms;
+                    !always_on)
+                {
+                    double press_duration_ms = (DateTime.Now - interaction_history[1].Time).TotalMilliseconds;
 
-                return eye_tracking_mouse.OnKeyPressed(key, key_state, speed_up, is_short_modifier_press, is_repetition, is_modifier, input_provider);
+                    // THEN it might be a beginning of a double press...
+                    if (press_duration_ms < 300)
+                    {
+                        is_waiting_for_second_modifier_press = true;
+                    }
+
+                    // OR it might be a single modifier press that should go to OS.
+                    if (press_duration_ms < Options.Instance.modifier_short_press_duration_ms && 
+                        (DateTime.Now - always_on_disabled_time).TotalMilliseconds > 300)
+                    {
+                        is_waiting_for_second_modifier_press = true;
+                        App.Current.Dispatcher.InvokeAsync((async () =>
+                        {
+                            await Task.Delay(300);
+                            lock (Helpers.locker)
+                            {
+                                if (!is_waiting_for_second_modifier_press)
+                                    return;
+                                is_waiting_for_second_modifier_press = false;
+                                input_provider.SendModifierDown();
+                                input_provider.SendModifierUp();
+                            }
+                        }));
+                    }
+                }
+
+                if (always_on)
+                {
+                    if (key == Key.Modifier && key_state == KeyState.Up)
+                        return true;
+
+                    if (key == Key.Unbound ||
+                        (key == Key.Modifier && key_state == KeyState.Down))
+                    {
+                        always_on = false;
+                        always_on_disabled_time = DateTime.Now;
+                        eye_tracking_mouse.StopControlling();
+                    }
+                }
+
+                return eye_tracking_mouse.OnKeyPressed(key, key_state, speed_up, is_repetition, is_modifier, input_provider);
             }
         }
 
