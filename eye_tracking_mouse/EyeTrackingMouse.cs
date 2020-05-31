@@ -28,8 +28,13 @@ namespace eye_tracking_mouse
 
         private Statistics statistics = Statistics.LoadFromFile(Statistics.Filepath);
 
+        private DateTime idle_start_time = DateTime.Now;
+
         private TobiiCoordinatesProvider tobii_coordinates_provider;
         private float[] current_coordinates;
+        
+        private PointSmoother gaze_smoother = new PointSmoother();
+        private PointSmoother calibration_shift_smoother = new PointSmoother();
 
         public enum MouseState
         {
@@ -52,26 +57,29 @@ namespace eye_tracking_mouse
         {
             lock (Helpers.locker)
             {
-                if (mouse_state == MouseState.Controlling || mouse_state == MouseState.Calibrating)
+                if (mouse_state == MouseState.Idle && (DateTime.Now - idle_start_time).TotalSeconds > 60)
+                    return;
+
+                if (DateTime.Now > freeze_until)
                 {
-                    if (DateTime.Now > freeze_until)
+                    this.current_coordinates = coordinates.ToCoordinates(Options.Instance.calibration_mode.additional_dimensions_configuration);
+                    gaze_point = gaze_smoother.SmoothPoint(coordinates.gaze_point);
+
+                    if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.reset_calibration_zone_size)
                     {
-                        this.current_coordinates = coordinates.ToCoordinates(Options.Instance.calibration_mode.additional_dimensions_configuration);
-                        gaze_point = coordinates.gaze_point;
-
-                        if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.reset_calibration_zone_size)
-                        {
-                            mouse_state = MouseState.Controlling;
-                        }
-
-                        if (mouse_state == MouseState.Controlling &&
-                            (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration_mode.update_period_ms)
-                        {
-                            last_shift_update_time = DateTime.Now;
-                            calibration_shift = CalibrationManager.Instance.GetShift(current_coordinates);
-                        }
+                        mouse_state = MouseState.Controlling;
                     }
 
+                    if (mouse_state != MouseState.Calibrating &&
+                        (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration_mode.update_period_ms)
+                    {
+                        last_shift_update_time = DateTime.Now;
+                        calibration_shift = calibration_shift_smoother.SmoothPoint(CalibrationManager.Instance.GetShift(current_coordinates));
+                    }
+                }
+
+                if (mouse_state == MouseState.Controlling || mouse_state == MouseState.Calibrating)
+                {
                     UpdateCursorPosition();
                 }
             }
@@ -94,6 +102,7 @@ namespace eye_tracking_mouse
         public void StartControlling()
         {
             lock (Helpers.locker) {
+                idle_start_time = DateTime.Now;
                 mouse_state = MouseState.Controlling;
                 tobii_coordinates_provider.Restart();
             }

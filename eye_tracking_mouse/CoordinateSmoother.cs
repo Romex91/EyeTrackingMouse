@@ -7,7 +7,7 @@ using System.Drawing;
 
 namespace eye_tracking_mouse
 {
-    class Vector3Smoother
+    public class Vector3Smoother
     {
         public Vector3Smoother()
         {
@@ -29,13 +29,12 @@ namespace eye_tracking_mouse
             point.Z = smoothers[2].GetSmoothenedPoint();
 
             return point;
-
         }
 
         private CoordinateSmoother[] smoothers;
     }
 
-    class PointSmoother
+    public class PointSmoother
     {
         public PointSmoother()
         {

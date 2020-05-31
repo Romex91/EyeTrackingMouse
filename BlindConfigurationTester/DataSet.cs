@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.VisualBasic.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -130,9 +131,37 @@ namespace BlindConfigurationTester
             [JsonIgnore]
             public List<Error> errors = new List<Error>();
 
-            public string ToString()
+            public string ToText()
+            { 
+                return "\n Utility: " + UtilityFunction + 
+                    "\n avg_error_before: " + TestInfo.avg_error_before + 
+                    "\n avg_error_after: " + TestInfo.avg_error_after;
+            }
+
+
+            public struct Info
             {
-                return " Utility: " + UtilityFunction;
+                public float avg_error_before;
+                public float avg_error_after;
+            }
+
+            public Info TestInfo
+            {
+                get
+                {
+                    float total_error_before = 0;
+                    float total_error_after = 0;
+                    foreach (var error in errors)
+                    {
+                        total_error_before += error.before_correction;
+                        total_error_after += error.after_correction;
+                    }
+
+                    return new Info {
+                        avg_error_before = total_error_before / errors.Count,
+                        avg_error_after = total_error_after / errors.Count
+                    };
+                }
             }
 
             public float UtilityFunction

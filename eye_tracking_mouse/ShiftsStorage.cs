@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using Newtonsoft.Json;
 using System.Threading;
+using System.Windows.Media;
 
 namespace eye_tracking_mouse
 {
@@ -110,6 +111,8 @@ namespace eye_tracking_mouse
 
         public void AddShift(float[] cursor_position, Point shift)
         {
+            if (!Helpers.AreCoordinatesSane(cursor_position))
+                return;
             cache.ChangeCursorPosition(cursor_position);
             var closest_shifts = cache.ClosestPoints;
             if (closest_shifts != null && closest_shifts[0].distance < calibration_mode.zone_size)
@@ -143,6 +146,8 @@ namespace eye_tracking_mouse
 
         public List<PointInfo> GetClosestCorrections(float[] cursor_position)
         {
+            if (!Helpers.AreCoordinatesSane(cursor_position))
+                return null;
             List<PointInfo> retval = new List<PointInfo>();
 
             cache.ChangeCursorPosition(cursor_position);
@@ -212,7 +217,7 @@ namespace eye_tracking_mouse
 
                 bool error_message_box_shown = false;
 
-                Corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(
+                var corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(
                     File.ReadAllText(DefaultPath)).Where(x =>
                 {
                     if (x.Coordinates == null)
@@ -228,16 +233,10 @@ namespace eye_tracking_mouse
                     }
                     return true;
                 }).ToList();
-                while (Corrections.Count > calibration_mode.max_zones_count)
-                    Corrections.Remove(Corrections.First());
-                for (int i = 0; i < Corrections.Count; i++)
+                foreach(var correction in corrections)
                 {
-                    if (cache.AllocateIndex() != i)
-                        throw new Exception("Logic error");
-
-                    cache.SaveToCache(Corrections[i].Coordinates, i);
+                    AddShift(correction.Coordinates, correction.Shift);
                 }
-
             }
             catch (Exception e)
             {
@@ -261,6 +260,16 @@ namespace eye_tracking_mouse
 
     public static partial class Helpers
     {
+        public static bool AreCoordinatesSane(float[] coordinates)
+        {
+            for (int i = 0; i < coordinates.Length; i++)
+            {
+                if (float.IsNaN(coordinates[i]) || float.IsInfinity(coordinates[i]))
+                    return false;
+            }
+            return true;
+        }
+
         public static void NormalizeWeights(List<ShiftsStorage.PointInfo> corrections)
         {
             float total_weight = 0;

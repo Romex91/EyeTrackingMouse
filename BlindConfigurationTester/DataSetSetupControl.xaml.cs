@@ -163,7 +163,7 @@ namespace BlindConfigurationTester
             }
 
             MessageBox.Show(
-                "Configuration: " + (dialog.GetSelectedConfiguration() ?? "User Data") + ". " + result.ToString() + 
+                "Configuration: " + (dialog.GetSelectedConfiguration() ?? "User Data") + ". " + result.ToText() + 
                 ". \nAvg time:" + avg_time);
         }
 

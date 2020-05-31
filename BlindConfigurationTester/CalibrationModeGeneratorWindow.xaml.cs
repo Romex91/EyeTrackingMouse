@@ -277,7 +277,7 @@ namespace BlindConfigurationTester
 
             Dispatcher.BeginInvoke((Action)(() =>
             {
-                Text_LastTestResult.Text = "Last test results " + best_result.ToString() + " \n" + JsonConvert.SerializeObject(best_mode, Formatting.Indented);
+                Text_LastTestResult.Text = "Last test results " + best_result.UtilityFunction + " \n" + JsonConvert.SerializeObject(best_mode, Formatting.Indented);
             }));
 
             Debug.Assert(results.best_calibration_mode.utility >= local_best_utility);
@@ -288,7 +288,7 @@ namespace BlindConfigurationTester
 
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    Text_GlobalBestModeInfo.Text = "Global Best Calibration Mode  " + best_result.ToString();
+                    Text_GlobalBestModeInfo.Text = "Global Best Calibration Mode  " + best_result.UtilityFunction;
                 }));
             }
 
@@ -299,7 +299,7 @@ namespace BlindConfigurationTester
 
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    Text_LocalBestModeInfo.Text = "Local Best Calibration Mode  " + best_result.ToString();
+                    Text_LocalBestModeInfo.Text = "Local Best Calibration Mode  " + best_result.UtilityFunction;
                 }));
             }
         }

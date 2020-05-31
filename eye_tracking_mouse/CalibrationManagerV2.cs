@@ -25,7 +25,7 @@ namespace eye_tracking_mouse
             var closest_corrections = shift_storage.GetClosestCorrections(cursor_position);
             if (closest_corrections == null)
             {
-                Debug.Assert(shift_storage.Corrections.Count() == 0);
+                Debug.Assert(shift_storage.Corrections.Count() == 0 || !Helpers.AreCoordinatesSane(cursor_position));
                 return new Point(0, 0);
             }
 
