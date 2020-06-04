@@ -41,7 +41,7 @@ namespace eye_tracking_mouse
         private void UpdateCursorPosition()
         {
             MouseButtons.Move(
-                smoothened_error_correction.Coordinates[0] + smoothened_error_correction.shift.X, 
+                smoothened_error_correction.Coordinates[0] + smoothened_error_correction.shift.X,
                 smoothened_error_correction.Coordinates[1] + smoothened_error_correction.shift.Y);
         }
 
@@ -49,12 +49,16 @@ namespace eye_tracking_mouse
         {
             lock (Helpers.locker)
             {
-                if (mouse_state == MouseState.Idle && (DateTime.Now - idle_start_time).TotalSeconds > 60)
+                if (mouse_state == MouseState.Idle
+                    && (DateTime.Now - idle_start_time).TotalSeconds > 60)
+                {
+                    CoordinateSmoother.Reset();
                     return;
+                }
 
                 if (DateTime.Now > freeze_until)
                 {
-                    if (mouse_state == MouseState.Calibrating && 
+                    if (mouse_state == MouseState.Calibrating &&
                         Helpers.GetDistance(coordinates.gaze_point, calibration_start_gaze_point) > Options.Instance.reset_calibration_zone_size)
                     {
                         mouse_state = MouseState.Controlling;
@@ -69,7 +73,7 @@ namespace eye_tracking_mouse
                         smoothened_error_correction_clone.Coordinates[0] = coordinates.gaze_point.X;
                         smoothened_error_correction_clone.Coordinates[1] = coordinates.gaze_point.Y;
                         smoothened_error_correction = CoordinateSmoother.Smoothen(smoothened_error_correction_clone);
-                    } 
+                    }
                     else
                     {
                         var current_coordinates = coordinates.ToCoordinates(Options.Instance.calibration_mode.additional_dimensions_configuration);
@@ -86,7 +90,8 @@ namespace eye_tracking_mouse
                         smoothened_error_correction = CoordinateSmoother.Smoothen(
                             new EyeTrackerErrorCorrection(current_coordinates, shift));
                     }
-                } else
+                }
+                else
                 {
                     // Adds inertia on exit from freeze state.
                     CoordinateSmoother.Smoothen(smoothened_error_correction);
@@ -105,6 +110,7 @@ namespace eye_tracking_mouse
             {
                 freeze_until = DateTime.Now;
                 mouse_state = MouseState.Idle;
+                idle_start_time = DateTime.Now;
 
                 if (MouseButtons.RightPressed)
                     MouseButtons.RightUp();
@@ -115,8 +121,8 @@ namespace eye_tracking_mouse
 
         public void StartControlling()
         {
-            lock (Helpers.locker) {
-                idle_start_time = DateTime.Now;
+            lock (Helpers.locker)
+            {
                 mouse_state = MouseState.Controlling;
                 tobii_coordinates_provider.Restart();
             }
@@ -292,7 +298,7 @@ namespace eye_tracking_mouse
 
             return true;
         }
-       
+
         public EyeTrackingMouse()
         {
             tobii_coordinates_provider = new TobiiCoordinatesProvider(OnNewCoordinates);
