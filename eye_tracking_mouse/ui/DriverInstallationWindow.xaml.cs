@@ -276,5 +276,10 @@ namespace eye_tracking_mouse
                 MessageBox.Show("Couldn't install the interception driver:" + err.Message, Helpers.application_name, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private void Hyperlink_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://github.com/oblitum/Interception");
+        }
     }
 }

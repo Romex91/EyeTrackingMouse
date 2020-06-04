@@ -22,7 +22,7 @@
                     <RowDefinition Height="auto"></RowDefinition>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="1" Grid.Column="1">This wizzard will install Oblita Interception Driver <Hyperlink>https://github.com/oblitum/Interception</Hyperlink>. <LineBreak/> 
+        <TextBlock Grid.Row="1" Grid.Column="1">This wizzard will install Oblita Interception Driver <Hyperlink Click="Hyperlink_Click">https://github.com/oblitum/Interception</Hyperlink>. <LineBreak/> 
             This will allow EyeTrackerMouse to intercept key presses on OS level. <LineBreak/> 
             <LineBreak/> 
             <LineBreak/> 

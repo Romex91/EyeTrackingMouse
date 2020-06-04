@@ -105,9 +105,9 @@ namespace eye_tracking_mouse
                     Options.Instance.key_bindings[Key.ShowCalibrationView].ToString();
 
                 CalibrationMode_RightEye.ToolTip =
-                CalibrationMode_PoorFixation.ToolTip = 
-                CalibrationMode_Default.ToolTip = 
-                CalibrationModeLabel.ToolTip = 
+                CalibrationMode_PoorFixation.ToolTip =
+                CalibrationMode_Default.ToolTip =
+                CalibrationModeLabel.ToolTip =
                 CalibrationModeCombo.ToolTip =
                 "When you use " + calibration_buttons + " " + Helpers.application_name + " slowly gathers data to increase accuracy.\n" +
                     "The algorithm is a bit tricky. It can use different data and different amounts of data.\n" +
@@ -118,7 +118,7 @@ namespace eye_tracking_mouse
                     "   * Rough initial precision. \n" +
                     "   * When learned provides better precison. \n" +
                     "   * Uses left eye.\n" +
-                    "2.Right eye \n"+
+                    "2.Right eye \n" +
                     "   * Same as Default but uses right eye.\n" +
                     "   * Third eye isn't supported.\n" +
                     "3.Poor tracker fixation \n" +
@@ -375,8 +375,14 @@ namespace eye_tracking_mouse
 
                     key_binding_control.set_default_binding_button.IsEnabled = InterceptionMethod.SelectedIndex == 1 && is_driver_loaded;
                 }
+                if (is_driver_loaded)
+                {
+                    Options.Instance.key_bindings.is_driver_installed = true;
+                    Options.Instance.SaveToFile(Options.Filepath);
+                }
 
                 WinApiWarning.Visibility = InterceptionMethod.SelectedIndex == 0 || !is_driver_loaded ? Visibility.Visible : Visibility.Hidden;
+                Button_UninstallOblita.Visibility = Options.Instance.key_bindings.is_driver_installed ? Visibility.Visible : Visibility.Hidden;
             }
         }
 
@@ -407,8 +413,8 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 Options.Instance.key_bindings.interception_method = InterceptionMethod.SelectedIndex == 0 ? KeyBindings.InterceptionMethod.WinApi : KeyBindings.InterceptionMethod.OblitaDriver;
-                Options.Instance.SaveToFile(Options.Filepath);
                 bool success = input_manager.UpdateInterceptionMethod();
+
                 if (!success)
                 {
                     if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.WinApi)
@@ -416,28 +422,54 @@ namespace eye_tracking_mouse
                         throw new Exception("Failed setting WinAPI interception method.");
                     }
 
-                    if (!Options.Instance.key_bindings.is_driver_installed)
+                    Options.Instance.key_bindings.is_driver_installed = false;
+                    if (MessageBox.Show(
+                        "This interception method will require driver installation and OS reboot.\nContinue?",
+                        Helpers.application_name,
+                        MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                     {
-                        if (MessageBox.Show(
-                            "This interception method will require driver installation and OS reboot.\nContinue?",
-                            Helpers.application_name,
-                            MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                        {
-                            var driver_installation_window = new DriverInstallationWindow();
-                            driver_installation_window.ShowDialog();
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show(
-                            "Failed loading interception driver." +
-                            "Reinstall EyeTrackingMouse or install the driver from command line:" +
-                            " https://github.com/oblitum/Interception. Application will run using WinAPI.",
-                            Helpers.application_name, MessageBoxButton.OK, MessageBoxImage.Error);
+                        var driver_installation_window = new DriverInstallationWindow();
+                        driver_installation_window.ShowDialog();
                     }
                 }
+
+                Options.Instance.SaveToFile(Options.Filepath);
+
                 UpdateKeyBindingControls();
                 UpdateTexts();
+            }
+        }
+
+        private void Button_UninstallOblita_Click(object sender, RoutedEventArgs e)
+        {
+            if (!is_initialized)
+                return;
+            lock (Helpers.locker)
+            {
+                if (MessageBox.Show("This will require system restart. Sure?", Helpers.application_name, MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+
+                string interception_installer = System.IO.Path.Combine(Environment.CurrentDirectory, "install-interception.exe");
+                var process = System.Diagnostics.Process.Start(interception_installer, "/uninstall");
+                process.WaitForExit();
+                if (process.ExitCode == 0)
+                {
+                    Options.Instance.key_bindings.is_driver_installed = false;
+                    Options.Instance.SaveToFile(Options.Filepath);
+                    if (MessageBox.Show("Driver is removed. Reboot now?", Helpers.application_name, MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start("shutdown.exe", "-r -t 0");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Couldn't uninstall the interception driver: installer returned non-zero exit code.",
+                        Helpers.application_name, 
+                        MessageBoxButton.OK, 
+                        MessageBoxImage.Error);
+                }
             }
         }
 

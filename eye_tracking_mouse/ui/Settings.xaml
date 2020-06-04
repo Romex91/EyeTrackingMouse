@@ -126,6 +126,8 @@
                         for key bindings to work.
                     </TextBlock>
 
+                    <Button Name="Button_UninstallOblita" Grid.Column="4" Grid.Row="11" Click="Button_UninstallOblita_Click">Uninstall oblita interception</Button>
+
                 </Grid>
             </TabItem>
 
