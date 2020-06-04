@@ -173,7 +173,7 @@
                         Grid.Row="2" Grid.ColumnSpan="4" 
                         x:Name="CalibrationStep" 
                         Label="Calibration step in pixels"
-                        Maximum="15" Minimum="0"
+                        Maximum="15" Minimum="1"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
