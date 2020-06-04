@@ -110,39 +110,6 @@ namespace eye_tracking_mouse
             eye_tracking_mouse = new EyeTrackingMouse();
             input_manager = new InputManager(eye_tracking_mouse);
 
-            Task.Run(() =>
-            {
-                if (Path.GetFullPath(Environment.CurrentDirectory).StartsWith(
-                        Path.GetFullPath(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData))))
-                {
-                    try
-                    {
-                        string path = Environment.GetEnvironmentVariable("EYE_TRACKING_MOUSE_UPDATE_FROM");
-                        if (path == null || path.Length == 0)
-                        {
-                            using (var update_manager = UpdateManager.GitHubUpdateManager("https://github.com/Romex91/EyeTrackingMouse").Result)
-                            {
-                                update_manager.UpdateApp().Wait();
-                            }
-                        } else
-                        {
-                            if (!Directory.Exists(path))
-                            {
-                                MessageBox.Show("Inexistent directory in EYE_TRACKING_MOUSE_UPDATE_FROM environment variable");
-                                return;
-                            }
-                            using (var update_manager = new UpdateManager(path))
-                            {
-                                update_manager.UpdateApp().Wait();
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-            });
-
             SquirrelAwareApp.HandleEvents(
                 onAppUninstall: v =>
                 {
