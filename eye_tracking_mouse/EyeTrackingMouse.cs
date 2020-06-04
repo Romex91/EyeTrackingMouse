@@ -54,8 +54,6 @@ namespace eye_tracking_mouse
 
                 if (DateTime.Now > freeze_until)
                 {
-                    var current_coordinates = coordinates.ToCoordinates(Options.Instance.calibration_mode.additional_dimensions_configuration);
-
                     if (mouse_state == MouseState.Calibrating && 
                         Helpers.GetDistance(coordinates.gaze_point, calibration_start_gaze_point) > Options.Instance.reset_calibration_zone_size)
                     {
@@ -64,13 +62,18 @@ namespace eye_tracking_mouse
 
                     if (mouse_state == MouseState.Calibrating)
                     {
-                        // The only thing to update in calibration mode is gaze point.
-                        smoothened_error_correction.Coordinates[0] = coordinates.gaze_point.X;
-                        smoothened_error_correction.Coordinates[1] = coordinates.gaze_point.Y;
-                        smoothened_error_correction = CoordinateSmoother.Smoothen(smoothened_error_correction);
+                        // The only thing to update while calibrating is gaze point.
+                        float[] coordinates_copy = new float[smoothened_error_correction.Coordinates.Length];
+                        smoothened_error_correction.Coordinates.CopyTo(coordinates_copy, 0);
+                        var smoothened_error_correction_clone = new EyeTrackerErrorCorrection(coordinates_copy, smoothened_error_correction.shift);
+                        smoothened_error_correction_clone.Coordinates[0] = coordinates.gaze_point.X;
+                        smoothened_error_correction_clone.Coordinates[1] = coordinates.gaze_point.Y;
+                        smoothened_error_correction = CoordinateSmoother.Smoothen(smoothened_error_correction_clone);
                     } 
                     else
                     {
+                        var current_coordinates = coordinates.ToCoordinates(Options.Instance.calibration_mode.additional_dimensions_configuration);
+
                         // The eye tracker provides shaky data that has to be smoothened before transforming to mouse cursor position.
                         // Another problem is that |CalibrationManager| may be a source of shaking too. That is why we shouldn't
                         // smoothen data too early.
@@ -83,6 +86,10 @@ namespace eye_tracking_mouse
                         smoothened_error_correction = CoordinateSmoother.Smoothen(
                             new EyeTrackerErrorCorrection(current_coordinates, shift));
                     }
+                } else
+                {
+                    // Adds inertia on exit from freeze state.
+                    CoordinateSmoother.Smoothen(smoothened_error_correction);
                 }
 
                 if (mouse_state == MouseState.Controlling || mouse_state == MouseState.Calibrating)
