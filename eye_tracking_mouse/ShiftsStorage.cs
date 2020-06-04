@@ -12,17 +12,17 @@ using System.Windows.Media;
 
 namespace eye_tracking_mouse
 {
-    // When users correct inacurate precision with W/A/S/D and then click stuff they create a |UserCorrection|.
-    public class UserCorrection
+    // When users correct inacurate precision with W/A/S/D and then click stuff they create a |EyeTrackerErrorCorrection|.
+    public class EyeTrackerErrorCorrection
     {
-        public UserCorrection(float[] coordinates, Point shift)
+        public EyeTrackerErrorCorrection(float[] coordinates, Point shift)
         {
             Coordinates = coordinates;
-            Shift = shift;
+            this.shift = shift;
         }
 
         // How far the cursor moved from the point before the correction.
-        public Point Shift { get; private set; }
+        public Point shift;
 
         // A multidimensional vector where first two coordinates represent 2d point on the display.
         // Other dimensions represent user body position.
@@ -37,7 +37,7 @@ namespace eye_tracking_mouse
         public CalibrationWindow calibration_window = null;
 
         // WARNING: Changes will invalidate |cache|! Make sure you keep it up to date.
-        public List<UserCorrection> Corrections = new List<UserCorrection>();
+        public List<EyeTrackerErrorCorrection> Corrections = new List<EyeTrackerErrorCorrection>();
 
         private Options.CalibrationMode calibration_mode;
         private ShiftStorageCache cache;
@@ -55,7 +55,7 @@ namespace eye_tracking_mouse
 
         public class PointInfo
         {
-            public UserCorrection correction;
+            public EyeTrackerErrorCorrection correction;
             public float distance;
             public float[] vector_from_correction_to_cursor;
             public float weight;
@@ -139,7 +139,7 @@ namespace eye_tracking_mouse
             if (cache.AllocateIndex() != Corrections.Count)
                 throw new Exception("Logic error");
             cache.SaveToCache(cursor_position, Corrections.Count);
-            Corrections.Add(new UserCorrection(cursor_position, shift));
+            Corrections.Add(new EyeTrackerErrorCorrection(cursor_position, shift));
 
             OnShiftsChanged();
         }
@@ -217,7 +217,7 @@ namespace eye_tracking_mouse
 
                 bool error_message_box_shown = false;
 
-                var corrections = JsonConvert.DeserializeObject<List<UserCorrection>>(
+                var corrections = JsonConvert.DeserializeObject<List<EyeTrackerErrorCorrection>>(
                     File.ReadAllText(DefaultPath)).Where(x =>
                 {
                     if (x.Coordinates == null)
@@ -235,12 +235,12 @@ namespace eye_tracking_mouse
                 }).ToList();
                 foreach(var correction in corrections)
                 {
-                    AddShift(correction.Coordinates, correction.Shift);
+                    AddShift(correction.Coordinates, correction.shift);
                 }
             }
             catch (Exception e)
             {
-                Corrections = new List<UserCorrection>();
+                Corrections = new List<EyeTrackerErrorCorrection>();
                 cache.Clear();
                 System.Windows.MessageBox.Show("Failed reading shifts storage: " + e.Message, Helpers.application_name, System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
@@ -285,8 +285,8 @@ namespace eye_tracking_mouse
             Point resulting_shift = new Point(0, 0);
             foreach (var point in corrections)
             {
-                resulting_shift.X += (int)(point.correction.Shift.X * point.weight);
-                resulting_shift.Y += (int)(point.correction.Shift.Y * point.weight);
+                resulting_shift.X += (int)(point.correction.shift.X * point.weight);
+                resulting_shift.Y += (int)(point.correction.shift.Y * point.weight);
             }
             return resulting_shift;
         }

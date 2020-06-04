@@ -4,88 +4,69 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
+using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace eye_tracking_mouse
 {
-    public class Vector3Smoother
-    {
-        public Vector3Smoother()
-        {
-            smoothers = new CoordinateSmoother[3];
-            for (int i = 0; i < 3; i++)
-            {
-                smoothers[i] = new CoordinateSmoother();
-            }
-        }
-
-        public Tobii.Interaction.Vector3 SmoothPoint(Tobii.Interaction.Vector3 point)
-        {
-            smoothers[0].AddPoint((float)point.X);
-            smoothers[1].AddPoint((float)point.Y);
-            smoothers[2].AddPoint((float)point.Z);
-
-            point.X = smoothers[0].GetSmoothenedPoint();
-            point.Y = smoothers[1].GetSmoothenedPoint();
-            point.Z = smoothers[2].GetSmoothenedPoint();
-
-            return point;
-        }
-
-        private CoordinateSmoother[] smoothers;
-    }
-
-    public class PointSmoother
-    {
-        public PointSmoother()
-        {
-            smoothers = new CoordinateSmoother[2];
-            for (int i = 0; i < 2; i++)
-            {
-                smoothers[i] = new CoordinateSmoother();
-            }
-        }
-
-        public Point SmoothPoint(Point point)
-        {
-            smoothers[0].AddPoint(point.X);
-            smoothers[1].AddPoint(point.Y);
-
-            point.X = (int) smoothers[0].GetSmoothenedPoint();
-            point.Y = (int) smoothers[1].GetSmoothenedPoint();
-
-            return point;
-        }
-
-        private CoordinateSmoother[] smoothers;
-    }
-
     // Tracks history of gaze points deleting those which are too far from the last point.
     // Longer the user stares at one area smoother resulting gaze point.
-    class CoordinateSmoother
+    static class CoordinateSmoother
     {
-        public void AddPoint(float point)
-        {
-            points.Insert(0, point);
-            while (points.Count > Options.Instance.smothening_points_count)
-                points.RemoveAt(points.Count - 1);
+        private static readonly List<EyeTrackerErrorCorrection> points = new List<EyeTrackerErrorCorrection>();
 
-            points.RemoveAll(p =>
-            {
-                return Math.Abs(p - point) > Options.Instance.smothening_zone_radius;
-            });
-        }
-
-        public float GetSmoothenedPoint()
+        public static EyeTrackerErrorCorrection Smoothen(EyeTrackerErrorCorrection correction)
         {
-            float X = 0;
-            foreach (var point in points)
+            AddPoint(correction);
+            float[] coordinates = new float[correction.Coordinates.Length];
+            Point shift = new Point(0, 0);
+
+            foreach(var point in points)
             {
-                X += point;
+                shift.X += point.shift.X;
+                shift.Y += point.shift.Y;
+                for (int i = 0; i < coordinates.Length; i++)
+                {
+                    coordinates[i] += point.Coordinates[i];
+                }
             }
 
-            return X / points.Count;
+            shift.X = shift.X / points.Count;
+            shift.Y = shift.Y / points.Count;
+            for (int i = 0; i < coordinates.Length; i++)
+            {
+
+                coordinates[i] = coordinates[i]/ points.Count;
+            }
+            return new EyeTrackerErrorCorrection(coordinates, shift);
         }
 
-        private readonly List<float> points = new List<float>();
+        public static void Reset()
+        {
+            points.Clear();
+        }
+
+        private static void AddPoint(EyeTrackerErrorCorrection correction)
+        {
+            lock(Helpers.locker)
+            {
+                points.Insert(0, correction);
+                while (points.Count > Options.Instance.smothening_points_count)
+                    points.RemoveAt(points.Count - 1);
+
+                points.RemoveAll(p =>
+                {
+                    Debug.Assert(p.Coordinates.Length == correction.Coordinates.Length);
+                    for (int i = 0; i < p.Coordinates.Length; i++)
+                    {
+                        if (Math.Abs(p.Coordinates[i] - correction.Coordinates[i]) > Options.Instance.smothening_zone_radius)
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+            }
+        }
     }
 }

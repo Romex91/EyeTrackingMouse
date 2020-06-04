@@ -136,7 +136,7 @@ namespace eye_tracking_mouse
             }));
         }
 
-        public void UpdateCurrentCorrection(UserCorrection correction)
+        public void UpdateCurrentCorrection(EyeTrackerErrorCorrection correction)
         {
             Dispatcher.BeginInvoke((Action)(() =>
             {
@@ -145,12 +145,12 @@ namespace eye_tracking_mouse
             }));
         }
 
-        private void InitArrowWithUserCorrection(UserCorrection shift, Petzold.Media2D.ArrowLine arrow)
+        private void InitArrowWithUserCorrection(EyeTrackerErrorCorrection shift, Petzold.Media2D.ArrowLine arrow)
         {
             arrow.X1 = shift.Coordinates[0];
             arrow.Y1 = shift.Coordinates[1];
-            arrow.X2 = shift.Coordinates[0] + shift.Shift.X;
-            arrow.Y2 = shift.Coordinates[1] + shift.Shift.Y;
+            arrow.X2 = shift.Coordinates[0] + shift.shift.X;
+            arrow.Y2 = shift.Coordinates[1] + shift.shift.Y;
             if (arrow == current_arrow)
             {
                 arrow.Stroke = Brushes.Green;
@@ -163,7 +163,7 @@ namespace eye_tracking_mouse
             arrow.StrokeThickness = 3;
         }
 
-        public void UpdateCorrections(List<UserCorrection> shifts)
+        public void UpdateCorrections(List<EyeTrackerErrorCorrection> shifts)
         {
             lock (Helpers.locker)
             {

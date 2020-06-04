@@ -32,12 +32,6 @@ namespace BlindConfigurationTester
 
         eye_tracking_mouse.TobiiCoordinatesProvider coordinatesProvider;
 
-        eye_tracking_mouse.PointSmoother gaze_point_smoother = new eye_tracking_mouse.PointSmoother();
-        eye_tracking_mouse.Vector3Smoother left_eye_smoother = new eye_tracking_mouse.Vector3Smoother();
-        eye_tracking_mouse.Vector3Smoother right_eye_smoother = new eye_tracking_mouse.Vector3Smoother();
-        eye_tracking_mouse.Vector3Smoother head_position_smoother = new eye_tracking_mouse.Vector3Smoother();
-        eye_tracking_mouse.Vector3Smoother head_direction_smoother = new eye_tracking_mouse.Vector3Smoother();
-
         public List<DataPoint> DataPoints { get; private set; }
         public List<DataPoint> SmoothenedDataPoints { get; private set; }
 
@@ -71,15 +65,6 @@ namespace BlindConfigurationTester
             coordinatesProvider.Restart();
             Dispatcher.BeginInvoke((Action)(() =>
             {
-                eye_tracking_mouse.TobiiCoordinates smoothened_coordinates = new eye_tracking_mouse.TobiiCoordinates
-                {
-                    gaze_point = gaze_point_smoother.SmoothPoint(coordinates.gaze_point),
-                    left_eye = left_eye_smoother.SmoothPoint(coordinates.left_eye),
-                    right_eye = right_eye_smoother.SmoothPoint(coordinates.right_eye),
-                    head_direction = head_direction_smoother.SmoothPoint(coordinates.head_direction),
-                    head_position = head_position_smoother.SmoothPoint(coordinates.head_position)
-                };
-
                 Point gaze_point = new Point(coordinates.gaze_point.X, coordinates.gaze_point.Y);
                 if (PresentationSource.FromVisual(Circle) == null)
                     return;
@@ -113,8 +98,7 @@ namespace BlindConfigurationTester
                         DataPoints.Add(new DataPoint
                         {
                             true_location_on_screen = location_of_point_on_screen,
-                            tobii_coordinates = coordinates,
-                            smoothened_tobii_coordinates = smoothened_coordinates
+                            tobii_coordinates = coordinates
                         });
 
                         is_user_looking_at_point = false;

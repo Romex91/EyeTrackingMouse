@@ -38,7 +38,7 @@ namespace eye_tracking_mouse
 
         private static Task move_mouse_task = null;
 
-        public static void Move(int x, int y)
+        public static void Move(float x, float y)
         {
             if (move_mouse_task == null || move_mouse_task.IsCompleted)
             {

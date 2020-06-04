@@ -222,7 +222,6 @@ namespace eye_tracking_mouse
             public int zone_size;
             public int max_zones_count;
             public int considered_zones_count;
-            public int update_period_ms;
 
             public int size_of_opaque_sector_in_percents = 30;
             public int size_of_transparent_sector_in_percents = 30;
@@ -245,7 +244,6 @@ namespace eye_tracking_mouse
                     zone_size = this.zone_size,
                     max_zones_count = this.max_zones_count,
                     considered_zones_count = this.considered_zones_count,
-                    update_period_ms = this.update_period_ms,
                     size_of_opaque_sector_in_percents = this.size_of_opaque_sector_in_percents,
                     size_of_transparent_sector_in_percents = this.size_of_transparent_sector_in_percents,
                     shade_thickness_in_pixels = this.shade_thickness_in_pixels,
@@ -260,7 +258,6 @@ namespace eye_tracking_mouse
                     zone_size == other.zone_size &&
                     max_zones_count == other.max_zones_count &&
                     considered_zones_count == other.considered_zones_count &&
-                    update_period_ms == other.update_period_ms &&
                     size_of_opaque_sector_in_percents == other.size_of_opaque_sector_in_percents &&
                     size_of_transparent_sector_in_percents == other.size_of_transparent_sector_in_percents &&
                     shade_thickness_in_pixels == other.shade_thickness_in_pixels &&
@@ -278,7 +275,6 @@ namespace eye_tracking_mouse
                         considered_zones_count = 5,
                         max_zones_count = 32,
                         additional_dimensions_configuration = AdditionalDimensionsConfguration.Disabled,
-                        update_period_ms = 20,
                         zone_size = 150
                     };
                 }
@@ -296,7 +292,6 @@ namespace eye_tracking_mouse
                         size_of_transparent_sector_in_percents = 60,
                         shade_thickness_in_pixels = 50,
                         algorithm = "V2",
-                        update_period_ms = 0,
                         zone_size = 75,
                         additional_dimensions_configuration = new AdditionalDimensionsConfguration
                         {

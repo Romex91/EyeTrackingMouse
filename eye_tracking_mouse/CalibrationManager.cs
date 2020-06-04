@@ -99,6 +99,7 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 instance?.Dispose();
+                CoordinateSmoother.Reset();
                 instance = BuildCalibrationManager(Options.Instance.calibration_mode, false);
             }
         }

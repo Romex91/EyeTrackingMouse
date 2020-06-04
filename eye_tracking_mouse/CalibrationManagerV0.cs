@@ -51,7 +51,7 @@ namespace eye_tracking_mouse
                             correction.correction.Coordinates[0], 
                             correction.correction.Coordinates[1])));
                 shift_storage.calibration_window.UpdateCorrectionsLables(lables);
-                shift_storage.calibration_window.UpdateCurrentCorrection(new UserCorrection(cursor_position, result));
+                shift_storage.calibration_window.UpdateCurrentCorrection(new EyeTrackerErrorCorrection(cursor_position, result));
             }
 
             return result;

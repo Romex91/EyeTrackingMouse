@@ -261,10 +261,12 @@ namespace BlindConfigurationTester
             DataPoint data_point,
             eye_tracking_mouse.AdditionalDimensionsConfguration config)
         {
-            var shift_position = data_point.tobii_coordinates.ToCoordinates(config);
+            float[] shift_position = data_point.tobii_coordinates.ToCoordinates(config);
             var tobii_gaze_point = new Point(
-                        data_point.tobii_coordinates.gaze_point.X,
-                        data_point.tobii_coordinates.gaze_point.Y);
+                        data_point.smoothened_tobii_coordinates.gaze_point.X,
+                        data_point.smoothened_tobii_coordinates.gaze_point.Y);
+            shift_position[0] = (float) tobii_gaze_point.X;
+            shift_position[1] = (float) tobii_gaze_point.Y;
             var shift = calibration_manager.GetShift(shift_position);
             var corrected_gaze_point = new Point(
                 tobii_gaze_point.X + shift.X,

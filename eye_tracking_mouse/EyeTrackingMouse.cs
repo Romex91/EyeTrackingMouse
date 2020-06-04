@@ -12,17 +12,11 @@ namespace eye_tracking_mouse
 {
     public class EyeTrackingMouse : IDisposable
     {
-        private Point gaze_point = new Point(0, 0);
-        // |gaze_point| is not accurate. To enable precise cursor control the application supports calibration by W/A/S/D.
-        // |calibration_shift| is result of such calibration. Application sets cursor position to |gaze_point| + |calibration_shift| when in |Controlling| state.
-        private Point calibration_shift = new Point(0, 0);
+        private EyeTrackerErrorCorrection smoothened_error_correction;
 
-        // A point uzer looked at when he started calibration. 
+        // A point user looked at when he started calibration. 
         // If user's gaze leaves area around this point the calibration will be over.
         private Point calibration_start_gaze_point = new Point(0, 0);
-
-        // Updating |calibration_shift| may be expensive. These variables tracks whether update is required.
-        private DateTime last_shift_update_time = DateTime.Now;
 
         private DateTime freeze_until = DateTime.Now;
 
@@ -31,10 +25,6 @@ namespace eye_tracking_mouse
         private DateTime idle_start_time = DateTime.Now;
 
         private TobiiCoordinatesProvider tobii_coordinates_provider;
-        private float[] current_coordinates;
-        
-        private PointSmoother gaze_smoother = new PointSmoother();
-        private PointSmoother calibration_shift_smoother = new PointSmoother();
 
         public enum MouseState
         {
@@ -50,7 +40,9 @@ namespace eye_tracking_mouse
 
         private void UpdateCursorPosition()
         {
-            MouseButtons.Move(gaze_point.X + calibration_shift.X, gaze_point.Y + calibration_shift.Y);
+            MouseButtons.Move(
+                smoothened_error_correction.Coordinates[0] + smoothened_error_correction.shift.X, 
+                smoothened_error_correction.Coordinates[1] + smoothened_error_correction.shift.Y);
         }
 
         private void OnNewCoordinates(TobiiCoordinates coordinates)
@@ -62,19 +54,34 @@ namespace eye_tracking_mouse
 
                 if (DateTime.Now > freeze_until)
                 {
-                    this.current_coordinates = coordinates.ToCoordinates(Options.Instance.calibration_mode.additional_dimensions_configuration);
-                    gaze_point = gaze_smoother.SmoothPoint(coordinates.gaze_point);
+                    var current_coordinates = coordinates.ToCoordinates(Options.Instance.calibration_mode.additional_dimensions_configuration);
 
-                    if (mouse_state == MouseState.Calibrating && Helpers.GetDistance(gaze_point, calibration_start_gaze_point) > Options.Instance.reset_calibration_zone_size)
+                    if (mouse_state == MouseState.Calibrating && 
+                        Helpers.GetDistance(coordinates.gaze_point, calibration_start_gaze_point) > Options.Instance.reset_calibration_zone_size)
                     {
                         mouse_state = MouseState.Controlling;
                     }
 
-                    if (mouse_state != MouseState.Calibrating &&
-                        (DateTime.Now - last_shift_update_time).TotalMilliseconds > Options.Instance.calibration_mode.update_period_ms)
+                    if (mouse_state == MouseState.Calibrating)
                     {
-                        last_shift_update_time = DateTime.Now;
-                        calibration_shift = calibration_shift_smoother.SmoothPoint(CalibrationManager.Instance.GetShift(current_coordinates));
+                        // The only thing to update in calibration mode is gaze point.
+                        smoothened_error_correction.Coordinates[0] = coordinates.gaze_point.X;
+                        smoothened_error_correction.Coordinates[1] = coordinates.gaze_point.Y;
+                        smoothened_error_correction = CoordinateSmoother.Smoothen(smoothened_error_correction);
+                    } 
+                    else
+                    {
+                        // The eye tracker provides shaky data that has to be smoothened before transforming to mouse cursor position.
+                        // Another problem is that |CalibrationManager| may be a source of shaking too. That is why we shouldn't
+                        // smoothen data too early.
+                        //
+                        // Keep in mind that smoothening decrease mouse cursor reaction time. So smoothening the data twice is a bad choice.
+                        // Due to these reason we pass raw shaky data to |CalibrationManager.GetShift| and smoothen the data after that.
+                        var shift = CalibrationManager.Instance.GetShift(current_coordinates);
+
+                        // Now is the time to smoothen the data because all sources of shakiness are left behind.
+                        smoothened_error_correction = CoordinateSmoother.Smoothen(
+                            new EyeTrackerErrorCorrection(current_coordinates, shift));
                     }
                 }
 
@@ -112,9 +119,14 @@ namespace eye_tracking_mouse
         {
             if (mouse_state != MouseState.Calibrating)
             {
-                calibration_start_gaze_point = gaze_point;
+                calibration_start_gaze_point =
+                    new Point((int)smoothened_error_correction.Coordinates[0],
+                              (int)smoothened_error_correction.Coordinates[1]);
                 mouse_state = MouseState.Calibrating;
             }
+            freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
+            statistics.OnCalibrate();
+            CoordinateSmoother.Reset();
         }
 
         public bool OnKeyPressed(
@@ -155,6 +167,7 @@ namespace eye_tracking_mouse
             {
                 // The application intercepts modifier key presses. We do not want to lose modifier when handling unbound keys.
                 // We stop controlling cursor when facing the first unbound key and send modifier keystroke to OS before handling pressed key.
+                // This way key combinations like 'Win+E' remain available.
                 if (!is_modifier)
                 {
                     input_provider.SendModifierDown();
@@ -184,30 +197,22 @@ namespace eye_tracking_mouse
                 if (key == Key.CalibrateLeft)
                 {
                     StartCalibration();
-                    calibration_shift.X -= calibration_step;
-                    freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
-                    statistics.OnCalibrate();
+                    smoothened_error_correction.shift.X -= calibration_step;
                 }
                 if (key == Key.CalibrateRight)
                 {
                     StartCalibration();
-                    calibration_shift.X += calibration_step;
-                    freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
-                    statistics.OnCalibrate();
+                    smoothened_error_correction.shift.X += calibration_step;
                 }
                 if (key == Key.CalibrateUp)
                 {
                     StartCalibration();
-                    calibration_shift.Y -= calibration_step;
-                    freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
-                    statistics.OnCalibrate();
+                    smoothened_error_correction.shift.Y -= calibration_step;
                 }
                 if (key == Key.CalibrateDown)
                 {
                     StartCalibration();
-                    calibration_shift.Y += calibration_step;
-                    freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
-                    statistics.OnCalibrate();
+                    smoothened_error_correction.shift.Y += calibration_step;
                 }
 
                 // Scroll
@@ -233,7 +238,13 @@ namespace eye_tracking_mouse
             if (mouse_state == MouseState.Calibrating &&
                 (key == Key.LeftMouseButton || key == Key.RightMouseButton))
             {
-                CalibrationManager.Instance.AddShift(current_coordinates, calibration_shift);
+                // Although we pass shaky (not smoothened) data to |CalibrationManager.GetShift| it is not an option here. 
+                // Accuracy tests (June 2020) confirm that |CalibrationManager| works better with smoothened rather than shaky data.
+                // Map of error corrections should be as accurate as possible.
+                //
+                // It's easy to make things worse changing this place. Even worse, it is hard to say that a commit is good or bad without 
+                // blind tests. Blind tests are elaborate. Make sure you understand what is going on here before making radical changes;)
+                CalibrationManager.Instance.AddShift(smoothened_error_correction.Coordinates, smoothened_error_correction.shift);
                 mouse_state = MouseState.Controlling;
             }
 

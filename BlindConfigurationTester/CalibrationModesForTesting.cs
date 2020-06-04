@@ -19,7 +19,6 @@ namespace BlindConfigurationTester
                         zone_size= 150,
                         max_zones_count= 2048,
                         considered_zones_count = 6,
-                        update_period_ms= 0,
                         size_of_opaque_sector_in_percents= 30,
                         size_of_transparent_sector_in_percents= 60,
                         shade_thickness_in_pixels= 50,
@@ -55,7 +54,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
@@ -76,7 +74,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
@@ -97,7 +94,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
@@ -118,7 +114,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
@@ -139,7 +134,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
@@ -160,7 +154,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                         new eye_tracking_mouse.AdditionalDimensionsConfguration
                         {
@@ -181,7 +174,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                         new eye_tracking_mouse.AdditionalDimensionsConfguration
                         {
@@ -203,7 +195,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
@@ -224,7 +215,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
@@ -245,7 +235,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
@@ -266,7 +255,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
@@ -287,7 +275,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                             new eye_tracking_mouse.AdditionalDimensionsConfguration
                             {
@@ -308,7 +295,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                         new eye_tracking_mouse.AdditionalDimensionsConfguration
                         {
@@ -329,7 +315,6 @@ namespace BlindConfigurationTester
                         zone_size = 150,
 
                         algorithm = "V2",
-                        update_period_ms = 0,
                         additional_dimensions_configuration =
                         new eye_tracking_mouse.AdditionalDimensionsConfguration
                         {
