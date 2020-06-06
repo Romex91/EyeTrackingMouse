@@ -129,8 +129,7 @@ namespace BlindConfigurationTester
 
         private void Button_GenerateConfigurationManually_Click(object sender, RoutedEventArgs e)
         {
-            new ManualVisualisationWindow.ManualVisualisationWindow(
-                Helpers.GetCalibrationMode(null)).ShowDialog();
+            new ManualVisualisationWindow.ManualVisualisationWindow().ShowDialog();
         }
 
         private void Button_TestConfiguration_Click(object sender, RoutedEventArgs e)

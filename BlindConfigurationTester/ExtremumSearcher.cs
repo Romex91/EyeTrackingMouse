@@ -70,7 +70,7 @@ namespace BlindConfigurationTester
 
             var retval = new List<UtilityAndModePair>();
 
-            const int max_tasks_count = 32;
+            const int max_tasks_count = 12;
             var tasks = new Task<List<UtilityAndModePair>>[Math.Min(max_tasks_count, extremums_queue.Count)];
             var new_test_results_array = new Dictionary<long, float>[tasks.Length];
             for (int i = 0; i < tasks.Length; i++)
