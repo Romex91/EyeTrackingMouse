@@ -69,15 +69,16 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         string[] algorithms = new string[] { "V0", "V1", "V2" };
         int selected_algorithm = 2;
         private Action redraw;
-        private eye_tracking_mouse.Options.CalibrationMode calibration_mode;
+        private CalibrationModeIterator iterator;
 
-        public AlgorithmVersionControlModel(Action redraw_callback,
-            eye_tracking_mouse.Options.CalibrationMode mode)
+        public AlgorithmVersionControlModel(
+            Action redraw_callback,
+            CalibrationModeIterator iterator)
         {
-            calibration_mode = mode;
+            this.iterator = iterator;
             for (int i = 0; i < algorithms.Length; i++)
             {
-                if (algorithms[i] == mode.algorithm)
+                if (algorithms[i] == iterator.CalibrationMode.algorithm)
                     selected_algorithm = i;
             }
             redraw = redraw_callback;
@@ -95,7 +96,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         {
             if (selected_algorithm > 0)
                 selected_algorithm--;
-            calibration_mode.algorithm = algorithms[selected_algorithm];
+            iterator.CalibrationMode.algorithm = algorithms[selected_algorithm];
             redraw.Invoke();
         }
 
@@ -103,7 +104,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         {
             if (selected_algorithm < algorithms.Length - 1)
                 selected_algorithm++;
-            calibration_mode.algorithm = algorithms[selected_algorithm];
+            iterator.CalibrationMode.algorithm = algorithms[selected_algorithm];
             redraw.Invoke();
         }
     }
@@ -148,6 +149,62 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         }
     }
 
+    class ListOfModesControlModel : IControlModel
+    {
+        private CalibrationModeIterator iterator;
+        private Action redraw;
+        string name;
+        int index = 0;
+        List<UtilityAndModePair> modes;
+
+        public ListOfModesControlModel(
+            string name,
+           CalibrationModeIterator iterator,
+           List<UtilityAndModePair> modes,
+           Action redraw_callback)
+        {
+            this.name = name;
+            this.modes = modes;
+            this.iterator = iterator;
+            redraw = redraw_callback;
+        }
+
+        public List<UtilityAndModePair> Modes
+        {
+            get => modes;
+        }
+
+        public string Name => name;
+
+        public string Value => index.ToString();
+
+        public bool IsCheckboxChecked { get => false; set => throw new NotImplementedException(); }
+
+        public bool IsCheckboxVisible => false;
+
+        public void Decrement()
+        {
+            if (modes == null || modes.Count == 0)
+                return;
+            if (index > 0)
+            {
+                iterator.CalibrationMode = modes[--index].mode;
+                redraw.Invoke();
+            }
+        }
+
+        public void Increment()
+        {
+            if (modes == null || modes.Count == 0)
+                return;
+            if (index < modes.Count - 1)
+            {
+                iterator.CalibrationMode = modes[++index].mode;
+                redraw.Invoke();
+            }
+        }
+    }
+
     /// <summary>
     /// Interaction logic for ManualVisualisationWindow.xaml
     /// </summary>
@@ -158,17 +215,49 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         List<IteratorOptionControlModel> iterator_option_control_models = new List<IteratorOptionControlModel>();
         DataSetControlModel data_set_control_model;
         AlgorithmVersionControlModel algorithm_control_model;
+        ListOfModesControlModel extremums_control_model;
+        ListOfModesControlModel linear_results_control_model;
 
+        eye_tracking_mouse.Options.CalibrationMode backup_mode = null;
+        List<UtilityAndModePair> backup_extremums = null;
+        List<UtilityAndModePair> backup_linear_results = null;
 
-        eye_tracking_mouse.Options.CalibrationMode backup = null;
-
-        public ManualVisualisationWindow(eye_tracking_mouse.Options.CalibrationMode mode)
+        public ManualVisualisationWindow()
         {
             InitializeComponent();
-            Reset(mode);
+            LoadConfiguration(null);
         }
 
-        private void Reset(eye_tracking_mouse.Options.CalibrationMode mode)
+        private void LoadConfiguration(string configuration)
+        {
+            List<UtilityAndModePair> extremums = null ;
+            List<UtilityAndModePair> linear_results= null;
+            {
+                string extremums_file_path = System.IO.Path.Combine(Utils.GetConfigurationDir(configuration), "extremum_search_results.json");
+                if (System.IO.File.Exists(extremums_file_path))
+                {
+                    extremums = JsonConvert.DeserializeObject<List<UtilityAndModePair>>(System.IO.File.ReadAllText(extremums_file_path));
+                }
+            }
+
+            {
+                string linear_results_file_path = System.IO.Path.Combine(Utils.GetConfigurationDir(configuration), "linear_results_sorted.json");
+                if (System.IO.File.Exists(linear_results_file_path))
+                {
+                    linear_results = JsonConvert.DeserializeObject<List<UtilityAndModePair>>(System.IO.File.ReadAllText(linear_results_file_path));
+                }
+            }
+
+
+            Reset(Helpers.GetCalibrationMode(configuration),
+                extremums,
+                linear_results);
+        }
+
+        private void Reset(
+            eye_tracking_mouse.Options.CalibrationMode mode,
+            List<UtilityAndModePair> extremums,
+            List<UtilityAndModePair> linear_results)
         {
             iterator = new CalibrationModeIterator(mode);
             foreach (var option_control in option_controls)
@@ -189,9 +278,15 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             }
 
             data_set_control_model = new DataSetControlModel(Redraw);
-            algorithm_control_model = new AlgorithmVersionControlModel(Redraw, mode);
+            algorithm_control_model = new AlgorithmVersionControlModel(Redraw, iterator);
+            extremums_control_model = new ListOfModesControlModel("extremum", iterator, extremums, Redraw);
+            linear_results_control_model = new ListOfModesControlModel("linear results", iterator, linear_results, Redraw);
+
+
             models.Add(data_set_control_model);
             models.Add(algorithm_control_model);
+            models.Add(extremums_control_model);
+            models.Add(linear_results_control_model);
 
             int row_number = 0;
             foreach (var model in models)
@@ -220,7 +315,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             CalibrationModeIterator.OptionsField[] enabled_fields)
         {
             return data_point_name + enabled_fields[0].field_name + " " +
-                  enabled_fields[1].field_name + " " + iterator.GetUniqueKey(mode);
+                  enabled_fields[1].field_name + " " + mode.algorithm + iterator.GetUniqueKey(mode);
         }
 
         private static PlotData CalculatePlotData(
@@ -342,24 +437,24 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                     y = enabled_fields[1].GetFieldValue(iterator.CalibrationMode),
                     z = Helpers.TestCalibrationMode(data_set_control_model.DataPoints, iterator.CalibrationMode).UtilityFunction;
                 GnuPlot.Unset("label 1");
-                GnuPlot.Set(string.Format("label 1 at {0}, {1}, {2} \"{2}\" point pt 7", x, y, z));
+                GnuPlot.Set(string.Format("label 1 at {0}, {1}, {2} \"{2}\" point pt 4", x, y, z));
                 // Show current configuration point.
 
                 GnuPlot.Unset("label 3");
                 GnuPlot.Set(string.Format("label 3 at {0}, {1}, {2} point pt 7", x, y, max_z));
 
                 GnuPlot.Unset("label 4");
-                GnuPlot.Set(string.Format("label 4 at {0}, {1}, {2} \"{2}\" point pt 7", max_x, max_y, max_z));
+                GnuPlot.Set(string.Format("label 4 at {0}, {1}, {2} \"{2}\" point pt 5", max_x, max_y, max_z));
 
             }
 
-            if (backup != null)
+            if (backup_mode != null)
             {
-                double x = enabled_fields[0].GetFieldValue(backup),
-                    y = enabled_fields[1].GetFieldValue(backup),
-                    z = Helpers.TestCalibrationMode(data_set_control_model.DataPoints, backup).UtilityFunction;
+                double x = enabled_fields[0].GetFieldValue(backup_mode),
+                    y = enabled_fields[1].GetFieldValue(backup_mode),
+                    z = Helpers.TestCalibrationMode(data_set_control_model.DataPoints, backup_mode).UtilityFunction;
                 GnuPlot.Unset("label 2");
-                GnuPlot.Set(string.Format("label 2 at {0}, {1}, {2} point pt 7", x, y, z));
+                GnuPlot.Set(string.Format("label 2 at {0}, {1}, {2} point pt 6", x, y, z));
             }
 
             GnuPlot.SPlot(plot_data.X, plot_data.Y, plot_data.Z);
@@ -394,20 +489,23 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             var configuration_selection_dialog = new ConfigurationSelectionDialog();
             if (configuration_selection_dialog.ShowDialog() != true)
                 return;
-            Reset(Helpers.GetCalibrationMode(
-                configuration_selection_dialog.GetSelectedConfiguration()));
+
+            LoadConfiguration(configuration_selection_dialog.GetSelectedConfiguration());
         }
 
         private void Button_SetBackup_Click(object sender, RoutedEventArgs e)
         {
-            backup = iterator.CalibrationMode.Clone();
+            backup_mode = iterator.CalibrationMode.Clone();
+            backup_extremums = extremums_control_model.Modes;
+            backup_linear_results = linear_results_control_model.Modes;
         }
 
         private void Button_RestoreBackup_Click(object sender, RoutedEventArgs e)
         {
-            if (backup != null)
-                iterator.CalibrationMode = backup.Clone();
-            Reset(backup);
+            if (backup_mode == null)
+                return;
+
+            Reset(backup_mode.Clone(), backup_extremums, backup_linear_results);
         }
     }
 }
