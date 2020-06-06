@@ -172,7 +172,7 @@
                     <local:IntegerPropertyControl 
                         Grid.Row="2" Grid.ColumnSpan="4" 
                         x:Name="CalibrationStep" 
-                        Label="Calibration step in pixels"
+                        Label="Calibration step (pixels)"
                         Maximum="15" Minimum="1"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
@@ -221,7 +221,7 @@
                     <local:IntegerPropertyControl 
                         Grid.Row="9" Grid.ColumnSpan="4" 
                         x:Name="SmotheningZoneRadius" 
-                        Label="Smoothening zone radius in pixels "
+                        Label="Instant jump distance (pixels)"
                         Maximum="1000" Minimum="1"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     

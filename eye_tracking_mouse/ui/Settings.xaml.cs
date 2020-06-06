@@ -94,12 +94,15 @@ namespace eye_tracking_mouse
                     "If you cannot open Start Menu because " + Helpers.application_name + " intercepts your key presses then increase it.";
 
                 SmootheningPointsCount.ToolTip =
-                    "Number of gaze points used to smooth the cursor position. \n" +
-                    "The resulting cursor position is the arithmetic mean of these points.";
+                    "The eye tracker provides gaze point coordinates ~30 times per second.\n" +
+                    "If the cursor jumped to each point immediately it would shake a lot.\n" +
+                    "Instead of that the app caches N last points and uses their average as \n" +
+                    "the current cursor position. This makes the cursor movement smooth \n" +
+                    "although too much points add latency.";
 
                 SmotheningZoneRadius.ToolTip =
-                    "A distance after which the cursor stop being smooth.\n" +
-                    "If you move your gaze quickly farther than this value the cursor will jump instantly to the new gaze point.";
+                    "If you move your gaze quickly farther than this value the cursor will jump instantly to the new gaze point.\n" +
+                    "This cancels latency caused by smoothening.";
 
                 string calibration_view_hotkeys = Helpers.GetModifierString() + " + " +
                     Options.Instance.key_bindings[Key.ShowCalibrationView].ToString();
