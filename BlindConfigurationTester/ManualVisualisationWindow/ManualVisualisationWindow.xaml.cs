@@ -69,15 +69,16 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         string[] algorithms = new string[] { "V0", "V1", "V2" };
         int selected_algorithm = 2;
         private Action redraw;
-        private eye_tracking_mouse.Options.CalibrationMode calibration_mode;
+        private CalibrationModeIterator iterator;
 
-        public AlgorithmVersionControlModel(Action redraw_callback,
-            eye_tracking_mouse.Options.CalibrationMode mode)
+        public AlgorithmVersionControlModel(
+            Action redraw_callback,
+            CalibrationModeIterator iterator)
         {
-            calibration_mode = mode;
+            this.iterator = iterator;
             for (int i = 0; i < algorithms.Length; i++)
             {
-                if (algorithms[i] == mode.algorithm)
+                if (algorithms[i] == iterator.CalibrationMode.algorithm)
                     selected_algorithm = i;
             }
             redraw = redraw_callback;
@@ -95,7 +96,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         {
             if (selected_algorithm > 0)
                 selected_algorithm--;
-            calibration_mode.algorithm = algorithms[selected_algorithm];
+            iterator.CalibrationMode.algorithm = algorithms[selected_algorithm];
             redraw.Invoke();
         }
 
@@ -103,7 +104,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         {
             if (selected_algorithm < algorithms.Length - 1)
                 selected_algorithm++;
-            calibration_mode.algorithm = algorithms[selected_algorithm];
+            iterator.CalibrationMode.algorithm = algorithms[selected_algorithm];
             redraw.Invoke();
         }
     }
@@ -277,7 +278,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             }
 
             data_set_control_model = new DataSetControlModel(Redraw);
-            algorithm_control_model = new AlgorithmVersionControlModel(Redraw, mode);
+            algorithm_control_model = new AlgorithmVersionControlModel(Redraw, iterator);
             extremums_control_model = new ListOfModesControlModel("extremum", iterator, extremums, Redraw);
             linear_results_control_model = new ListOfModesControlModel("linear results", iterator, linear_results, Redraw);
 
@@ -314,7 +315,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             CalibrationModeIterator.OptionsField[] enabled_fields)
         {
             return data_point_name + enabled_fields[0].field_name + " " +
-                  enabled_fields[1].field_name + " " + iterator.GetUniqueKey(mode);
+                  enabled_fields[1].field_name + " " + mode.algorithm + iterator.GetUniqueKey(mode);
         }
 
         private static PlotData CalculatePlotData(
