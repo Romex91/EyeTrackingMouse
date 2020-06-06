@@ -263,8 +263,8 @@ namespace BlindConfigurationTester
         {
             float[] shift_position = data_point.tobii_coordinates.ToCoordinates(config);
             var tobii_gaze_point = new Point(
-                        data_point.smoothened_tobii_coordinates.gaze_point.X,
-                        data_point.smoothened_tobii_coordinates.gaze_point.Y);
+                        data_point.tobii_coordinates.gaze_point.X,
+                        data_point.tobii_coordinates.gaze_point.Y);
             shift_position[0] = (float) tobii_gaze_point.X;
             shift_position[1] = (float) tobii_gaze_point.Y;
             var shift = calibration_manager.GetShift(shift_position);
