@@ -337,7 +337,7 @@ namespace eye_tracking_mouse
 
         public int modifier_short_press_duration_ms = 100;
 
-        public int smothening_zone_radius = 250;
+        public int smothening_zone_radius = 100;
         public int smothening_points_count = 15;
 
         public static string Filepath { get { return Path.Combine(Helpers.UserDataFolder, "options.json"); } }
