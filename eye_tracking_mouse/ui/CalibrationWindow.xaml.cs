@@ -140,17 +140,17 @@ namespace eye_tracking_mouse
         {
             Dispatcher.BeginInvoke((Action)(() =>
             {
-                color_calculator.AdjustColorBoundaries(correction.Coordinates);
+                color_calculator.AdjustColorBoundaries(correction.сoordinates);
                 InitArrowWithUserCorrection(correction, current_arrow);
             }));
         }
 
         private void InitArrowWithUserCorrection(EyeTrackerErrorCorrection shift, Petzold.Media2D.ArrowLine arrow)
         {
-            arrow.X1 = shift.Coordinates[0];
-            arrow.Y1 = shift.Coordinates[1];
-            arrow.X2 = shift.Coordinates[0] + shift.shift.X;
-            arrow.Y2 = shift.Coordinates[1] + shift.shift.Y;
+            arrow.X1 = shift.сoordinates[0];
+            arrow.Y1 = shift.сoordinates[1];
+            arrow.X2 = shift.сoordinates[0] + shift.shift.X;
+            arrow.Y2 = shift.сoordinates[1] + shift.shift.Y;
             if (arrow == current_arrow)
             {
                 arrow.Stroke = Brushes.Green;
@@ -158,7 +158,7 @@ namespace eye_tracking_mouse
             else
             {
                 arrow.Stroke = Options.Instance.calibration_mode.additional_dimensions_configuration.Equals(AdditionalDimensionsConfguration.Disabled) ?
-                    Brushes.Red : new SolidColorBrush(color_calculator.GetColor(shift.Coordinates));
+                    Brushes.Red : new SolidColorBrush(color_calculator.GetColor(shift.сoordinates));
             }
             arrow.StrokeThickness = 3;
         }
@@ -180,7 +180,7 @@ namespace eye_tracking_mouse
 
                     foreach (var shift in shifts)
                     {
-                        color_calculator.AdjustColorBoundaries(shift.Coordinates);
+                        color_calculator.AdjustColorBoundaries(shift.сoordinates);
                     }
 
                     foreach (var shift in shifts)

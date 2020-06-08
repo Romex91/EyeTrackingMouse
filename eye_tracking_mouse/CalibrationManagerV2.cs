@@ -9,7 +9,49 @@ using System.Threading.Tasks;
 namespace eye_tracking_mouse
 {
 
-    // Takes average of closest corrections.
+    // Currently there are three versions of CalibrationManager: V0 V1 and V2
+    // V0 and V1 are obsolete and persist purely for testing.
+    //
+    // All three versions are doing the same thing. They track history of previous error corrections and try to make sense from them.
+    // Error correction is a little arrow on the screen that shows what error the eye tracker made at this point (see EyeTrackerErrorCorrection in ShiftsStorage.cs).
+    //
+    // V0 is a naive implementation that adjusts mouse position by average of closest to cursor error corrections.
+    // Its drawback is that it considers only distances but not directions.
+    // 
+    // E.G.: Imagine this is a computer screen: 
+    // =======================================================================
+    //
+    //             0            A  B
+    //             ^              
+    //             | 
+    //             | the cursor is straight to the left of A and B
+    // 
+    // =======================================================================
+    // 0 is cursor position.
+    // A and B are error corrections made previously (arrows on screen)
+    //
+    // V0 measures distances from A and B (they are almost equal) and takes weighted average. 
+    // The result will consider A and B almost equaly. This is okey when A and B are pointing in the same direction.
+    // But when they are opposite they cancel out each other.
+    // Consequence can be seen with bare eyes when you click UI elements placed close to each other.
+    // It feels like the App doesn't consider you corrections so you have to press the same combination of WASD again and again.
+    //
+    // V1 solves this problem by "shading":
+    //
+    // The same screen with V0: 
+    // =======================================================================
+    //
+    //             0            A ) B
+    //                            ^
+    //                            |
+    //                            | A casts a shade on B
+    //
+    // =======================================================================
+    // V1 will only conider A because B is behind the shade.
+    // 
+    // Unexpectedly V0 beats V1 in tests despite of the drawback being visible with bare eyes.
+    // Here comes V2 that is a hybrid of V0 and V1
+    // It applies V0 for cursor positions that are far away from exitsting error corrections and V1 for closer ones.
     class CalibrationManagerV2 : ICalibrationManager
     {
         private readonly ShiftsStorage shift_storage;
@@ -22,64 +64,113 @@ namespace eye_tracking_mouse
 
         public Point GetShift(float[] cursor_position)
         {
-            var closest_corrections = shift_storage.GetClosestCorrections(cursor_position);
-            if (closest_corrections == null)
-            {
-                Debug.Assert(shift_storage.Corrections.Count() == 0 || !Helpers.AreCoordinatesSane(cursor_position));
-                return new Point(0, 0);
-            }
 
+            // |GetClosestCorrections| is computationaly heavy. We call it once and create copies for V0 and V1 parts of this function.
+            List<ShiftsStorage.PointInfo> closest_corrections_v0 = new List<ShiftsStorage.PointInfo>(calibration_mode.considered_zones_count);
+            List<ShiftsStorage.PointInfo> closest_corrections_v1 = new List<ShiftsStorage.PointInfo>(calibration_mode.considered_zones_count_v1);
+            {
+                var closest_corrections = shift_storage.GetClosestCorrections(cursor_position);
+                if (closest_corrections == null || closest_corrections.Count() == 0)
+                {
+                    Debug.Assert(shift_storage.Corrections.Count() == 0 || !Helpers.AreCoordinatesSane(cursor_position));
+                    return new Point(0, 0);
+                }
+                for (int i = 0; i < closest_corrections.Count; i++)
+                {
+                    var correction = closest_corrections[i];
+                    if (i < calibration_mode.considered_zones_count)
+                    {
+                        closest_corrections_v0.Add(new ShiftsStorage.PointInfo { 
+                            correction = correction.correction,
+                            distance = correction.distance,
+                            weight = correction.weight,
+                            vector_from_correction_to_cursor = correction.vector_from_correction_to_cursor
+                        });
+                    }
+                    if (i < calibration_mode.considered_zones_count_v1)
+                    {
+                        closest_corrections_v1.Add(new ShiftsStorage.PointInfo
+                        {
+                            correction = correction.correction,
+                            distance = correction.distance,
+                            weight = correction.weight,
+                            vector_from_correction_to_cursor = correction.vector_from_correction_to_cursor
+                        });
+                    }
+                }
+            }
+            // V0 part (average of closest error corrections weighted by distance):
             float sum_of_reverse_distances = 0;
-            foreach (var index in closest_corrections)
+            foreach (var index in closest_corrections_v0)
             {
                 sum_of_reverse_distances += (1 / index.distance);
             }
-            foreach (var correction in closest_corrections)
+
+            foreach (var correction in closest_corrections_v0)
             {
                 correction.weight = 1 / correction.distance / sum_of_reverse_distances;
             }
-            var avg = Helpers.GetWeightedAverage(closest_corrections);
 
-            ApplyShades(closest_corrections);
-
-            foreach (var correction in closest_corrections)
+            // V1 part (same as V0 plus shading)
+            sum_of_reverse_distances = 0;
+            foreach (var index in closest_corrections_v1)
+            {
+                sum_of_reverse_distances += (1 / index.distance);
+            }
+            ApplyShades(closest_corrections_v1);
+            foreach (var correction in closest_corrections_v1)
             {
                 correction.weight = correction.weight / correction.distance / sum_of_reverse_distances;
             }
+            Helpers.NormalizeWeights(closest_corrections_v1);
 
-            Helpers.NormalizeWeights(closest_corrections);
-
+            // Compute ratio of V0/V1 infuence on final result.
             Debug.Assert(calibration_mode.correction_fade_out_distance > 0);
+            var vector_from_correction_to_cursor = closest_corrections_v1[0].vector_from_correction_to_cursor;
+            float XYdistance = (float)Math.Sqrt(
+                vector_from_correction_to_cursor[0] * vector_from_correction_to_cursor[0] +
+                vector_from_correction_to_cursor[1] * vector_from_correction_to_cursor[1]);
+            // Longer the distance lower the factor.
+            float v0_vs_v1_factor = 1.0f - (float)Math.Pow(
+                XYdistance / calibration_mode.correction_fade_out_distance, 4);
+            if (v0_vs_v1_factor < 0)
+                v0_vs_v1_factor = 0;
 
+            // Merge v0 and v1 to single set using the computed factor.
+            List<ShiftsStorage.PointInfo> v1_v0_hybrid_corrections = new List<ShiftsStorage.PointInfo>();
 
-            float total_weight = 0;
-            foreach (var correction in closest_corrections)
+            foreach (var correction in closest_corrections_v1)
             {
-                var vector_from_correction_to_cursor = correction.vector_from_correction_to_cursor;
-                float XYdistance = (float) Math.Sqrt(
-                    vector_from_correction_to_cursor[0] * vector_from_correction_to_cursor[0] +
-                    vector_from_correction_to_cursor[1] * vector_from_correction_to_cursor[1]);
-
-                float factor = 1.0f - (float)Math.Pow(
-                    XYdistance / calibration_mode.correction_fade_out_distance, 2);
-                correction.weight *= factor > 0 ? factor : 0;
-                total_weight += correction.weight;
+                correction.weight = v0_vs_v1_factor * correction.weight;
+                v1_v0_hybrid_corrections.Add(correction);
             }
 
-            Debug.Assert(total_weight <= 1);
+            foreach (var correction in closest_corrections_v0)
+            {
+                correction.weight = (1 - v0_vs_v1_factor) * correction.weight;
+                int i = 0;
+                for (; i < v1_v0_hybrid_corrections.Count; i++)
+                {
+                    if (correction.correction == v1_v0_hybrid_corrections[i].correction)
+                    {
+                        v1_v0_hybrid_corrections[i].weight += correction.weight;
+                        break;
+                    }
+                }
+                if (i == v1_v0_hybrid_corrections.Count)
+                    v1_v0_hybrid_corrections.Add(correction);
+            }
 
-            var result = Helpers.GetWeightedAverage(closest_corrections);
-            result.X = (int) (result.X + avg.X * (1 - total_weight));
-            result.Y = (int) (result.Y + avg.Y * (1 - total_weight));
+            var result = Helpers.GetWeightedAverage(v1_v0_hybrid_corrections);
 
             if (shift_storage.calibration_window != null)
             {
                 var lables = new List<Tuple<string /*text*/, System.Windows.Point>>();
-                foreach (var correction in closest_corrections)
+                foreach (var correction in v1_v0_hybrid_corrections)
                     lables.Add(new Tuple<string, System.Windows.Point>((int)(correction.weight * 100) + "%",
                         new System.Windows.Point(
-                            correction.correction.Coordinates[0],
-                            correction.correction.Coordinates[1])));
+                            correction.correction.сoordinates[0],
+                            correction.correction.сoordinates[1])));
                 shift_storage.calibration_window.UpdateCorrectionsLables(lables);
                 shift_storage.calibration_window.UpdateCurrentCorrection(new EyeTrackerErrorCorrection(cursor_position, result));
             }
@@ -113,7 +204,6 @@ namespace eye_tracking_mouse
 
             return opacity;
         }
-
         private void ApplyShades(List<ShiftsStorage.PointInfo> corrections)
         {
             for (int i = 0; i < corrections.Count;)

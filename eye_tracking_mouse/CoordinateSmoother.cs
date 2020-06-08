@@ -18,7 +18,7 @@ namespace eye_tracking_mouse
         public static EyeTrackerErrorCorrection Smoothen(EyeTrackerErrorCorrection correction)
         {
             AddPoint(correction);
-            float[] coordinates = new float[correction.Coordinates.Length];
+            float[] coordinates = new float[correction.сoordinates.Length];
             Point shift = new Point(0, 0);
 
             foreach(var point in points)
@@ -27,7 +27,7 @@ namespace eye_tracking_mouse
                 shift.Y += point.shift.Y;
                 for (int i = 0; i < coordinates.Length; i++)
                 {
-                    coordinates[i] += point.Coordinates[i];
+                    coordinates[i] += point.сoordinates[i];
                 }
             }
 
@@ -56,10 +56,10 @@ namespace eye_tracking_mouse
 
                 points.RemoveAll(p =>
                 {
-                    Debug.Assert(p.Coordinates.Length == correction.Coordinates.Length);
-                    for (int i = 0; i < p.Coordinates.Length; i++)
+                    Debug.Assert(p.сoordinates.Length == correction.сoordinates.Length);
+                    for (int i = 0; i < p.сoordinates.Length; i++)
                     {
-                        if (Math.Abs(p.Coordinates[i] - correction.Coordinates[i]) > Options.Instance.smothening_zone_radius)
+                        if (Math.Abs(p.сoordinates[i] - correction.сoordinates[i]) > Options.Instance.smothening_zone_radius)
                         {
                             return true;
                         }

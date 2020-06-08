@@ -221,6 +221,7 @@ namespace eye_tracking_mouse
             public static EventHandler Changed;
             public int zone_size;
             public int max_zones_count;
+
             public int considered_zones_count;
 
             public int size_of_opaque_sector_in_percents = 30;
@@ -228,6 +229,7 @@ namespace eye_tracking_mouse
             public int shade_thickness_in_pixels = 50;
 
             // V2
+            public int considered_zones_count_v1 = 6;
             public int correction_fade_out_distance = 100;
 
             public string tag_for_testing;
@@ -248,6 +250,7 @@ namespace eye_tracking_mouse
                     size_of_transparent_sector_in_percents = this.size_of_transparent_sector_in_percents,
                     shade_thickness_in_pixels = this.shade_thickness_in_pixels,
                     correction_fade_out_distance = this.correction_fade_out_distance,
+                    considered_zones_count_v1 = this.considered_zones_count_v1,
                     algorithm = this.algorithm,
                     additional_dimensions_configuration = this.additional_dimensions_configuration.Clone()
                 };
@@ -261,6 +264,7 @@ namespace eye_tracking_mouse
                     size_of_opaque_sector_in_percents == other.size_of_opaque_sector_in_percents &&
                     size_of_transparent_sector_in_percents == other.size_of_transparent_sector_in_percents &&
                     shade_thickness_in_pixels == other.shade_thickness_in_pixels &&
+                    considered_zones_count_v1 == other.considered_zones_count_v1 &&
                     correction_fade_out_distance == other.correction_fade_out_distance &&
                     algorithm == other.algorithm &&
                     additional_dimensions_configuration.Equals(other.additional_dimensions_configuration);
@@ -273,6 +277,7 @@ namespace eye_tracking_mouse
                     return new CalibrationMode
                     {
                         considered_zones_count = 5,
+                        considered_zones_count_v1 = 5,
                         max_zones_count = 32,
                         additional_dimensions_configuration = AdditionalDimensionsConfguration.Disabled,
                         zone_size = 150
@@ -287,6 +292,7 @@ namespace eye_tracking_mouse
                     return new CalibrationMode
                     {
                         considered_zones_count = 6,
+                        considered_zones_count_v1 = 6,
                         max_zones_count = 512,
                         size_of_opaque_sector_in_percents = 30,
                         size_of_transparent_sector_in_percents = 60,

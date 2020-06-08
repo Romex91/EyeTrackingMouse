@@ -41,8 +41,8 @@ namespace eye_tracking_mouse
         private void UpdateCursorPosition()
         {
             MouseButtons.Move(
-                smoothened_error_correction.Coordinates[0] + smoothened_error_correction.shift.X,
-                smoothened_error_correction.Coordinates[1] + smoothened_error_correction.shift.Y);
+                smoothened_error_correction.сoordinates[0] + smoothened_error_correction.shift.X,
+                smoothened_error_correction.сoordinates[1] + smoothened_error_correction.shift.Y);
         }
 
         private void OnNewCoordinates(TobiiCoordinates coordinates)
@@ -67,11 +67,11 @@ namespace eye_tracking_mouse
                     if (mouse_state == MouseState.Calibrating)
                     {
                         // The only thing to update while calibrating is gaze point.
-                        float[] coordinates_copy = new float[smoothened_error_correction.Coordinates.Length];
-                        smoothened_error_correction.Coordinates.CopyTo(coordinates_copy, 0);
+                        float[] coordinates_copy = new float[smoothened_error_correction.сoordinates.Length];
+                        smoothened_error_correction.сoordinates.CopyTo(coordinates_copy, 0);
                         var smoothened_error_correction_clone = new EyeTrackerErrorCorrection(coordinates_copy, smoothened_error_correction.shift);
-                        smoothened_error_correction_clone.Coordinates[0] = coordinates.gaze_point.X;
-                        smoothened_error_correction_clone.Coordinates[1] = coordinates.gaze_point.Y;
+                        smoothened_error_correction_clone.сoordinates[0] = coordinates.gaze_point.X;
+                        smoothened_error_correction_clone.сoordinates[1] = coordinates.gaze_point.Y;
                         smoothened_error_correction = CoordinateSmoother.Smoothen(smoothened_error_correction_clone);
                     }
                     else
@@ -133,8 +133,8 @@ namespace eye_tracking_mouse
             if (mouse_state != MouseState.Calibrating)
             {
                 calibration_start_gaze_point =
-                    new Point((int)smoothened_error_correction.Coordinates[0],
-                              (int)smoothened_error_correction.Coordinates[1]);
+                    new Point((int)smoothened_error_correction.сoordinates[0],
+                              (int)smoothened_error_correction.сoordinates[1]);
                 mouse_state = MouseState.Calibrating;
             }
             freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
@@ -257,7 +257,7 @@ namespace eye_tracking_mouse
                 //
                 // It's easy to make things worse changing this place. Even worse, it is hard to say that a commit is good or bad without 
                 // blind tests. Blind tests are elaborate. Make sure you understand what is going on here before making radical changes;)
-                CalibrationManager.Instance.AddShift(smoothened_error_correction.Coordinates, smoothened_error_correction.shift);
+                CalibrationManager.Instance.AddShift(smoothened_error_correction.сoordinates, smoothened_error_correction.shift);
                 mouse_state = MouseState.Controlling;
             }
 

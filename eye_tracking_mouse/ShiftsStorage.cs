@@ -17,19 +17,21 @@ namespace eye_tracking_mouse
     {
         public EyeTrackerErrorCorrection(float[] coordinates, Point shift)
         {
-            Coordinates = coordinates;
+            сoordinates = coordinates;
             this.shift = shift;
         }
 
-        // How far the cursor moved from the point before the correction.
+        // Vector coming from the uncalibrated gaze point to the 'true' gaze point.
+        //
+        // cursor position = eye tracker output + |shift|.
         public Point shift;
 
         // A multidimensional vector where first two coordinates represent 2d point on the display.
         // Other dimensions represent user body position.
-        public float[] Coordinates { get; private set; }
+        public float[] сoordinates { get; private set; }
     }
 
-    // |ShiftsStorage| is responsible for storing user corrections (shifts).
+    // |ShiftsStorage| is responsible for storing error corrections (shifts).
     // * It supports even spreading of the corrections on display. If user makes two corrections in the same (or near) position the new correction overwrites the old one.
     // * It handles saving and loading corrections from file.
     public class ShiftsStorage : IDisposable
@@ -183,7 +185,7 @@ namespace eye_tracking_mouse
 
                 if (cache.AllocateIndex()!= Corrections.Count)
                     throw new Exception("Logic error");
-                cache.SaveToCache(tmp.Coordinates, Corrections.Count);
+                cache.SaveToCache(tmp.сoordinates, Corrections.Count);
                 Corrections.Add(tmp);
             }
         }
@@ -220,9 +222,9 @@ namespace eye_tracking_mouse
                 var corrections = JsonConvert.DeserializeObject<List<EyeTrackerErrorCorrection>>(
                     File.ReadAllText(DefaultPath)).Where(x =>
                 {
-                    if (x.Coordinates == null)
+                    if (x.сoordinates == null)
                         return false;
-                    if (x.Coordinates.Length != calibration_mode.additional_dimensions_configuration.CoordinatesCount)
+                    if (x.сoordinates.Length != calibration_mode.additional_dimensions_configuration.CoordinatesCount)
                     {
                         if (!error_message_box_shown)
                         {
@@ -235,7 +237,7 @@ namespace eye_tracking_mouse
                 }).ToList();
                 foreach(var correction in corrections)
                 {
-                    AddShift(correction.Coordinates, correction.shift);
+                    AddShift(correction.сoordinates, correction.shift);
                 }
             }
             catch (Exception e)
@@ -280,7 +282,7 @@ namespace eye_tracking_mouse
                 corrections[i].weight = corrections[i].weight / total_weight;
         }
 
-        public static Point GetWeightedAverage(List<ShiftsStorage.PointInfo> corrections)
+        public static Point GetWeightedAverage(IEnumerable<ShiftsStorage.PointInfo> corrections)
         {
             Point resulting_shift = new Point(0, 0);
             foreach (var point in corrections)

@@ -170,7 +170,10 @@ namespace eye_tracking_mouse
             int number_of_shift_positions = cache.number_of_shift_positions;
 
             int subtract_iterator = 0;
-            int number_of_considered_points = Math.Min(cache.mode.considered_zones_count, number_of_shift_positions);
+            int number_of_considered_points = 
+                Math.Min(
+                    Math.Max(cache.mode.considered_zones_count, cache.mode.considered_zones_count_v1), 
+                    number_of_shift_positions);
 
             System.Numerics.Vector<float>[] cursor_position = new System.Numerics.Vector<float>[vectors_per_point];
             int i = 0;
@@ -258,7 +261,11 @@ namespace eye_tracking_mouse
         // Find indexes of points closest to cursor position.
         private void FindClosestPoints()
         {
-            int considered_points_count = Math.Min(mode.considered_zones_count, number_of_shift_positions);
+            int considered_points_count =
+                Math.Min(
+                    Math.Max(mode.considered_zones_count, mode.considered_zones_count_v1),
+                    number_of_shift_positions);
+
             if (considered_points_count == 0)
             {
                 ClosestPoints = null;

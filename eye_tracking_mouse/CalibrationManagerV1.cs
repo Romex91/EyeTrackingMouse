@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace eye_tracking_mouse
 {
 
-    // Takes average of closest corrections.
+    // Takes average of closest corrections and apply "shading" (error corrections are shading out other corrections behind them).
     class CalibrationManagerV1 : ICalibrationManager
     {
         private readonly ShiftsStorage shift_storage;
@@ -54,8 +54,8 @@ namespace eye_tracking_mouse
                 foreach (var correction in closest_corrections)
                     lables.Add(new Tuple<string, System.Windows.Point>((int)(correction.weight * 100) + "%",
                         new System.Windows.Point(
-                            correction.correction.Coordinates[0],
-                            correction.correction.Coordinates[1])));
+                            correction.correction.сoordinates[0],
+                            correction.correction.сoordinates[1])));
                 shift_storage.calibration_window.UpdateCorrectionsLables(lables);
                 shift_storage.calibration_window.UpdateCurrentCorrection(new EyeTrackerErrorCorrection(cursor_position, result));
             }
