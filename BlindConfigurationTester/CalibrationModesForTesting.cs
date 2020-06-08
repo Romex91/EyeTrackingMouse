@@ -20,7 +20,6 @@ namespace BlindConfigurationTester
                         max_zones_count= 2048,
                         considered_zones_count = 6,
                         size_of_opaque_sector_in_percents= 30,
-                        size_of_transparent_sector_in_percents= 60,
                         shade_thickness_in_pixels= 50,
                         correction_fade_out_distance= 50,
                         tag_for_testing= "mid_incremental",
@@ -50,7 +49,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 2000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -70,7 +68,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 2000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -90,7 +87,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 2000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -110,7 +106,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 2000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -130,7 +125,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 2000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -150,7 +144,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 2000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -170,7 +163,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 2000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -191,7 +183,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 1000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -211,7 +202,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 1000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -231,7 +221,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 1000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -251,7 +240,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 1000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -271,7 +259,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 1000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -291,7 +278,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 1000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",
@@ -311,7 +297,6 @@ namespace BlindConfigurationTester
                         max_zones_count = 1000,
                         shade_thickness_in_pixels = 50,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 30,
                         zone_size = 150,
 
                         algorithm = "V2",

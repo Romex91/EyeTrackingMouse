@@ -196,17 +196,9 @@ namespace BlindConfigurationTester
             return calibration_manager;
         }
 
-        private static bool IsModeCorrect(eye_tracking_mouse.Options.CalibrationMode mode)
-        {
-            return
-                mode.size_of_opaque_sector_in_percents + mode.size_of_transparent_sector_in_percents < 91;
-        }
 
         public static Helpers.TestResult TestCalibrationMode(List<DataPoint> data_points, eye_tracking_mouse.Options.CalibrationMode calibration_mode)
         {
-            if (!IsModeCorrect(calibration_mode))
-                return new Helpers.TestResult();
-
             return TestCalibrationManager(SetupCalibrationManager(calibration_mode), 
                 data_points, calibration_mode.additional_dimensions_configuration);
         }

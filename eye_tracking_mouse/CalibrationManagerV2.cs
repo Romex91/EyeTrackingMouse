@@ -189,14 +189,13 @@ namespace eye_tracking_mouse
             float angle_in_percents =(float) (Helpers.GetAngleBetweenVectors(source_of_shade, shaded_correction) * 100 / Math.PI);
             Debug.Assert(angle_in_percents <= 100);
 
-            // Opacity descendes gradualy in the sector between opaque and transparent sectors.
+            // Opacity descendes gradualy on the sides of opaque sector.
             if (angle_in_percents < calibration_mode.size_of_opaque_sector_in_percents)
                 opacity = 1;
-            else if (angle_in_percents > 100 - calibration_mode.size_of_transparent_sector_in_percents)
+            else if (angle_in_percents > calibration_mode.size_of_opaque_sector_in_percents + 10)
                 opacity = 0;
             else
-                opacity = (angle_in_percents + calibration_mode.size_of_transparent_sector_in_percents - 100) /
-                    (calibration_mode.size_of_opaque_sector_in_percents + calibration_mode.size_of_transparent_sector_in_percents - 100);
+                opacity = (calibration_mode.size_of_opaque_sector_in_percents + 10 - angle_in_percents) / (10);
 
             float distance_from_shade_shell_to_shaded_correction = shaded_correction.distance - source_of_shade.distance;
             if (distance_from_shade_shell_to_shaded_correction < calibration_mode.shade_thickness_in_pixels)

@@ -225,7 +225,6 @@ namespace eye_tracking_mouse
             public int considered_zones_count;
 
             public int size_of_opaque_sector_in_percents = 30;
-            public int size_of_transparent_sector_in_percents = 30;
             public int shade_thickness_in_pixels = 50;
 
             // V2
@@ -247,7 +246,6 @@ namespace eye_tracking_mouse
                     max_zones_count = this.max_zones_count,
                     considered_zones_count = this.considered_zones_count,
                     size_of_opaque_sector_in_percents = this.size_of_opaque_sector_in_percents,
-                    size_of_transparent_sector_in_percents = this.size_of_transparent_sector_in_percents,
                     shade_thickness_in_pixels = this.shade_thickness_in_pixels,
                     correction_fade_out_distance = this.correction_fade_out_distance,
                     considered_zones_count_v1 = this.considered_zones_count_v1,
@@ -262,7 +260,6 @@ namespace eye_tracking_mouse
                     max_zones_count == other.max_zones_count &&
                     considered_zones_count == other.considered_zones_count &&
                     size_of_opaque_sector_in_percents == other.size_of_opaque_sector_in_percents &&
-                    size_of_transparent_sector_in_percents == other.size_of_transparent_sector_in_percents &&
                     shade_thickness_in_pixels == other.shade_thickness_in_pixels &&
                     considered_zones_count_v1 == other.considered_zones_count_v1 &&
                     correction_fade_out_distance == other.correction_fade_out_distance &&
@@ -295,7 +292,6 @@ namespace eye_tracking_mouse
                         considered_zones_count_v1 = 6,
                         max_zones_count = 512,
                         size_of_opaque_sector_in_percents = 30,
-                        size_of_transparent_sector_in_percents = 60,
                         shade_thickness_in_pixels = 50,
                         algorithm = "V2",
                         zone_size = 75,
