@@ -72,6 +72,7 @@ namespace BlindConfigurationTester
                 OptionsField.BuildExponential(field_name : "max_zones_count", 8, 2048, 2, false),
                 OptionsField.BuildHardcoded(field_name : "considered_zones_count", new List<int>{ 3, 4, 5, 6, 8, 10, 14, 20, 30 }),
                 OptionsField.BuildHardcoded(field_name : "considered_zones_count_v1", new List<int>{ 3, 4, 5, 6, 8, 10, 14, 20, 30 }),
+                OptionsField.BuildHardcoded(field_name : "shade_thickness_in_pixels", new List<int>{ 5, 10, 25, 50}),
                 OptionsField.BuildLinear(field_name : "size_of_opaque_sector_in_percents", max : 70, min : 30, step: 10),
                 OptionsField.BuildHardcoded(field_name : "correction_fade_out_distance", new List<int>{ 50, 75, 100, 150, 200, 250, 350, 500, 800 }),
                 OptionsField.BuildExponential(field_name : "coordinate 2", 50, 30000, 1.6f, true),
