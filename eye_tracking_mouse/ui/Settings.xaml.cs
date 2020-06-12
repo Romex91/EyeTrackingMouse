@@ -148,7 +148,7 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 is_initialized = false;
-                SmotheningZoneRadius.Value = Options.Instance.smothening_zone_radius;
+                SmotheningZoneRadius.Value = Options.Instance.instant_jump_distance;
                 SmootheningPointsCount.Value = Options.Instance.smothening_points_count;
                 ModifierShortPressTimeMs.Value = Options.Instance.modifier_short_press_duration_ms;
 
@@ -198,7 +198,7 @@ namespace eye_tracking_mouse
 
                 if (sender == SmotheningZoneRadius)
                 {
-                    Options.Instance.smothening_zone_radius = (int)SmotheningZoneRadius.Value;
+                    Options.Instance.instant_jump_distance = (int)SmotheningZoneRadius.Value;
                 }
                 else if (sender == CalibrationStep)
                 {

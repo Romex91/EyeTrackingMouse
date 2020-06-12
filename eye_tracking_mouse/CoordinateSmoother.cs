@@ -59,7 +59,7 @@ namespace eye_tracking_mouse
                     Debug.Assert(p.сoordinates.Length == correction.сoordinates.Length);
                     for (int i = 0; i < p.сoordinates.Length; i++)
                     {
-                        if (Math.Abs(p.сoordinates[i] - correction.сoordinates[i]) > Options.Instance.smothening_zone_radius)
+                        if (Math.Abs(p.сoordinates[i] - correction.сoordinates[i]) > Options.Instance.instant_jump_distance)
                         {
                             return true;
                         }

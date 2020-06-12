@@ -76,19 +76,17 @@ namespace eye_tracking_mouse
                     }
                     else
                     {
-                        var current_coordinates = coordinates.ToCoordinates(Options.Instance.calibration_mode.additional_dimensions_configuration);
-
-                        // The eye tracker provides shaky data that has to be smoothened before transforming to mouse cursor position.
-                        // Another problem is that |CalibrationManager| may be a source of shaking too. That is why we shouldn't
-                        // smoothen data too early.
+                        // The eye tracker provides shaky data that has to be smoothened before transforming to the mouse cursor position.
+                        // |CalibrationManager| amplifies this shaking.
+                        // To cancel the amplification we smoothen data BEFORE it goes to |CalibrationManager|.
                         //
-                        // Keep in mind that smoothening decrease mouse cursor reaction time. So smoothening the data twice is a bad choice.
-                        // Due to these reason we pass raw shaky data to |CalibrationManager.GetShift| and smoothen the data after that.
-                        var shift = CalibrationManager.Instance.GetShift(current_coordinates);
-
-                        // Now is the time to smoothen the data because all sources of shakiness are left behind.
-                        smoothened_error_correction = CoordinateSmoother.Smoothen(
-                            new EyeTrackerErrorCorrection(current_coordinates, shift));
+                        // Another problem is |CalibrationManager| also may be a source of shaking (even on smoothened input). 
+                        // So in addition to smoothening its input we have to smoothen its output. 
+                        // Smoothening data twice leads to bigger latency but otherwise, the cursor shakes. 
+                        // Big latency is compensated by |instant_jump_distance|.
+                        var shift = smoothened_error_correction == null ? new Point(0,0) : CalibrationManager.Instance.GetShift(smoothened_error_correction.сoordinates);
+                        var shaky_coordinates = coordinates.ToCoordinates(Options.Instance.calibration_mode.additional_dimensions_configuration);
+                        smoothened_error_correction = CoordinateSmoother.Smoothen(new EyeTrackerErrorCorrection(shaky_coordinates, shift));
                     }
                 }
                 else
@@ -251,12 +249,6 @@ namespace eye_tracking_mouse
             if (mouse_state == MouseState.Calibrating &&
                 (key == Key.LeftMouseButton || key == Key.RightMouseButton))
             {
-                // Although we pass shaky (not smoothened) data to |CalibrationManager.GetShift| it is not an option here. 
-                // Accuracy tests (June 2020) confirm that |CalibrationManager| works better with smoothened rather than shaky data.
-                // Map of error corrections should be as accurate as possible.
-                //
-                // It's easy to make things worse changing this place. Even worse, it is hard to say that a commit is good or bad without 
-                // blind tests. Blind tests are elaborate. Make sure you understand what is going on here before making radical changes;)
                 CalibrationManager.Instance.AddShift(smoothened_error_correction.сoordinates, smoothened_error_correction.shift);
                 mouse_state = MouseState.Controlling;
             }
