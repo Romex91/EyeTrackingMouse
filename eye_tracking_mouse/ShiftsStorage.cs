@@ -28,7 +28,7 @@ namespace eye_tracking_mouse
 
         // A multidimensional vector where first two coordinates represent 2d point on the display.
         // Other dimensions represent user body position.
-        public float[] сoordinates { get; private set; }
+        public float[] сoordinates;
     }
 
     // |ShiftsStorage| is responsible for storing error corrections (shifts).
