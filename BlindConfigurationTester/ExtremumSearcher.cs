@@ -115,9 +115,12 @@ namespace BlindConfigurationTester
             }
 
             extremums_queue.Sort((x, y) => {
+                
                 if (x.utility < y.utility)
                     return 1;
-                else return -1;
+                if (x.utility == y.utility)
+                    return 0;
+                return -1;
             });
 
             QueueInfo = "Queue. Size: " + extremums_queue.Count + " \nContent: ";

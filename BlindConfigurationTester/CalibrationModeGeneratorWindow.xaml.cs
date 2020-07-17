@@ -165,7 +165,9 @@ namespace BlindConfigurationTester
                 results.extremum_search_results.Sort((x, y) => {
                     if (x.utility < y.utility)
                         return 1;
-                    else return -1;
+                    if (x.utility == y.utility)
+                        return 0;
+                    return -1;
                 });
                 if (results.extremum_search_results.Count > 1000)
                 {

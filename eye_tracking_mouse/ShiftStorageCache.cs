@@ -315,7 +315,13 @@ namespace eye_tracking_mouse
                     vector_from_correction_to_cursor = GetSubtractionResult(indexes[i]),
                 });
             }
-            ClosestPoints.Sort((x, y) => x.distance < y.distance ? -1 : 1);
+            ClosestPoints.Sort((x, y) => {
+                if (x.distance < y.distance)
+                    return 1;
+                if (x.distance == y.distance)
+                    return 0;
+                return -1;
+            });
         }
     }
 }
