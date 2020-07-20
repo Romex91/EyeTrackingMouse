@@ -131,6 +131,15 @@ namespace eye_tracking_mouse
         // WARNING: This is the main performance bottleneck. Measure performance before and after each change.
         public void ChangeCursorPosition(float[] coordinates)
         {
+            if (coordinates.Length > AlignedCoordinatesCount)
+            {
+                System.Windows.MessageBox.Show(
+                    "Too much coordinates in additional_dimensions_configuration in options.json.\n" +
+                    "If you are sure it is reasonable rewrite ShiftStorageCache.", 
+                    Helpers.application_name);
+                Environment.Exit(-1);
+            }
+
             int i = 0;
             for (; i < coordinates.Length; ++i)
                 cursor_coordinates[i] = (float)(coordinate_scales[i] * coordinates[i]);
