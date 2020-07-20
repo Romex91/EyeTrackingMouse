@@ -325,7 +325,7 @@ namespace eye_tracking_mouse
                 });
             }
             ClosestPoints.Sort((x, y) => {
-                if (x.distance < y.distance)
+                if (x.distance > y.distance)
                     return 1;
                 if (x.distance == y.distance)
                     return 0;
