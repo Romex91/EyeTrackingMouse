@@ -22,7 +22,7 @@ namespace BlindConfigurationTester
     /// </summary>
     public partial class CalibrationModeGeneratorWindow : Window
     {
-        public CalibrationModeGeneratorWindow(List<DataPoint> data_points)
+        public CalibrationModeGeneratorWindow(DataSet data_set)
         {
             InitializeComponent();
 
@@ -32,7 +32,7 @@ namespace BlindConfigurationTester
                 watch.Start();
                 try
                 {
-                   await GenerateConfiguration(data_points);
+                   await GenerateConfiguration(data_set);
                 } finally
                 {
                     watch.Stop();
@@ -95,7 +95,7 @@ namespace BlindConfigurationTester
         private long total_min_max_permutations = 0;
         private long remaining_min_max_permutations = 0;
 
-        private async Task GenerateConfiguration(List<DataPoint> data_points)
+        private async Task GenerateConfiguration(DataSet data_set)
         {
             // VS unit tests don't work and I don't want to fix them.
             IteratorTest.UniqueKeysAreUnique(CalibrationModesForTesting.Short.First());
@@ -117,8 +117,8 @@ namespace BlindConfigurationTester
                     {
                         Text_CurrentPermutation.Text = JsonConvert.SerializeObject(mode, Formatting.Indented);
                     }));
-                    MaxOutEachDimension(x.Clone(), data_points, tag);
-                    IncrementalImprove(x.Clone(), data_points, tag);
+                    MaxOutEachDimension(x.Clone(), data_set, tag);
+                    IncrementalImprove(x.Clone(), data_set, tag);
                 });
 
                 //iterator.ForEachMinMaxPermutation(mode, x => {
@@ -140,7 +140,7 @@ namespace BlindConfigurationTester
 
             var extremum_searcher = new ExtremumSearcher(
                 results.best_calibration_mode.mode, 
-                data_points,
+                data_set,
                 (ExtremumSearcher.TestResultsInfo info) =>
                 {
                     Dispatcher.BeginInvoke((Action)(() =>
@@ -195,7 +195,7 @@ namespace BlindConfigurationTester
 
         private void MaxOutEachDimension(
             eye_tracking_mouse.Options.CalibrationMode mode,
-            List<DataPoint> data_points, string tag)
+            DataSet data_set, string tag)
         {
             eye_tracking_mouse.Options.CalibrationMode local_best_calibration_mode = mode;
             float local_best_utility = 0;
@@ -218,7 +218,7 @@ namespace BlindConfigurationTester
                         modes_to_test.Add(calibration_mode);
                     }
 
-                    RunTests(data_points, modes_to_test, ref local_best_calibration_mode, ref local_best_utility);
+                    RunTests(data_set, modes_to_test, ref local_best_calibration_mode, ref local_best_utility);
                 }
 
                 number_of_local_iterations++;
@@ -235,7 +235,7 @@ namespace BlindConfigurationTester
         }
 
         private void RunTests(
-            List<DataPoint> data_points,
+            DataSet data_set,
             List<eye_tracking_mouse.Options.CalibrationMode> modes,
             ref eye_tracking_mouse.Options.CalibrationMode local_best_mode,
             ref float local_best_utility)
@@ -252,34 +252,32 @@ namespace BlindConfigurationTester
 
             cancellation.Token.ThrowIfCancellationRequested();
 
-            List<Task<Helpers.TestResult>> tasks = new List<Task<Helpers.TestResult>>();
+            List<Task<Helpers.TestResult[]>> tasks = new List<Task<Helpers.TestResult[]>>();
             foreach (var mode in modes)
             {
                 cancellation.Token.ThrowIfCancellationRequested();
-                tasks.Add(Task.Factory.StartNew<Helpers.TestResult>(() =>
+                tasks.Add(Task.Factory.StartNew<Helpers.TestResult[]>(() =>
                 {
-                    return Helpers.TestCalibrationMode(data_points, mode);
+                    return Helpers.TestCalibrationMode(data_set, mode);
                 }));
             }
 
             eye_tracking_mouse.Options.CalibrationMode best_mode = null;
             float best_utility = 0;
-            Helpers.TestResult best_result = null;
 
             for (int i = 0; i < tasks.Count; i++)
             {
-                float task_utility = tasks[i].Result.UtilityFunction;
+                float task_utility = Helpers.GetCombinedUtility(tasks[i].Result);
                 if (best_mode == null || task_utility > best_utility)
                 {
                     best_utility = task_utility;
                     best_mode = modes[i];
-                    best_result = tasks[i].Result;
                 }
             }
 
             Dispatcher.BeginInvoke((Action)(() =>
             {
-                Text_LastTestResult.Text = "Last test results " + best_result.UtilityFunction + " \n" + JsonConvert.SerializeObject(best_mode, Formatting.Indented);
+                Text_LastTestResult.Text = "Last test results " + best_utility + " \n" + JsonConvert.SerializeObject(best_mode, Formatting.Indented);
             }));
 
             Debug.Assert(results.best_calibration_mode.utility >= local_best_utility);
@@ -290,7 +288,7 @@ namespace BlindConfigurationTester
 
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    Text_GlobalBestModeInfo.Text = "Global Best Calibration Mode  " + best_result.UtilityFunction;
+                    Text_GlobalBestModeInfo.Text = "Global Best Calibration Mode  " + best_utility;
                 }));
             }
 
@@ -301,20 +299,20 @@ namespace BlindConfigurationTester
 
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    Text_LocalBestModeInfo.Text = "Local Best Calibration Mode  " + best_result.UtilityFunction;
+                    Text_LocalBestModeInfo.Text = "Local Best Calibration Mode  " + best_utility;
                 }));
             }
         }
 
         private void IncrementalImprove(
             eye_tracking_mouse.Options.CalibrationMode mode,
-            List<DataPoint> data_points,
+            DataSet data_set,
             string tag)
         {
             eye_tracking_mouse.Options.CalibrationMode local_best_calibration_mode = mode;
             float local_best_utility = 0;
             RunTests(
-                data_points,
+                data_set,
                 new List<eye_tracking_mouse.Options.CalibrationMode> { local_best_calibration_mode },
                 ref local_best_calibration_mode,
                 ref local_best_utility);
@@ -347,7 +345,7 @@ namespace BlindConfigurationTester
                 if (modes_to_test.Count == 0)
                     break;
 
-                RunTests(data_points, modes_to_test, ref local_best_calibration_mode, ref local_best_utility);
+                RunTests(data_set, modes_to_test, ref local_best_calibration_mode, ref local_best_utility);
 
                 if (local_best_utility == old_best_utility)
                     steps_number++;

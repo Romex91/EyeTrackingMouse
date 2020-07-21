@@ -20,12 +20,12 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
 {
     class DataSetControlModel : IControlModel
     {
-        string[] names;
-        List<DataPoint>[] data_sets;
+        List<string> names;
+        List<DataSet> data_sets;
         int selected_data_set = 0;
         private Action redraw;
 
-        public List<DataPoint> DataPoints
+        public DataSet SelectedDataSet
         {
             get { return data_sets[selected_data_set]; }
         }
@@ -33,12 +33,14 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         public DataSetControlModel(Action redraw_callback)
         {
             redraw = redraw_callback;
-            names = DataSet.ListDataSetsNames();
-            data_sets = new List<DataPoint>[names.Length];
-            for(int i = 0; i < names.Length; i++)
+            names = DataSetBuilder.ListDataSetsNames().ToList();
+            data_sets = new List<DataSet>();
+            foreach(var name in names)
             {
-                data_sets[i] = DataSet.Load(names[i]).data_points;
+                data_sets.Add(DataSet.LoadSingleSection(name));
             }
+            data_sets.Add(DataSet.LoadEverything());
+            names.Add("ALL");
         }
 
         public string Name => "data_set";
@@ -58,7 +60,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
 
         public void Increment()
         {
-            if (selected_data_set < names.Length - 1)
+            if (selected_data_set < names.Count - 1)
               selected_data_set++;
             redraw.Invoke();
         }
@@ -321,7 +323,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
         private static PlotData CalculatePlotData(
             eye_tracking_mouse.Options.CalibrationMode mode,
             CalibrationModeIterator.OptionsField[] enabled_fields,
-            List<DataPoint> data_points)
+            DataSet data_set)
         {
             var plot_data = new PlotData
             {
@@ -345,7 +347,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                         int index = i_copy * enabled_fields[1].Range.Length + j++;
                         plot_data.X[index] = enabled_fields[0].GetFieldValue(this_thread_mode_clone);
                         plot_data.Y[index] = enabled_fields[1].GetFieldValue(this_thread_mode_clone);
-                        plot_data.Z[index] = Helpers.TestCalibrationMode(data_points, this_thread_mode_clone).UtilityFunction;
+                        plot_data.Z[index] = Helpers.GetCombinedUtility(Helpers.TestCalibrationMode(data_set, this_thread_mode_clone));
                     }
                     while (enabled_fields[1].Increment(this_thread_mode_clone, 1));
                 });
@@ -413,7 +415,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             }
             if (plot_data == null)
             {
-                plot_data = CalculatePlotData(mode, enabled_fields, data_set_control_model.DataPoints);
+                plot_data = CalculatePlotData(mode, enabled_fields, data_set_control_model.SelectedDataSet);
                 if (!cache.ContainsKey(key))
                     cache.Add(key, plot_data);
             }
@@ -435,7 +437,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
                 // Show current configuration point.
                 double x = enabled_fields[0].GetFieldValue(iterator.CalibrationMode),
                     y = enabled_fields[1].GetFieldValue(iterator.CalibrationMode),
-                    z = Helpers.TestCalibrationMode(data_set_control_model.DataPoints, iterator.CalibrationMode).UtilityFunction;
+                    z = Helpers.GetCombinedUtility(Helpers.TestCalibrationMode(data_set_control_model.SelectedDataSet, iterator.CalibrationMode));
                 GnuPlot.Unset("label 1");
                 GnuPlot.Set(string.Format("label 1 at {0}, {1}, {2} \"{2}\" point pt 4", x, y, z));
                 // Show current configuration point.
@@ -452,7 +454,7 @@ namespace BlindConfigurationTester.ManualVisualisationWindow
             {
                 double x = enabled_fields[0].GetFieldValue(backup_mode),
                     y = enabled_fields[1].GetFieldValue(backup_mode),
-                    z = Helpers.TestCalibrationMode(data_set_control_model.DataPoints, backup_mode).UtilityFunction;
+                    z = Helpers.GetCombinedUtility(Helpers.TestCalibrationMode(data_set_control_model.SelectedDataSet, backup_mode));
                 GnuPlot.Unset("label 2");
                 GnuPlot.Set(string.Format("label 2 at {0}, {1}, {2} point pt 6", x, y, z));
             }

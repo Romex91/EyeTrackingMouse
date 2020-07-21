@@ -32,7 +32,7 @@ namespace BlindConfigurationTester
         List<UtilityAndModePair> extremums_queue =
             new List<UtilityAndModePair>();
         CancellationToken cancellation_token;
-        List<DataPoint> data_points;
+        DataSet data_set;
         Action<TestResultsInfo> test_results_info_callback;
 
         // Subtasks can only read this field. Each task has separate |new_test_results| to write test results.
@@ -48,11 +48,11 @@ namespace BlindConfigurationTester
 
         public ExtremumSearcher(
             eye_tracking_mouse.Options.CalibrationMode starting_mode,
-            List<DataPoint> data_points,
+            DataSet data_set,
             Action<TestResultsInfo> test_results_info_callback,
             CancellationToken cancellation_token)
         {
-            this.data_points = data_points;
+            this.data_set = data_set;
             this.cancellation_token = cancellation_token;
             this.test_results_info_callback = test_results_info_callback;
 
@@ -154,7 +154,7 @@ namespace BlindConfigurationTester
             }
 
             info.modes_tested++;
-            float utility = Helpers.TestCalibrationMode(data_points, mode).UtilityFunction;
+            float utility = Helpers.GetCombinedUtility(Helpers.TestCalibrationMode(data_set, mode));
             new_test_results.Add(key, utility);
 
             return utility;

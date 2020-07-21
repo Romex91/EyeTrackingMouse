@@ -12,12 +12,12 @@ namespace PerfTestRunner
         {
             var caibration_mode = BlindConfigurationTester.Helpers.GetCalibrationMode(null);
             var calibration_manager = BlindConfigurationTester.Helpers.SetupCalibrationManager(caibration_mode);
-            var data_points = BlindConfigurationTester.DataSet.Load("0roman").data_points;
+            var data_set = BlindConfigurationTester.DataSet.LoadEverything();
 
             int avg_time;
             var result = BlindConfigurationTester.Helpers.RunPerfTest(
                 calibration_manager,
-                data_points,
+                data_set,
                 caibration_mode.additional_dimensions_configuration,
                 out avg_time);
 
@@ -27,7 +27,7 @@ namespace PerfTestRunner
             }
             else if (args[0] == "utility")
             {
-                Console.WriteLine(result.UtilityFunction);
+                Console.WriteLine(BlindConfigurationTester.Helpers.GetCombinedUtility(result));
             }
             else
             {
