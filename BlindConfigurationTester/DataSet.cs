@@ -168,14 +168,8 @@ namespace BlindConfigurationTester
             {
                 get
                 {
-                    float total_correction = 0;
-                    foreach (var error in errors)
-                    {
-                        total_correction += error.before_correction - error.after_correction;
-                    }
-                    if (errors.Count == 0)
-                        return 0;
-                    return total_correction / errors.Count;
+                    var info = TestInfo;
+                    return (info.avg_error_before - info.avg_error_after) * 100f / info.avg_error_before;
                 }
             }
         }
