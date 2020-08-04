@@ -83,8 +83,6 @@ namespace eye_tracking_mouse
                 Directory.CreateDirectory(Helpers.UserDataFolder);
             }
 
-            System.Diagnostics.Process.GetCurrentProcess().PriorityClass = System.Diagnostics.ProcessPriorityClass.RealTime;
-
             // Tray icon initialization
             {
                 System.Windows.Forms.ContextMenuStrip context_menu_strip = new System.Windows.Forms.ContextMenuStrip { Visible = true };
