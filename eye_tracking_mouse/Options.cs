@@ -291,19 +291,19 @@ namespace eye_tracking_mouse
                 {
                     return new CalibrationMode
                     {
-                        zone_size = 50,
-                        max_zones_count = 512,
                         considered_zones_count = 6,
                         considered_zones_count_v1 = 14,
+                        max_zones_count = 1024,
                         size_of_opaque_sector_in_percents = 30,
                         shade_thickness_in_pixels = 10,
                         correction_fade_out_distance = 75,
                         algorithm = "V2",
+                        zone_size = 75,
                         additional_dimensions_configuration = new AdditionalDimensionsConfguration
                         {
-                            LeftEye = new Vector3Percents { X = 8726, Y = 22337, Z = 5454 },
+                            LeftEye = new Vector3Percents { X = 5454, Y = 8726, Z = 3409 },
                             RightEye = Vector3Percents.Disabled,
-                            AngleBetweenEyes = new Vector3Percents { X = 22337, Y = 3409, Z = null },
+                            AngleBetweenEyes = new Vector3Percents { X = 5454, Y = 128, Z = null },
                             HeadPosition = Vector3Percents.Disabled,
                             HeadDirection = Vector3Percents.Disabled
                         },
