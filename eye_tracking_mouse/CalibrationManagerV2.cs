@@ -64,7 +64,8 @@ namespace eye_tracking_mouse
 
         public Point GetShift(float[] cursor_position)
         {
-
+            if (cursor_position.Length != calibration_mode.additional_dimensions_configuration.CoordinatesCount)
+                return new Point(0, 0);
             // |GetClosestCorrections| is computationaly heavy. We call it once and create copies for V0 and V1 parts of this function.
             List<ShiftsStorage.PointInfo> closest_corrections_v0 = new List<ShiftsStorage.PointInfo>(calibration_mode.considered_zones_count);
             List<ShiftsStorage.PointInfo> closest_corrections_v1 = new List<ShiftsStorage.PointInfo>(calibration_mode.considered_zones_count_v1);

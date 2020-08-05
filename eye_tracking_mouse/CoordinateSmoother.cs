@@ -56,7 +56,8 @@ namespace eye_tracking_mouse
 
                 points.RemoveAll(p =>
                 {
-                    Debug.Assert(p.сoordinates.Length == correction.сoordinates.Length);
+                    if (p.сoordinates.Length != correction.сoordinates.Length)
+                        return true;
                     for (int i = 0; i < p.сoordinates.Length; i++)
                     {
                         if (Math.Abs(p.сoordinates[i] - correction.сoordinates[i]) > Options.Instance.instant_jump_distance)
