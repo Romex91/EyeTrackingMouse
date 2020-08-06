@@ -22,6 +22,9 @@ namespace eye_tracking_mouse
 
         public Point GetShift(float[] cursor_position)
         {
+            if (cursor_position.Length != calibration_mode.additional_dimensions_configuration.CoordinatesCount)
+                return new Point(0, 0);
+
             var closest_corrections = shift_storage.GetClosestCorrections(cursor_position);
             if (closest_corrections == null)
             {
