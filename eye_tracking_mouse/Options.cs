@@ -273,13 +273,13 @@ namespace eye_tracking_mouse
                 {
                     return new CalibrationMode
                     {
-                        zone_size = 250,
-                        max_zones_count = 16,
+                        zone_size = 150,
+                        max_zones_count = 64,
                         considered_zones_count = 6,
-                        size_of_opaque_sector_in_percents = 30,
+                        size_of_opaque_sector_in_percents = 40,
                         shade_thickness_in_pixels = 10,
                         considered_zones_count_v1 = 14,
-                        correction_fade_out_distance = 50,
+                        correction_fade_out_distance = 75,
                         additional_dimensions_configuration = AdditionalDimensionsConfguration.Disabled,
                     };
                 }
