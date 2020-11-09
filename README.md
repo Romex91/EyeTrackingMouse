@@ -1,6 +1,6 @@
 ## EyeTrackingMouse
 
-A power-tool to click stuff while typing.
+A power-tool for clicking stuff while typing.
 Replaces computer mouse with combination of [Tobii Eye Tracker 4C/5](https://gaming.tobii.com/) and hotkeys.
 
 The app is 100% offline.
