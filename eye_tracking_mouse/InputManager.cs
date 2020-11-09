@@ -89,7 +89,6 @@ namespace eye_tracking_mouse
                     {System.Windows.Forms.Keys.H,Key.ScrollUp},
                     {System.Windows.Forms.Keys.Oemcomma,Key.ScrollLeft},
                     {System.Windows.Forms.Keys.OemPeriod, Key.ScrollRight},
-                    {System.Windows.Forms.Keys.M, Key.ShowCalibrationView},
                     {System.Windows.Forms.Keys.A, Key.CalibrateLeft},
                     {System.Windows.Forms.Keys.D,Key.CalibrateRight},
                     {System.Windows.Forms.Keys.W, Key.CalibrateUp},
@@ -248,7 +247,7 @@ namespace eye_tracking_mouse
                 // Convert |Interceptor.Keys| to |eye_tracking_mouse.Key|
                 var key_bindings = Options.Instance.key_bindings;
                 Key key = Key.Unbound;
-                if (key_bindings.bindings.ContainsValue(e.Key))
+                if (key_bindings.bindings.ContainsValue(e.Key) && e.Key != Interceptor.Keys.Escape)
                 {
                     key = key_bindings.bindings.First(pair =>
                     {

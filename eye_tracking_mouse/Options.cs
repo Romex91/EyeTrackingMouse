@@ -199,7 +199,7 @@ namespace eye_tracking_mouse
             {Key.ScrollUp, Interceptor.Keys.H},
             {Key.ScrollLeft, Interceptor.Keys.CommaLeftArrow},
             {Key.ScrollRight, Interceptor.Keys.PeriodRightArrow},
-            {Key.ShowCalibrationView, Interceptor.Keys.M},
+            {Key.ShowCalibrationView, Interceptor.Keys.Escape}, // Escape means unset.
             {Key.CalibrateLeft, Interceptor.Keys.A},
             {Key.CalibrateRight, Interceptor.Keys.D},
             {Key.CalibrateUp, Interceptor.Keys.W},
