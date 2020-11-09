@@ -1,16 +1,17 @@
-# EyeTrackingMouse
+## EyeTrackingMouse
 
+A power-tool to click stuff while typing.
 Replaces computer mouse with combination of [Tobii Eye Tracker 4C/5](https://gaming.tobii.com/) and hotkeys.
 
 The app is 100% offline.
 
-# Installation
+### Installation
 
 Download and run Setup.exe here https://github.com/Romex91/EyeTrackingMouse/releases/latest
 
 This will create an entry in [Apps & features] and schedule the app to run at Windows startup.
 
-# Usage
+### Usage
 
 5-minute User Guide:
 
@@ -36,10 +37,10 @@ To open Windows Start Menu press and release Win quickly.
 
 You can reassign key bindings in the settings window (click Tray icon)
 
-# Frequently Asked Questions:
+### Frequently Asked Questions
 
 https://github.com/Romex91/EyeTrackingMouse/blob/master/FAQ.md
 
-# Support the project
+### Support the project
 
 https://www.patreon.com/EyeTrackingMouse
