@@ -133,6 +133,9 @@
     <Compile Include="ui\CalibrationWindow.xaml.cs">
       <DependentUpon>ui\CalibrationWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ui\ConsentWindow.xaml.cs">
+      <DependentUpon>ConsentWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ui\IntegerPropertyControl.xaml.cs">
       <DependentUpon>ui\IntegerPropertyControl.xaml</DependentUpon>
     </Compile>
@@ -157,6 +160,10 @@
     <Compile Include="Helpers.cs" />
     <Compile Include="InputManager.cs" />
     <Page Include="ui\CalibrationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ui\ConsentWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

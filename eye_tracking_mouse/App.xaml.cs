@@ -127,13 +127,32 @@ namespace eye_tracking_mouse
 
                     Helpers.DeleteAppFiles();
                 },
+                onAppUpdate: (Version version)=>
+                {
+                    lock (Helpers.locker)
+                    {
+
+                        Helpers.ShowBaloonNotification("EyeTrackingMouse has updated. It is now faster and more accurate. \n Double press " + Options.Instance.key_bindings[Key.Modifier] + " to toggle Always On mode. \n" +
+                            "This is the last automatic update over the network. I removed auto-update for better security. EyeTrackingMouse is completely offline now.");
+                    }
+                },
                 onFirstRun: () =>
                 {
                     Helpers.CreateShortcuts();
-                    Autostart.Enable();
-                    OpenSettings(null, null);
                 });
 
+            lock (Helpers.locker)
+            {
+
+                if (!Options.Instance.user_consent_given) {
+                    new ConsentWindow( ()=>
+                    {
+                        Autostart.Enable();
+                        OpenSettings(null, null);
+
+                    }).Show();
+                }
+            }
 
             application.Run();
 

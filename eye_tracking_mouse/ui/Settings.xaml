@@ -23,7 +23,7 @@
                     <CheckBox Grid.Row="0" Grid.Column="0" Name="CheckboxAutostart" Checked="CheckboxAutostart_Checked" Unchecked="CheckboxAutostart_Unchecked">Launch application at windows startup</CheckBox>
                     <TextBlock Grid.Row="1" Grid.Column="0">
                         <LineBreak/>
-                        Video Guide: <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://youtu.be/aKi3Qr7T764?t=74"> youtube.com </Hyperlink>
+                         <Bold>5-munutes Video Guide</Bold>: <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://youtu.be/aKi3Qr7T764?t=74"> youtube.com </Hyperlink>
                          <LineBreak/>
                         <LineBreak/>
                         This application is built on: <LineBreak/>
