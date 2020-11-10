@@ -12,7 +12,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("EyeTrackingMouse")]
-[assembly: AssemblyCopyright("Copyright © 2019 Roman Kuksin")]
+[assembly: AssemblyCopyright("Copyright © 2020 Roman Kuksin")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
