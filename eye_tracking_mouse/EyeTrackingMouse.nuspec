@@ -6,7 +6,7 @@
     <version>0.0.0.0</version>
     <title>EyeTrackingMouse</title>
     <authors>Roman Kuksin</authors>
-    <description>Replaces computer mouse with combination of Tobii Eye tracker 4c and hotkeys.</description>
+    <description>A power-tool for clicking stuff while typing. Control cursor with your eyes using Tobii Eye Tracker.</description>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <copyright>Copyright 2020 Roman Kuksin</copyright>
     <iconUrl>

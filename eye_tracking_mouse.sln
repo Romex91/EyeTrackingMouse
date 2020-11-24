@@ -15,24 +15,33 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
+		Signed|x64 = Signed|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C451A00E-77F1-4F3F-B7EE-27DC712EA316}.Debug|x64.ActiveCfg = Debug|x64
 		{C451A00E-77F1-4F3F-B7EE-27DC712EA316}.Debug|x64.Build.0 = Debug|x64
 		{C451A00E-77F1-4F3F-B7EE-27DC712EA316}.Release|x64.ActiveCfg = Release|x64
 		{C451A00E-77F1-4F3F-B7EE-27DC712EA316}.Release|x64.Build.0 = Release|x64
+		{C451A00E-77F1-4F3F-B7EE-27DC712EA316}.Signed|x64.ActiveCfg = Signed|x64
+		{C451A00E-77F1-4F3F-B7EE-27DC712EA316}.Signed|x64.Build.0 = Signed|x64
 		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Debug|x64.ActiveCfg = Debug|x64
 		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Debug|x64.Build.0 = Debug|x64
 		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Release|x64.ActiveCfg = Release|x64
 		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Release|x64.Build.0 = Release|x64
+		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Signed|x64.ActiveCfg = Signed|x64
+		{24FC1943-EF73-4827-B471-5F43E3E2E1E0}.Signed|x64.Build.0 = Signed|x64
 		{CF197621-369D-49BB-988D-45A23F8CCC3E}.Debug|x64.ActiveCfg = Debug|x64
 		{CF197621-369D-49BB-988D-45A23F8CCC3E}.Debug|x64.Build.0 = Debug|x64
 		{CF197621-369D-49BB-988D-45A23F8CCC3E}.Release|x64.ActiveCfg = Release|x64
 		{CF197621-369D-49BB-988D-45A23F8CCC3E}.Release|x64.Build.0 = Release|x64
+		{CF197621-369D-49BB-988D-45A23F8CCC3E}.Signed|x64.ActiveCfg = Signed|Any CPU
+		{CF197621-369D-49BB-988D-45A23F8CCC3E}.Signed|x64.Build.0 = Signed|x64
 		{CF6042EA-A592-4005-8084-27A3E646D94C}.Debug|x64.ActiveCfg = Debug|x64
 		{CF6042EA-A592-4005-8084-27A3E646D94C}.Debug|x64.Build.0 = Debug|x64
 		{CF6042EA-A592-4005-8084-27A3E646D94C}.Release|x64.ActiveCfg = Release|x64
 		{CF6042EA-A592-4005-8084-27A3E646D94C}.Release|x64.Build.0 = Release|x64
+		{CF6042EA-A592-4005-8084-27A3E646D94C}.Signed|x64.ActiveCfg = Signed|x64
+		{CF6042EA-A592-4005-8084-27A3E646D94C}.Signed|x64.Build.0 = Signed|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
