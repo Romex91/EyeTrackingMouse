@@ -40,18 +40,12 @@ namespace eye_tracking_mouse
 
         private static void Shutdown(object sender, EventArgs e)
         {
-            if (MessageBox.Show(
-                    "This will prevent you from controlling mouse with your eyes.\nSure you want to quit?",
-                    Helpers.application_name,
-                    MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-            {
-                input_manager.Stop();
-                eye_tracking_mouse.StopControlling();
-                Helpers.tray_icon.Visible = false;
+            input_manager.Stop();
+            eye_tracking_mouse.StopControlling();
+            Helpers.tray_icon.Visible = false;
 
-                FilesSavingQueue.FlushSynchroniously();
-                System.Windows.Application.Current.Shutdown();
-            }
+            FilesSavingQueue.FlushSynchroniously();
+            System.Windows.Application.Current.Shutdown();
         }
 
         private static void ResetCalibration(object sender, EventArgs e)
@@ -149,7 +143,8 @@ namespace eye_tracking_mouse
                     {
                         Autostart.Enable();
                         OpenSettings(null, null);
-
+                    }, ()=> {
+                        Shutdown(null, null);
                     }).Show();
                 }
             }

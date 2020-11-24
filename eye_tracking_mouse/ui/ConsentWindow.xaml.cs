@@ -20,9 +20,11 @@ namespace eye_tracking_mouse
     public partial class ConsentWindow : Window
     {
         private Action on_consent_given;
-        public ConsentWindow(Action on_consent_given)
+        private Action on_consent_rejected;
+        public ConsentWindow(Action on_consent_given, Action on_consent_rejected)
         {
             this.on_consent_given = on_consent_given;
+            this.on_consent_rejected = on_consent_rejected;
             InitializeComponent();
             CheckboxCheckedChanged(null, null);
         }
@@ -53,7 +55,7 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 if (!Options.Instance.user_consent_given)
-                    Environment.Exit(0);
+                    on_consent_rejected();
             }
         }
     }
