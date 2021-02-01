@@ -11,6 +11,7 @@
         ResizeMode="NoResize"
         WindowState="Maximized"
         Deactivated="Window_Deactivated"
+        ShowInTaskbar="False"
         Topmost="True">
     <Window.Background>
         <SolidColorBrush Opacity="0.0" Color="Black"></SolidColorBrush>

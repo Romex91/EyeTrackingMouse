@@ -36,8 +36,8 @@ namespace eye_tracking_mouse
 
             Canvas.SetLeft(Instructions, pos.X);
             Canvas.SetTop(Instructions, pos.Y);
-
         }
+
 
 
         private void OnKeyBindignsChanged(object sender, EventArgs e)
@@ -71,7 +71,6 @@ namespace eye_tracking_mouse
                         item.Value.Text = "CapsLk";
                     if (item.Value.Text == Interceptor.Keys.WindowsKey.ToString())
                         item.Value.Text = "Win";
-
                 }
             }
         }
