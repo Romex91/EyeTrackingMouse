@@ -386,6 +386,8 @@ namespace eye_tracking_mouse
 
                 WinApiWarning.Visibility = InterceptionMethod.SelectedIndex == 0 || !is_driver_loaded ? Visibility.Visible : Visibility.Hidden;
                 Button_UninstallOblita.Visibility = Options.Instance.key_bindings.is_driver_installed ? Visibility.Visible : Visibility.Hidden;
+
+                KeyBindings.Changed?.Invoke(this, new EventArgs());
             }
         }
 

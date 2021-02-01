@@ -70,11 +70,10 @@
                         </DrawingImage>
                     </Image.Source>
                 </Image>
-                <TextBlock x:Name="TxtLeftMouseButton" Background="Transparent"    Canvas.Left="9" Canvas.Top="8"><Run Text="J"/></TextBlock>
-                <TextBlock x:Name="TxtRightMouseButton" Background="Transparent"    Canvas.Left="39" Canvas.Top="8"><Run Text="K"/></TextBlock>
-
+                <TextBlock Background="Transparent"    Canvas.Left="9" Canvas.Top="8"><Run x:Name="TxtLeftMouseButton"  Text="J"/></TextBlock>
+                <TextBlock  Background="Transparent"    Canvas.Left="39" Canvas.Top="8"><Run x:Name="TxtRightMouseButton" Text="K"/></TextBlock>
             </Canvas>
-            <TextBlock x:Name="TxtModifier"    Canvas.Left="36" Canvas.Top="24"><Run Text="WIN"/> <Run Foreground="Black" Text="- EXIT"/></TextBlock>
+            <TextBlock Canvas.Left="14" Canvas.Top="24"><Run Foreground="Black" Text="EXIT:"/> <Run x:Name="TxtModifier" Text="WIN"/> </TextBlock>
 
 
             <!--Problem:
@@ -84,10 +83,10 @@
                 Workaround: Change platform to Any CPU. Rebuild the target.
                 This is a VS bug.-->
             <Canvas>
-                <TextBlock x:Name="TxtCalibrateLeft"    Canvas.Left="-56" Canvas.Top="-36" RenderTransformOrigin="0.427,0.602"><Run Text="A"/></TextBlock>
-                <TextBlock x:Name="TxtCalibrateRight"    Canvas.Left="37" Canvas.Top="-37"><Run Text="D"/></TextBlock>
-                <TextBlock x:Name="TxtCalibrateUp"    Canvas.Left="-14" Canvas.Top="-91"><Run Text="W"/></TextBlock>
-                <TextBlock x:Name="TxtCalibrateDown"    Canvas.Left="-11" Canvas.Top="59"><Run Text="S"/></TextBlock>
+                <TextBlock Canvas.Left="-56" Canvas.Top="-36" RenderTransformOrigin="0.427,0.602"><Run x:Name="TxtCalibrateLeft"  Text="A"/></TextBlock>
+                <TextBlock Canvas.Left="37" Canvas.Top="-37"><Run x:Name="TxtCalibrateRight" Text="D"/></TextBlock>
+                <TextBlock Canvas.Left="-14" Canvas.Top="-91"><Run x:Name="TxtCalibrateUp" Text="W"/></TextBlock>
+                <TextBlock  Canvas.Left="-11" Canvas.Top="59"><Run x:Name="TxtCalibrateDown" Text="S"/></TextBlock>
 
                 <petzold:ArrowLine
                 X1="0"
@@ -137,10 +136,10 @@
 
             <Canvas Canvas.Top="-100" Canvas.Left="200">
                 <TextBlock Foreground="Black"  Canvas.Left="-41" Canvas.Top="-14"><Run Text="SCROLL"/></TextBlock>
-                <TextBlock x:Name="TxtScrollDown"    Canvas.Left="-11" Canvas.Top="43"><Run Text="N"/></TextBlock>
-                <TextBlock x:Name="TxtScrollUp"    Canvas.Left="-12" Canvas.Top="-73"><Run Text="H"/></TextBlock>
-                <TextBlock x:Name="TxtScrollLeft"    Canvas.Left="-87" Canvas.Top="-36"><Run Text="Comma"/></TextBlock>
-                <TextBlock x:Name="TxtScrollRight"    Canvas.Left="59" Canvas.Top="-33"><Run Text="Dot"/></TextBlock>
+                <TextBlock  Canvas.Left="-11" Canvas.Top="43"><Run x:Name="TxtScrollDown" Text="N"/></TextBlock>
+                <TextBlock     Canvas.Left="-12" Canvas.Top="-73"><Run x:Name="TxtScrollUp" Text="H"/></TextBlock>
+                <TextBlock     Canvas.Left="-87" Canvas.Top="-36"><Run x:Name="TxtScrollLeft" Text="Comma"/></TextBlock>
+                <TextBlock Canvas.Left="59" Canvas.Top="-33"><Run x:Name="TxtScrollRight"  Text="Dot"/></TextBlock>
 
                 <petzold:ArrowLine
                     X1="0"

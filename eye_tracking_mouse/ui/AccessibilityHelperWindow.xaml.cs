@@ -26,6 +26,8 @@ namespace eye_tracking_mouse
 
             CompositionTarget.Rendering += OnRendering;
 
+            KeyBindings.Changed += OnKeyBindignsChanged;
+            OnKeyBindignsChanged(null, null);
         }
 
         private void OnRendering(object sender, EventArgs e)
@@ -35,20 +37,44 @@ namespace eye_tracking_mouse
             Canvas.SetLeft(Instructions, pos.X);
             Canvas.SetTop(Instructions, pos.Y);
 
-            Dictionary<Key, string> key_to_letter_dictionary = new Dictionary<Key, string> {
-                { Key.LeftMouseButton, "J" },
-                { Key.RightMouseButton, "K" },
-                { Key.ScrollDown, "N" },
-                { Key.ScrollUp, "H" },
-                { Key.ScrollLeft, "<" },
-                { Key.ScrollRight, ">" },
-                { Key.CalibrateDown, "S" },
-                { Key.CalibrateUp, "W" },
-                { Key.CalibrateLeft, "A" },
-                { Key.CalibrateRight, "D" },
-            };
         }
 
+
+        private void OnKeyBindignsChanged(object sender, EventArgs e)
+        {
+            lock (Helpers.locker)
+            {
+                Dictionary<Key, Run> key_to_letter_dictionary = new Dictionary<Key, Run> {
+                    { Key.LeftMouseButton, TxtLeftMouseButton },
+                    { Key.RightMouseButton, TxtRightMouseButton },
+                    { Key.ScrollDown, TxtScrollDown },
+                    { Key.ScrollUp, TxtScrollUp},
+                    { Key.ScrollLeft, TxtScrollLeft},
+                    { Key.ScrollRight, TxtScrollRight},
+                    { Key.CalibrateDown, TxtCalibrateDown},
+                    { Key.CalibrateUp, TxtCalibrateUp },
+                    { Key.CalibrateRight, TxtCalibrateRight},
+                    { Key.CalibrateLeft , TxtCalibrateLeft},
+                    { Key.Modifier, TxtModifier},
+                };
+
+                var bindings = Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver ?
+                    Options.Instance.key_bindings.bindings : KeyBindings.default_bindings;
+                foreach ( var item in key_to_letter_dictionary)
+                {
+                    item.Value.Text = bindings[item.Key].ToString();
+                    if (item.Value.Text == Interceptor.Keys.CommaLeftArrow.ToString())
+                        item.Value.Text = "<";
+                    if (item.Value.Text == Interceptor.Keys.PeriodRightArrow.ToString())
+                        item.Value.Text = ">";
+                    if (item.Value.Text == Interceptor.Keys.CapsLock.ToString())
+                        item.Value.Text = "CapsLk";
+                    if (item.Value.Text == Interceptor.Keys.WindowsKey.ToString())
+                        item.Value.Text = "Win";
+
+                }
+            }
+        }
 
         private void Window_Deactivated(object sender, EventArgs e)
         {
