@@ -126,7 +126,7 @@ namespace eye_tracking_mouse
             }
         }
 
-        private void StartCalibration()
+        public void StartCalibration()
         {
             if (mouse_state != MouseState.Calibrating)
             {
@@ -136,159 +136,43 @@ namespace eye_tracking_mouse
                 mouse_state = MouseState.Calibrating;
             }
             freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.calibrate_freeze_time_ms);
-            statistics.OnCalibrate();
             CoordinateSmoother.Reset();
         }
 
-        public bool OnKeyPressed(
-            Key key,
-            KeyState key_state,
-            float speed_up,
-            bool is_repetition,
-            bool is_modifier,
-            InputProvider input_provider)
+        public void AdjustCursorPosition(int X, int Y)
         {
-            // The application grabs control over cursor when modifier is pressed.
-            if (key == Key.Modifier)
-            {
-                if (key_state == KeyState.Down)
-                {
-                    StartControlling();
-                    return true;
-                }
+            smoothened_error_correction.shift.X += X;
+            smoothened_error_correction.shift.Y += Y;
+            statistics.OnCalibrate();
+        }
 
-                if (key_state == KeyState.Up)
-                {
-                    if (mouse_state == EyeTrackingMouse.MouseState.Idle)
-                    {
-                        return false;
-                    }
+        public void ApplyCalibration()
+        {
+            CalibrationManager.Instance.AddShift(smoothened_error_correction.сoordinates, smoothened_error_correction.shift);
+        }
 
-                    StopControlling();
-                    return true;
-                }
-            }
+        public void LeftDown()
+        {
+            MouseButtons.LeftDown();
+            // Freeze cursor for a short period of time after mouse clicks to make double clicks esier.
+            freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.click_freeze_time_ms);
+            statistics.OnClick();
+        }
+        public void RightDown()
+        {
+            MouseButtons.RightDown();
+            // Freeze cursor for a short period of time after mouse clicks to make double clicks esier.
+            freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.click_freeze_time_ms);
+            statistics.OnClick();
+        }
 
-            if (mouse_state == EyeTrackingMouse.MouseState.Idle)
-            {
-                return false;
-            }
-
-            if (key == Key.Unbound)
-            {
-                // The application intercepts modifier key presses. We do not want to lose modifier when handling unbound keys.
-                // We stop controlling cursor when facing the first unbound key and send modifier keystroke to OS before handling pressed key.
-                // This way key combinations like 'Win+E' remain available.
-                if (!is_modifier)
-                {
-                    input_provider.SendModifierDown();
-                    StopControlling();
-                }
-                return false;
-            }
-
-            var repetition_white_list = new SortedSet<Key> {
-                    Key.ScrollDown,
-                    Key.ScrollUp,
-                    Key.ScrollLeft,
-                    Key.ScrollRight,
-                    Key.CalibrateLeft,
-                    Key.CalibrateRight,
-                    Key.CalibrateUp,
-                    Key.CalibrateDown,
-                };
-
-            if (is_repetition && !repetition_white_list.Contains(key))
-                return true;
-
-            if (key_state == KeyState.Down)
-            {
-                // Calibration
-                int calibration_step = (int)(Options.Instance.calibration_step * speed_up);
-                if (key == Key.CalibrateLeft)
-                {
-                    StartCalibration();
-                    smoothened_error_correction.shift.X -= calibration_step;
-                }
-                if (key == Key.CalibrateRight)
-                {
-                    StartCalibration();
-                    smoothened_error_correction.shift.X += calibration_step;
-                }
-                if (key == Key.CalibrateUp)
-                {
-                    StartCalibration();
-                    smoothened_error_correction.shift.Y -= calibration_step;
-                }
-                if (key == Key.CalibrateDown)
-                {
-                    StartCalibration();
-                    smoothened_error_correction.shift.Y += calibration_step;
-                }
-
-                // Scroll
-                if (key == Key.ScrollDown)
-                {
-                    MouseButtons.WheelDown((int)(Options.Instance.vertical_scroll_step * speed_up));
-                }
-                if (key == Key.ScrollUp)
-                {
-                    MouseButtons.WheelUp((int)(Options.Instance.vertical_scroll_step * speed_up));
-                }
-                if (key == Key.ScrollLeft)
-                {
-                    MouseButtons.WheelLeft((int)(Options.Instance.horizontal_scroll_step * speed_up));
-                }
-                if (key == Key.ScrollRight)
-                {
-                    MouseButtons.WheelRight((int)(Options.Instance.horizontal_scroll_step * speed_up));
-                }
-            }
-
-            // Mouse buttons
-            if (mouse_state == MouseState.Calibrating &&
-                (key == Key.LeftMouseButton || key == Key.RightMouseButton))
-            {
-                CalibrationManager.Instance.AddShift(smoothened_error_correction.сoordinates, smoothened_error_correction.shift);
-                mouse_state = MouseState.Controlling;
-            }
-
-            if (key == Key.LeftMouseButton)
-            {
-                if (key_state == KeyState.Down)
-                {
-                    // Freeze cursor for a short period of time after mouse clicks to make double clicks esier.
-                    MouseButtons.LeftDown();
-                    freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.click_freeze_time_ms);
-                    statistics.OnClick();
-                }
-                else if (key_state == KeyState.Up)
-                {
-                    MouseButtons.LeftUp();
-                }
-            }
-
-            if (key == Key.RightMouseButton)
-            {
-                if (key_state == KeyState.Down)
-                {
-                    // Freeze cursor for a short period of time after mouse clicks to make double clicks esier.
-                    MouseButtons.RightDown();
-                    freeze_until = DateTime.Now.AddMilliseconds(Options.Instance.click_freeze_time_ms);
-                    statistics.OnClick();
-                }
-                else if (key_state == KeyState.Up)
-                {
-                    MouseButtons.RightUp();
-                }
-            }
-
-            if (key == Key.ShowCalibrationView && key_state == KeyState.Down)
-            {
-                CalibrationManager.Instance.IsDebugWindowEnabled = !CalibrationManager.Instance.IsDebugWindowEnabled;
-            }
-
-            return true;
+        public void LeftUp()
+        {
+           MouseButtons.LeftUp();
+        }
+        public void RightUp()
+        {
+            MouseButtons.RightUp();
         }
 
         public EyeTrackingMouse()

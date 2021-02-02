@@ -97,7 +97,7 @@ namespace eye_tracking_mouse
                 if (key == Key.Modifier && key_bindings.is_modifier_e0 != is_e0_key)
                     key = Key.Unbound;
 
-                e.Handled = receiver.OnKeyPressed(key, key_state, Helpers.IsModifier(e.Key));
+                e.Handled = receiver.OnKeyPressed(key, key_state, Helpers.IsModifier(e.Key), this);
             }
         }
 

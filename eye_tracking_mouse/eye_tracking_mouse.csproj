@@ -141,6 +141,7 @@
     <Compile Include="calibration\CalibrationManagerV0.cs" />
     <Compile Include="calibration\CalibrationManagerV1.cs" />
     <Compile Include="calibration\CalibrationManagerV2.cs" />
+    <Compile Include="core\DefaultMouseController.cs" />
     <Compile Include="input\OblitaInterceptionInputProvider.cs" />
     <Compile Include="input\WinApiInputProvider.cs" />
     <Compile Include="calibration\ShiftStorageCache.cs" />

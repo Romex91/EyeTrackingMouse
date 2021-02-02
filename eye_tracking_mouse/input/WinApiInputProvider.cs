@@ -75,7 +75,7 @@ namespace eye_tracking_mouse
                     return CallNextHookEx(win_api_hook_id, nCode, wParam, lParam);
                 }
 
-                if (receiver.OnKeyPressed(key, key_state, Helpers.IsModifier(key_code)))
+                if (receiver.OnKeyPressed(key, key_state, Helpers.IsModifier(key_code), this))
                     return new IntPtr(1);
             }
 
