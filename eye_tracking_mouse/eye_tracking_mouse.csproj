@@ -6,7 +6,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{24FC1943-EF73-4827-B471-5F43E3E2E1E0}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>eye_tracking_mouse</RootNamespace>
     <AssemblyName>EyeTrackingMouse</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
@@ -141,7 +141,8 @@
     <Compile Include="calibration\CalibrationManagerV0.cs" />
     <Compile Include="calibration\CalibrationManagerV1.cs" />
     <Compile Include="calibration\CalibrationManagerV2.cs" />
-    <Compile Include="core\DefaultMouseController.cs" />
+    <Compile Include="input\AccessibilityMouseController.cs" />
+    <Compile Include="input\DefaultMouseController.cs" />
     <Compile Include="input\OblitaInterceptionInputProvider.cs" />
     <Compile Include="input\WinApiInputProvider.cs" />
     <Compile Include="calibration\ShiftStorageCache.cs" />

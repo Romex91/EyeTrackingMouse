@@ -12,7 +12,7 @@ namespace eye_tracking_mouse
     // Implementations should intercept key presses.
     public abstract class InputProvider
     {
-        public interface IInputReceiver
+        public interface IInputReceiver: IDisposable
         {
             bool OnKeyPressed(Key key, KeyState key_state, bool is_modifier, InputProvider provider);
         }
@@ -45,7 +45,7 @@ namespace eye_tracking_mouse
     {
         private readonly EyeTrackingMouse eye_tracking_mouse;
         private InputProvider input_provider;
-
+        InputProvider.IInputReceiver mouse_controller;
         public void Stop()
         {
             lock (Helpers.locker)
@@ -54,6 +54,10 @@ namespace eye_tracking_mouse
                 if (input_provider != null && input_provider.IsLoaded)
                     input_provider.Unload();
                 input_provider = null;
+
+                if (mouse_controller != null)
+                    mouse_controller.Dispose();
+                mouse_controller = null;
             }
         }
 
@@ -73,18 +77,18 @@ namespace eye_tracking_mouse
             {
                 Stop();
 
-                InputProvider.IInputReceiver reciever = new DefaultMouseController(eye_tracking_mouse);
+                mouse_controller = new AccessibilityMouseController(eye_tracking_mouse);
 
                 if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver)
                 {
-                    input_provider = new OblitaInterceptionInputProvider(reciever);
+                    input_provider = new OblitaInterceptionInputProvider(mouse_controller);
                     input_provider.Load();
 
                     if (input_provider.IsLoaded)
                         return true;
                 }
 
-                input_provider = new WinApiInputProvider(reciever);
+                input_provider = new WinApiInputProvider(mouse_controller);
                 input_provider.Load();
 
                 return Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.WinApi;

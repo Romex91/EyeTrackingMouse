@@ -54,6 +54,7 @@ namespace eye_tracking_mouse
                     {System.Windows.Forms.Keys.D,Key.CalibrateRight},
                     {System.Windows.Forms.Keys.W, Key.CalibrateUp},
                     {System.Windows.Forms.Keys.S, Key.CalibrateDown},
+                    {System.Windows.Forms.Keys.Escape, Key.StopCalibration},
                 };
 
                 System.Windows.Forms.Keys key_code = (System.Windows.Forms.Keys)Marshal.ReadInt32(lParam);

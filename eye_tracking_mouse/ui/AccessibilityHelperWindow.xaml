@@ -11,6 +11,7 @@
         ResizeMode="NoResize"
         WindowState="Maximized"
         Deactivated="Window_Deactivated"
+        Closed="Window_Closed"
         ShowInTaskbar="False"
         Topmost="True">
     <Window.Background>
@@ -28,7 +29,7 @@
 
     <Canvas  x:Name="Canvas" Margin="0,2,0,-2">
         <Canvas Name="Instructions">
-            <Canvas Canvas.Left="170" Canvas.Top="0">
+            <Canvas Canvas.Left="170" Canvas.Top="-60">
                 <Image Name="ImgMouse" Visibility="Visible" Width="70" >
                     <Image.Source>
                         <DrawingImage>
@@ -74,8 +75,8 @@
                 <TextBlock Background="Transparent"    Canvas.Left="9" Canvas.Top="8"><Run x:Name="TxtLeftMouseButton"  Text="J"/></TextBlock>
                 <TextBlock  Background="Transparent"    Canvas.Left="39" Canvas.Top="8"><Run x:Name="TxtRightMouseButton" Text="K"/></TextBlock>
             </Canvas>
-            <TextBlock Canvas.Left="14" Canvas.Top="24"><Run Foreground="Black" Text="EXIT:"/> <Run x:Name="TxtModifier" Text="WIN"/> </TextBlock>
-
+            <TextBlock Canvas.Left="14" Canvas.Top="24"><Run Foreground="Black" Text="EXIT:"/> <Run x:Name="TxtExit" Text="Escape"/> </TextBlock>
+            <TextBlock Canvas.Left="14" Canvas.Top="50"><Run Foreground="Black" Text="Eye Tracking:"/> <Run x:Name="TxtModifier" Text="WIN"/></TextBlock>
 
             <!--Problem:
                     "Layout measurement override of element should not 
@@ -135,7 +136,7 @@
             </Canvas>
 
 
-            <Canvas Canvas.Top="-100" Canvas.Left="200">
+            <Canvas Canvas.Top="-130" Canvas.Left="130">
                 <TextBlock Foreground="Black"  Canvas.Left="-41" Canvas.Top="-14"><Run Text="SCROLL"/></TextBlock>
                 <TextBlock  Canvas.Left="-11" Canvas.Top="43"><Run x:Name="TxtScrollDown" Text="N"/></TextBlock>
                 <TextBlock     Canvas.Left="-12" Canvas.Top="-73"><Run x:Name="TxtScrollUp" Text="H"/></TextBlock>

@@ -30,6 +30,23 @@ namespace eye_tracking_mouse
             OnKeyBindignsChanged(null, null);
         }
 
+        public new void Show()
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                this.OnRendering(null, null);
+                base.Show();
+            }));
+        }
+
+        public new void Hide()
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                base.Hide();
+            }));
+        }
+
         private void OnRendering(object sender, EventArgs e)
         {
             var pos = System.Windows.Forms.Cursor.Position;
@@ -37,8 +54,6 @@ namespace eye_tracking_mouse
             Canvas.SetLeft(Instructions, pos.X);
             Canvas.SetTop(Instructions, pos.Y);
         }
-
-
 
         private void OnKeyBindignsChanged(object sender, EventArgs e)
         {
@@ -56,6 +71,7 @@ namespace eye_tracking_mouse
                     { Key.CalibrateRight, TxtCalibrateRight},
                     { Key.CalibrateLeft , TxtCalibrateLeft},
                     { Key.Modifier, TxtModifier},
+                    { Key.StopCalibration, TxtExit},
                 };
 
                 var bindings = Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver ?
@@ -78,6 +94,12 @@ namespace eye_tracking_mouse
         private void Window_Deactivated(object sender, EventArgs e)
         {
             Topmost = true;
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            CompositionTarget.Rendering -= OnRendering;
+            KeyBindings.Changed -= OnKeyBindignsChanged;
         }
     }
 }

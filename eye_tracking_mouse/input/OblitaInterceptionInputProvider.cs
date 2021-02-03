@@ -86,7 +86,7 @@ namespace eye_tracking_mouse
                 // Convert |Interceptor.Keys| to |eye_tracking_mouse.Key|
                 var key_bindings = Options.Instance.key_bindings;
                 Key key = Key.Unbound;
-                if (key_bindings.bindings.ContainsValue(e.Key) && e.Key != Interceptor.Keys.Escape)
+                if (key_bindings.bindings.ContainsValue(e.Key))
                 {
                     key = key_bindings.bindings.First(pair =>
                     {

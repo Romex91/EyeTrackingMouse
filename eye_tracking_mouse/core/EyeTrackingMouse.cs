@@ -26,6 +26,8 @@ namespace eye_tracking_mouse
 
         private TobiiCoordinatesProvider tobii_coordinates_provider;
 
+        private bool dynamic_calibration = false;
+
         public enum MouseState
         {
             // Application does nothing. 
@@ -58,7 +60,7 @@ namespace eye_tracking_mouse
 
                 if (DateTime.Now > freeze_until)
                 {
-                    if (mouse_state == MouseState.Calibrating &&
+                    if (mouse_state == MouseState.Calibrating && dynamic_calibration &&
                         Helpers.GetDistance(coordinates.gaze_point, calibration_start_gaze_point) > Options.Instance.reset_calibration_zone_size)
                     {
                         mouse_state = MouseState.Controlling;
@@ -66,13 +68,19 @@ namespace eye_tracking_mouse
 
                     if (mouse_state == MouseState.Calibrating)
                     {
-                        // The only thing to update while calibrating is gaze point.
-                        float[] coordinates_copy = new float[smoothened_error_correction.сoordinates.Length];
-                        smoothened_error_correction.сoordinates.CopyTo(coordinates_copy, 0);
-                        var smoothened_error_correction_clone = new EyeTrackerErrorCorrection(coordinates_copy, smoothened_error_correction.shift);
-                        smoothened_error_correction_clone.сoordinates[0] = coordinates.gaze_point.X;
-                        smoothened_error_correction_clone.сoordinates[1] = coordinates.gaze_point.Y;
-                        smoothened_error_correction = CoordinateSmoother.Smoothen(smoothened_error_correction_clone);
+                        if(dynamic_calibration)
+                        {
+                            // The only thing to update while calibrating is gaze point.
+                            float[] coordinates_copy = new float[smoothened_error_correction.сoordinates.Length];
+                            smoothened_error_correction.сoordinates.CopyTo(coordinates_copy, 0);
+                            var smoothened_error_correction_clone = new EyeTrackerErrorCorrection(coordinates_copy, smoothened_error_correction.shift);
+                            smoothened_error_correction_clone.сoordinates[0] = coordinates.gaze_point.X;
+                            smoothened_error_correction_clone.сoordinates[1] = coordinates.gaze_point.Y;
+                            smoothened_error_correction = CoordinateSmoother.Smoothen(smoothened_error_correction_clone);
+                        } else
+                        {
+                            CoordinateSmoother.Reset();
+                        }
                     }
                     else
                     {
@@ -126,8 +134,9 @@ namespace eye_tracking_mouse
             }
         }
 
-        public void StartCalibration()
+        public void StartCalibration(bool dynamic_calibration)
         {
+            this.dynamic_calibration = dynamic_calibration;
             if (mouse_state != MouseState.Calibrating)
             {
                 calibration_start_gaze_point =

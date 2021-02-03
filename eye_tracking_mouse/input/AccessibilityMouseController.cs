@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 
 namespace eye_tracking_mouse
 {
-    public class DefaultMouseController : InputProvider.IInputReceiver
+    // DefaultMouseController and AccessibilityMouseController are not DRY.
+    // Fixing AccessibilityMouseController? Consider fixing DefaultMouseController.
+    public class AccessibilityMouseController : InputProvider.IInputReceiver
     {
         private readonly InteractionHistoryEntry[] interaction_history = new InteractionHistoryEntry[3];
-        private bool is_waiting_for_second_modifier_press = false;
-        private bool always_on = false;
-        private DateTime always_on_disabled_time = DateTime.Now;
+        bool is_first_adjustment = true;
+
+        AccessibilityHelperWindow helper_window = null;
 
         private struct InteractionHistoryEntry
         {
@@ -22,8 +24,10 @@ namespace eye_tracking_mouse
 
         private EyeTrackingMouse eye_tracking_mouse;
 
-        public DefaultMouseController(EyeTrackingMouse eye_tracking_mouse)
+        public AccessibilityMouseController(EyeTrackingMouse eye_tracking_mouse)
         {
+
+            helper_window = new AccessibilityHelperWindow();
             this.eye_tracking_mouse = eye_tracking_mouse;
         }
 
@@ -62,69 +66,6 @@ namespace eye_tracking_mouse
                         speed_up = 2.0f;
                 }
 
-                // Single and double modifier presses have different functions
-                // Single press goes to OS (this allows using WINDOWS MENU)
-                // Double press enables |always_on| mode.
-                if (is_waiting_for_second_modifier_press)
-                {
-                    is_waiting_for_second_modifier_press = false;
-                    if (key == Key.Modifier && key_state == KeyState.Down &&
-                        (DateTime.Now - interaction_history[1].Time).TotalMilliseconds < 300)
-                    {
-                        always_on = true;
-                        eye_tracking_mouse.StartControlling();
-                        return true;
-                    }
-                }
-
-                // IF user pressed and released modifier key without pressing other buttons in between...
-                if (key == Key.Modifier &&
-                    key_state == KeyState.Up &&
-                    interaction_history[1].Key == key &&
-                    !always_on)
-                {
-                    double press_duration_ms = (DateTime.Now - interaction_history[1].Time).TotalMilliseconds;
-
-                    // THEN it might be a beginning of a double press...
-                    if (press_duration_ms < 300)
-                    {
-                        is_waiting_for_second_modifier_press = true;
-                    }
-
-                    // OR it might be a single modifier press that should go to OS.
-                    if (press_duration_ms < Options.Instance.modifier_short_press_duration_ms &&
-                        (DateTime.Now - always_on_disabled_time).TotalMilliseconds > 300)
-                    {
-                        is_waiting_for_second_modifier_press = true;
-                        App.Current.Dispatcher.InvokeAsync((async () =>
-                        {
-                            await Task.Delay(300);
-                            lock (Helpers.locker)
-                            {
-                                if (!is_waiting_for_second_modifier_press)
-                                    return;
-                                is_waiting_for_second_modifier_press = false;
-                                input_provider.SendModifierDown();
-                                input_provider.SendModifierUp();
-                            }
-                        }));
-                    }
-                }
-
-                if (always_on)
-                {
-                    if (key == Key.Modifier && key_state == KeyState.Up)
-                        return true;
-
-                    if (key == Key.Unbound ||
-                        (key == Key.Modifier && key_state == KeyState.Down))
-                    {
-                        always_on = false;
-                        always_on_disabled_time = DateTime.Now;
-                        eye_tracking_mouse.StopControlling();
-                    }
-                }
-
                 return this.OnKeyPressed(key, key_state, speed_up, is_repetition, is_modifier, input_provider);
             }
         }
@@ -137,43 +78,55 @@ namespace eye_tracking_mouse
             bool is_modifier,
             InputProvider input_provider)
         {
-            // The application grabs control over cursor when modifier is pressed.
             if (key == Key.Modifier)
             {
                 if (key_state == KeyState.Down)
                 {
+                    is_first_adjustment = true;
+                    helper_window.Hide();
                     eye_tracking_mouse.StartControlling();
                     return true;
                 }
 
                 if (key_state == KeyState.Up)
                 {
-                    if (eye_tracking_mouse.mouse_state == EyeTrackingMouse.MouseState.Idle)
+
+                    if (eye_tracking_mouse.mouse_state == EyeTrackingMouse.MouseState.Controlling)
                     {
-                        return false;
+                        eye_tracking_mouse.StartCalibration(false);
+                        helper_window.Show();
+                        return true;
                     }
 
-                    eye_tracking_mouse.StopControlling();
-                    return true;
+                    return false;
                 }
             }
 
-            if (eye_tracking_mouse.mouse_state == EyeTrackingMouse.MouseState.Idle)
+            if (eye_tracking_mouse.mouse_state != EyeTrackingMouse.MouseState.Calibrating)
             {
+                if (eye_tracking_mouse.mouse_state == EyeTrackingMouse.MouseState.Controlling)
+                {
+                    helper_window.Hide();
+                    eye_tracking_mouse.StopControlling();
+                    input_provider.SendModifierDown();
+                }
                 return false;
+            }
+
+            if (key == Key.StopCalibration)
+            {
+                if (key_state == KeyState.Up)
+                {
+                    helper_window.Hide();
+                    eye_tracking_mouse.StopControlling();
+                }
+                return true;
             }
 
             if (key == Key.Unbound)
             {
-                // The application intercepts modifier key presses. We do not want to lose modifier when handling unbound keys.
-                // We stop controlling cursor when facing the first unbound key and send modifier keystroke to OS before handling pressed key.
-                // This way key combinations like 'Win+E' remain available.
-                if (!is_modifier)
-                {
-                    input_provider.SendModifierDown();
-                    eye_tracking_mouse.StopControlling();
-                }
-                return false;
+                // Unbound key in Accessibility mode might mean that User has problems with pressing the right buttons.
+                return true;
             }
 
             var repetition_white_list = new SortedSet<Key> {
@@ -196,25 +149,20 @@ namespace eye_tracking_mouse
                 int calibration_step = (int)(Options.Instance.calibration_step * speed_up);
                 if (key == Key.CalibrateLeft)
                 {
-                    eye_tracking_mouse.StartCalibration();
                     eye_tracking_mouse.AdjustCursorPosition(-calibration_step, 0);
                 }
                 if (key == Key.CalibrateRight)
                 {
-                    eye_tracking_mouse.StartCalibration();
                     eye_tracking_mouse.AdjustCursorPosition(calibration_step, 0);
                 }
                 if (key == Key.CalibrateUp)
                 {
-                    eye_tracking_mouse.StartCalibration();
                     eye_tracking_mouse.AdjustCursorPosition(0, -calibration_step);
                 }
                 if (key == Key.CalibrateDown)
                 {
-                    eye_tracking_mouse.StartCalibration();
                     eye_tracking_mouse.AdjustCursorPosition(0, +calibration_step);
                 }
-
                 // Scroll
                 if (key == Key.ScrollDown)
                 {
@@ -238,8 +186,11 @@ namespace eye_tracking_mouse
             if (eye_tracking_mouse.mouse_state == EyeTrackingMouse.MouseState.Calibrating &&
                 (key == Key.LeftMouseButton || key == Key.RightMouseButton))
             {
-                eye_tracking_mouse.ApplyCalibration();
-                eye_tracking_mouse.StartControlling();
+                if (is_first_adjustment)
+                {
+                    is_first_adjustment = false;
+                    eye_tracking_mouse.ApplyCalibration();
+                }
             }
 
             if (key == Key.LeftMouseButton)
@@ -272,6 +223,11 @@ namespace eye_tracking_mouse
             }
 
             return true;
+        }
+
+        public void Dispose()
+        {
+            helper_window.Close();
         }
     }
 }

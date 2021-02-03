@@ -24,6 +24,9 @@ namespace eye_tracking_mouse
         CalibrateRight,
         CalibrateUp,
         CalibrateDown,
+
+        // Used only in Accessibility Mode.
+        StopCalibration,
     }
 
     // Determines how spatial each new dimension will be.
@@ -204,6 +207,8 @@ namespace eye_tracking_mouse
             {Key.CalibrateRight, Interceptor.Keys.D},
             {Key.CalibrateUp, Interceptor.Keys.W},
             {Key.CalibrateDown, Interceptor.Keys.S},
+
+            {Key.StopCalibration, Interceptor.Keys.Escape},
         };
 
         [JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
