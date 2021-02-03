@@ -77,7 +77,7 @@ namespace eye_tracking_mouse
             {
                 Stop();
 
-                mouse_controller = new AccessibilityMouseController(eye_tracking_mouse);
+                mouse_controller = new DefaultMouseController(eye_tracking_mouse);
 
                 if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver)
                 {

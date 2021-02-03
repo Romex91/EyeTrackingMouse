@@ -25,7 +25,6 @@ namespace eye_tracking_mouse
         CalibrateUp,
         CalibrateDown,
 
-        // Used only in Accessibility Mode.
         StopCalibration,
     }
 

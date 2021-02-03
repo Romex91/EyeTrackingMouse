@@ -165,6 +165,13 @@ namespace eye_tracking_mouse
                 return false;
             }
 
+            if (key == Key.StopCalibration && always_on)
+            {
+                if (key_state == KeyState.Up)
+                    eye_tracking_mouse.StopControlling();
+                return true;
+            }
+
             if (key == Key.Unbound || key == Key.StopCalibration)
             {
                 // The application intercepts modifier key presses. We do not want to lose modifier when handling unbound keys.
@@ -172,7 +179,8 @@ namespace eye_tracking_mouse
                 // This way key combinations like 'Win+E' remain available.
                 if (!is_modifier)
                 {
-                    input_provider.SendModifierDown();
+                    if (!always_on)
+                        input_provider.SendModifierDown();
                     eye_tracking_mouse.StopControlling();
                 }
                 return false;
