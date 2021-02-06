@@ -219,28 +219,28 @@
                         Grid.Row="3" Grid.ColumnSpan="4" 
                         x:Name="ClickFreezeTimeMs" 
                         Label="Click freeze time (ms)"
-                        Maximum="1000" Minimum="0"
+                        Maximum="4000" Minimum="0"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
                         Grid.Row="4" Grid.ColumnSpan="4" 
                         x:Name="CalibrationFreezeTimeMs" 
                         Label="Calibration freeze time (ms)"
-                        Maximum="2000" Minimum="0"
+                        Maximum="4000" Minimum="0"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
                         Grid.Row="5" Grid.ColumnSpan="4" 
                         x:Name="DoubleSpeedUpTimeMs" 
                         Label="Double speed-up time (ms)"
-                        Maximum="500" Minimum="0"
+                        Maximum="4000" Minimum="0"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                 
                     <local:IntegerPropertyControl 
                         Grid.Row="6" Grid.ColumnSpan="4" 
                         x:Name="QuadrupleSpeedUpTimeMs" 
                         Label="Quadruple speed-up time (ms)"
-                        Maximum="500" Minimum="0"
+                        Maximum="4000" Minimum="0"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
