@@ -13,6 +13,7 @@
         Deactivated="Window_Deactivated"
         Closed="Window_Closed"
         ShowInTaskbar="False"
+        DpiChanged="Window_DpiChanged"
         Topmost="True">
     <Window.Background>
         <SolidColorBrush Opacity="0.0" Color="Black"></SolidColorBrush>

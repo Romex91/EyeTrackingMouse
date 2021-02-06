@@ -20,6 +20,7 @@ namespace eye_tracking_mouse
     /// </summary>
     public partial class AccessibilityHelperWindow : Window
     {
+        private double dpiX = 1, dpiY = 1;
         public AccessibilityHelperWindow()
         {
             InitializeComponent();
@@ -51,8 +52,8 @@ namespace eye_tracking_mouse
         {
             var pos = System.Windows.Forms.Cursor.Position;
 
-            Canvas.SetLeft(Instructions, pos.X);
-            Canvas.SetTop(Instructions, pos.Y);
+            Canvas.SetLeft(Instructions, pos.X / dpiX);
+            Canvas.SetTop(Instructions, pos.Y / dpiY);
         }
 
         private void OnKeyBindignsChanged(object sender, EventArgs e)
@@ -94,6 +95,12 @@ namespace eye_tracking_mouse
         private void Window_Deactivated(object sender, EventArgs e)
         {
             Topmost = true;
+        }
+
+        private void Window_DpiChanged(object sender, DpiChangedEventArgs e)
+        {
+            dpiX = e.NewDpi.DpiScaleX;
+            dpiY = e.NewDpi.DpiScaleY;
         }
 
         private void Window_Closed(object sender, EventArgs e)
