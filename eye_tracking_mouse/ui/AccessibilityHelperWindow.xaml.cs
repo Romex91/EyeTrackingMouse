@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -35,14 +36,17 @@ namespace eye_tracking_mouse
             {
                 calibration_arrow.Visibility = Visibility.Visible;
                 calibration_start_point = starting_point;
+                TxtSaved.Visibility = Visibility.Visible;
             }));
         }
 
         public void HideCalibration()
         {
-            Dispatcher.BeginInvoke((Action)(() =>
+            Dispatcher.BeginInvoke((Action)(async () =>
             {
+                await Task.Delay(TimeSpan.FromMilliseconds(300));
                 calibration_arrow.Visibility = Visibility.Hidden;
+                TxtSaved.Visibility = Visibility.Hidden;
             }));
         }
 

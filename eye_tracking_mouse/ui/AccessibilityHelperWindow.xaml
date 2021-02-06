@@ -80,6 +80,9 @@
             <TextBlock Canvas.Left="14" Canvas.Top="50"><Run Foreground="Black" Text="Eye Tracking:"/> <Run x:Name="TxtModifier" Text="WIN"/></TextBlock>
             <TextBlock Canvas.Left="14" Canvas.Top="76"><Run Foreground="Black" Text="Save Calibtation:"/> <Run x:Name="TxtSaveCalibration" Text="M"/></TextBlock>
 
+
+            <TextBlock Visibility="Hidden" Foreground="Red" x:Name="TxtSaved" Text="saved"/>
+
             <!--Problem:
                     "Layout measurement override of element should not 
                      return PositiveInfinity as its DesiredSize, 
