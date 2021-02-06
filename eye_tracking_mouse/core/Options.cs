@@ -186,6 +186,8 @@ namespace eye_tracking_mouse
         public InterceptionMethod interception_method = InterceptionMethod.WinApi;
         public bool is_driver_installed = false;
 
+        public bool is_accessibility_enabled = false;
+
         public Interceptor.Keys this[Key key]
         {
             get => interception_method == InterceptionMethod.OblitaDriver ? bindings[key] : default_bindings[key];

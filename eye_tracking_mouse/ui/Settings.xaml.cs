@@ -39,6 +39,7 @@ namespace eye_tracking_mouse
                 UpdateKeyBindingControls();
 
                 CheckboxAutostart.IsChecked = Autostart.IsEnabled;
+                CheckboxAccessibility.IsChecked = Options.Instance.key_bindings.is_accessibility_enabled;
 
                 UpdateSliders();
             }
@@ -418,7 +419,7 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 Options.Instance.key_bindings.interception_method = InterceptionMethod.SelectedIndex == 0 ? KeyBindings.InterceptionMethod.WinApi : KeyBindings.InterceptionMethod.OblitaDriver;
-                bool success = input_manager.UpdateInterceptionMethod();
+                bool success = input_manager.Reset();
 
                 if (!success)
                 {
@@ -516,6 +517,32 @@ namespace eye_tracking_mouse
         {
             if (is_initialized)
                 Autostart.Disable();
+        }
+
+        private void CheckboxAccessibility_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!is_initialized)
+                return;
+            lock (Helpers.locker)
+            {
+                Options.Instance.key_bindings.is_accessibility_enabled = true;
+                input_manager.Reset();
+                Options.Changed?.Invoke(this, new EventArgs());
+                Options.Instance.SaveToFile(Options.Filepath);
+            }
+        }
+
+        private void CheckboxAccessibility_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (!is_initialized)
+                return;
+            lock (Helpers.locker)
+            {
+                Options.Instance.key_bindings.is_accessibility_enabled = false;
+                input_manager.Reset();
+                Options.Changed?.Invoke(this, new EventArgs());
+                Options.Instance.SaveToFile(Options.Filepath);
+            }
         }
     }
 }

@@ -19,9 +19,12 @@
                         <RowDefinition Height="auto"></RowDefinition>
                         <RowDefinition Height="auto"></RowDefinition>
                         <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
                     </Grid.RowDefinitions>
                     <CheckBox Grid.Row="0" Grid.Column="0" Name="CheckboxAutostart" Checked="CheckboxAutostart_Checked" Unchecked="CheckboxAutostart_Unchecked">Launch at windows startup</CheckBox>
-                    <TextBlock Grid.Row="1" Grid.Column="0">
+                    <CheckBox Grid.Row="1" Grid.Column="0" Name="CheckboxAccessibility" Checked="CheckboxAccessibility_Checked" Unchecked="CheckboxAccessibility_Unchecked">Accessibility mode</CheckBox>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0">
                         <LineBreak/>
                          <Bold>5-munutes Video Guide</Bold>: <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://youtu.be/aKi3Qr7T764?t=74"> youtube.com </Hyperlink>
                          <LineBreak/>
@@ -31,8 +34,9 @@
                         <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://github.com/Squirrel/Squirrel.Windows"> Squirrel.Windows</Hyperlink><LineBreak/>
                         <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://developer.tobii.com/consumer-eye-trackers/core-sdk/"> Tobii Core SDK</Hyperlink><LineBreak/>
                     </TextBlock>
-                    <TextBlock Grid.Row="2" Grid.Column="0" Name="TextBlockVersion"></TextBlock>
-                    <TextBlock Grid.Row="3" Grid.Column="0">
+                    <TextBlock Grid.Row="3" Grid.Column="0" Name="TextBlockVersion"></TextBlock>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0">
                         <LineBreak/>
                         Support the project: <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://www.patreon.com/EyeTrackingMouse"> patreon.com </Hyperlink>
                     </TextBlock>

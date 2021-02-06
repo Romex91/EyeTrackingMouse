@@ -71,13 +71,16 @@ namespace eye_tracking_mouse
 
 
         // Enables keys interception with selected |interception_method|. Backs off to WinAPI if failed loading interception driver.
-        public bool UpdateInterceptionMethod()
+        public bool Reset()
         {
             lock (Helpers.locker)
             {
                 Stop();
 
-                mouse_controller = new DefaultMouseController(eye_tracking_mouse);
+                if (Options.Instance.key_bindings.is_accessibility_enabled)
+                    mouse_controller = new AccessibilityMouseController(eye_tracking_mouse);
+                else
+                    mouse_controller = new DefaultMouseController(eye_tracking_mouse);
 
                 if (Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver)
                 {
@@ -106,7 +109,7 @@ namespace eye_tracking_mouse
         public InputManager(EyeTrackingMouse eye_tracking_mouse)
         {
             this.eye_tracking_mouse = eye_tracking_mouse;
-            if (!UpdateInterceptionMethod())
+            if (!Reset())
             {
                 lock (Helpers.locker)
                 {
