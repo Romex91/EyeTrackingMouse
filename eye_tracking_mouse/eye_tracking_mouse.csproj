@@ -150,6 +150,7 @@
     <Compile Include="ui\Arrowheads\ArrowEnds.cs" />
     <Compile Include="ui\Arrowheads\ArrowLine.cs" />
     <Compile Include="ui\Arrowheads\ArrowLineBase.cs" />
+    <Compile Include="ui\BooleanConverter.cs" />
     <Compile Include="utils\FilesSavingQueue.cs" />
     <Compile Include="utils\Autostart.cs" />
     <Compile Include="ui\CalibrationWindow.xaml.cs">

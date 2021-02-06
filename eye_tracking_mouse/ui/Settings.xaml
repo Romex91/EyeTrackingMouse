@@ -6,9 +6,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:eye_tracking_mouse"
         mc:Ignorable="d"
-        Title="Settings" ResizeMode="NoResize" Height="360" Width="570" SizeToContent="WidthAndHeight">
+        Title="Settings" ResizeMode="NoResize" Height="400" Width="570" SizeToContent="WidthAndHeight">
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <local:BooleanToVisibilityConverter 
+        x:Key="BooleanToVisibilityConverter" 
+        False="Collapsed" 
+        True="Visible" />
+
+        <local:BooleanToVisibilityConverter 
+        x:Key="InverseBooleanToVisibilityConverter" 
+        True="Collapsed" 
+        False="Visible" />
+
     </Window.Resources>
     <Grid>
         <TabControl x:Name="TabControl">
@@ -179,19 +188,20 @@
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
                     </Grid.RowDefinitions>
 
                     <local:IntegerPropertyControl 
@@ -220,6 +230,9 @@
                         x:Name="ClickFreezeTimeMs" 
                         Label="Click freeze time (ms)"
                         Maximum="4000" Minimum="0"
+                        
+                        Visibility="{Binding IsChecked,ElementName=CheckboxAccessibility,Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+                        
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
@@ -227,6 +240,9 @@
                         x:Name="CalibrationFreezeTimeMs" 
                         Label="Calibration freeze time (ms)"
                         Maximum="4000" Minimum="0"
+                        
+                        Visibility="{Binding IsChecked,ElementName=CheckboxAccessibility,Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+                        
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
@@ -248,6 +264,9 @@
                         x:Name="ModifierShortPressTimeMs" 
                         Label="Modifier short press time (ms)"
                         Maximum="1000" Minimum="0"
+                        
+                        Visibility="{Binding IsChecked,ElementName=CheckboxAccessibility,Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+                        
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
@@ -263,15 +282,15 @@
                         Label="Instant jump distance (pixels)"
                         Maximum="1000" Minimum="1"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
-                    
-                    <TextBlock Grid.Row="10" Grid.Column="0" Name="CalibrationModeLabel">Calibration mode</TextBlock>
-                    <ComboBox Grid.Row="10" Grid.Column="2" x:Name="CalibrationModeCombo" SelectionChanged="CalibrationModeCombo_SelectionChanged">
+
+                    <TextBlock Margin="0 20 0 0" Grid.Row="10" Grid.Column="0" Name="CalibrationModeLabel">Calibration mode</TextBlock>
+                    <ComboBox Margin="0 20 0 0" Grid.Row="10" Grid.Column="2" x:Name="CalibrationModeCombo" SelectionChanged="CalibrationModeCombo_SelectionChanged">
                         <ComboBoxItem Name="CalibrationMode_Default">Default</ComboBoxItem>
                         <ComboBoxItem Name="CalibrationMode_RightEye">Right eye</ComboBoxItem>
                         <ComboBoxItem Name="CalibrationMode_PoorFixation">Poor tracker fixation</ComboBoxItem>
                         <ComboBoxItem Name="CalibrationMode_Custom">Custom</ComboBoxItem>
                     </ComboBox>
-                    <Button Grid.Row="12" Grid.Column="2" Grid.ColumnSpan="1" Name="ResetDefaults" Click="ResetDefaults_Click">Reset to defaults</Button>
+                    <Button Margin="0 20 0 0" Grid.Row="12" Grid.Column="2" Grid.ColumnSpan="1" Name="ResetDefaults" Click="ResetDefaults_Click">Reset to defaults</Button>
                 </Grid>
             </TabItem>
         </TabControl>
