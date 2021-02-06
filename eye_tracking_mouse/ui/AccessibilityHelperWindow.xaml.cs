@@ -1,17 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace eye_tracking_mouse
 {
@@ -21,6 +13,10 @@ namespace eye_tracking_mouse
     public partial class AccessibilityHelperWindow : Window
     {
         private double dpiX = 1, dpiY = 1;
+
+        private System.Drawing.Point calibration_start_point = System.Windows.Forms.Cursor.Position;
+        private Petzold.Media2D.ArrowLine calibration_arrow = new Petzold.Media2D.ArrowLine { Stroke = Brushes.Red, StrokeThickness = 3, Visibility = Visibility.Hidden };
+
         public AccessibilityHelperWindow()
         {
             InitializeComponent();
@@ -29,6 +25,25 @@ namespace eye_tracking_mouse
 
             KeyBindings.Changed += OnKeyBindignsChanged;
             OnKeyBindignsChanged(null, null);
+
+            Canvas.Children.Add(calibration_arrow);
+        }
+
+        public void ShowCalibration(System.Drawing.Point starting_point)
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                calibration_arrow.Visibility = Visibility.Visible;
+                calibration_start_point = starting_point;
+            }));
+        }
+
+        public void HideCalibration()
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                calibration_arrow.Visibility = Visibility.Hidden;
+            }));
         }
 
         public new void Show()
@@ -54,6 +69,12 @@ namespace eye_tracking_mouse
 
             Canvas.SetLeft(Instructions, pos.X / dpiX);
             Canvas.SetTop(Instructions, pos.Y / dpiY);
+
+            calibration_arrow.X1 = calibration_start_point.X / dpiX;
+            calibration_arrow.Y1 = calibration_start_point.Y / dpiY;
+
+            calibration_arrow.X2 = pos.X / dpiX;
+            calibration_arrow.Y2 = pos.Y / dpiY;
         }
 
         private void OnKeyBindignsChanged(object sender, EventArgs e)
@@ -73,6 +94,7 @@ namespace eye_tracking_mouse
                     { Key.CalibrateLeft , TxtCalibrateLeft},
                     { Key.Modifier, TxtModifier},
                     { Key.StopCalibration, TxtExit},
+                    { Key.Accessibility_SaveCalibration, TxtSaveCalibration}
                 };
 
                 var bindings = Options.Instance.key_bindings.interception_method == KeyBindings.InterceptionMethod.OblitaDriver ?

@@ -83,9 +83,9 @@ namespace eye_tracking_mouse
             Interceptor.Keys.PrintScreen,
         };
 
-        public static string GetKeyString(Interceptor.Keys key, bool is_e0)
+        public static string GetKeyString(Interceptor.Keys? key, bool is_e0)
         {
-            if (key == Interceptor.Keys.Escape)
+            if (key == null)
                 return "Unset";
 
             string retval = "";

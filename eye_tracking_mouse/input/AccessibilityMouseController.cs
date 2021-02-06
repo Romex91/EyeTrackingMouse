@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,7 +12,6 @@ namespace eye_tracking_mouse
     public class AccessibilityMouseController : InputProvider.IInputReceiver
     {
         private readonly InteractionHistoryEntry[] interaction_history = new InteractionHistoryEntry[3];
-        bool is_first_adjustment = true;
 
         AccessibilityHelperWindow helper_window = null;
 
@@ -23,6 +23,8 @@ namespace eye_tracking_mouse
         };
 
         private EyeTrackingMouse eye_tracking_mouse;
+
+        private Point starting_cursor_position;
 
         public AccessibilityMouseController(EyeTrackingMouse eye_tracking_mouse)
         {
@@ -82,7 +84,6 @@ namespace eye_tracking_mouse
             {
                 if (key_state == KeyState.Down)
                 {
-                    is_first_adjustment = true;
                     helper_window.Hide();
                     eye_tracking_mouse.StartControlling();
                     return true;
@@ -93,6 +94,7 @@ namespace eye_tracking_mouse
 
                     if (eye_tracking_mouse.mouse_state == EyeTrackingMouse.MouseState.Controlling)
                     {
+                        starting_cursor_position = System.Windows.Forms.Cursor.Position;
                         eye_tracking_mouse.StartCalibration(false);
                         helper_window.Show();
                         return true;
@@ -184,12 +186,15 @@ namespace eye_tracking_mouse
 
             // Mouse buttons
             if (eye_tracking_mouse.mouse_state == EyeTrackingMouse.MouseState.Calibrating &&
-                (key == Key.LeftMouseButton || key == Key.RightMouseButton))
+                (key == Key.Accessibility_SaveCalibration))
             {
-                if (is_first_adjustment)
+                if (key_state == KeyState.Up)
                 {
-                    is_first_adjustment = false;
-                    eye_tracking_mouse.ApplyCalibration();
+                    helper_window.HideCalibration();
+                    eye_tracking_mouse.SaveCalibration();
+                } else
+                {
+                    helper_window.ShowCalibration(starting_cursor_position);
                 }
             }
 

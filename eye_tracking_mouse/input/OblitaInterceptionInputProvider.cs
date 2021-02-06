@@ -114,18 +114,25 @@ namespace eye_tracking_mouse
 
         public override void SendModifierDown()
         {
+            var key = Options.Instance.key_bindings[Key.Modifier];
             // Make sure capslock is always disabled when it is used as a modifier.
-            if (Options.Instance.key_bindings[Key.Modifier] == Interceptor.Keys.CapsLock)
+            if (key == Interceptor.Keys.CapsLock || key == null)
             {
                 return;
             }
-            driver_input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
+            driver_input.SendKey((Interceptor.Keys)key, Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 : Interceptor.KeyState.Down);
             Thread.Sleep(10);
         }
 
         public override void SendModifierUp()
         {
-            driver_input.SendKey(Options.Instance.key_bindings[Key.Modifier], Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 | Interceptor.KeyState.Up : Interceptor.KeyState.Up);
+            var key = Options.Instance.key_bindings[Key.Modifier];
+            if (key == null)
+            {
+                return;
+            }
+
+            driver_input.SendKey((Interceptor.Keys)key, Options.Instance.key_bindings.is_modifier_e0 ? Interceptor.KeyState.E0 | Interceptor.KeyState.Up : Interceptor.KeyState.Up);
             Thread.Sleep(10);
         }
 

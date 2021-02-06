@@ -155,7 +155,7 @@ namespace eye_tracking_mouse
             statistics.OnCalibrate();
         }
 
-        public void ApplyCalibration()
+        public void SaveCalibration()
         {
             CalibrationManager.Instance.AddShift(smoothened_error_correction.сoordinates, smoothened_error_correction.shift);
         }

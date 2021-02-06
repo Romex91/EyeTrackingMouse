@@ -172,7 +172,7 @@ namespace eye_tracking_mouse
                 return true;
             }
 
-            if (key == Key.Unbound || key == Key.StopCalibration)
+            if (key == Key.Unbound || key == Key.StopCalibration || key == Key.Accessibility_SaveCalibration)
             {
                 // The application intercepts modifier key presses. We do not want to lose modifier when handling unbound keys.
                 // We stop controlling cursor when facing the first unbound key and send modifier keystroke to OS before handling pressed key.
@@ -248,7 +248,7 @@ namespace eye_tracking_mouse
             if (eye_tracking_mouse.mouse_state == EyeTrackingMouse.MouseState.Calibrating &&
                 (key == Key.LeftMouseButton || key == Key.RightMouseButton))
             {
-                eye_tracking_mouse.ApplyCalibration();
+                eye_tracking_mouse.SaveCalibration();
                 eye_tracking_mouse.StartControlling();
             }
 

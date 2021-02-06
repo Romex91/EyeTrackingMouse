@@ -77,7 +77,7 @@ namespace eye_tracking_mouse
             {
                 Stop();
 
-                if (Options.Instance.key_bindings.is_accessibility_enabled)
+                if (Options.Instance.accessibility_mode)
                     mouse_controller = new AccessibilityMouseController(eye_tracking_mouse);
                 else
                     mouse_controller = new DefaultMouseController(eye_tracking_mouse);
