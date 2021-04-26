@@ -121,7 +121,9 @@ namespace eye_tracking_mouse
         {
             get
             {
-                return Path.Combine(AppFolder, " User Data");
+                // We use a separate User Data folder to avoid settings being discarded on Squirrel.Windows reinstallations.
+                // Squirrel.Windows is not configurable and always removes |AppFolder|.
+                return AppFolder + " User Data";
             }
 
         }
