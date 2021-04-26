@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BlindConfigurationTester"
         mc:Ignorable="d"
-        Title="EyeTrackerMouse Test Tool" Height="532" Width="588.325" >
+        Title="EyeTrackerMouse Test Tool" Height="244.914" Width="688.886" >
 
     <Grid Name="Grid" VerticalAlignment="Center" HorizontalAlignment="Center">
         <Grid.ColumnDefinitions>
@@ -28,16 +28,6 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.ColumnSpan="2" HorizontalAlignment="Center" Grid.Row="0">Configuration setup:</TextBlock>
-        <Border BorderBrush="Black" BorderThickness="2" Grid.ColumnSpan="2" Grid.Row="1">
-            <local:ConfigurationControl HorizontalAlignment="Stretch" Padding="10" x:Name="Configuration"></local:ConfigurationControl>
-        </Border>
-
-        <TextBlock Grid.ColumnSpan="2" HorizontalAlignment="Center" Grid.Row="2">Study setup:</TextBlock>
-        <Border BorderBrush="Black" BorderThickness="2" Grid.ColumnSpan="2" Grid.Row="3">
-            <local:StudySetupControl HorizontalAlignment="Stretch" Padding="10" x:Name="Study"></local:StudySetupControl>
-        </Border>
-        
         <TextBlock Grid.ColumnSpan="2" HorizontalAlignment="Center" Grid.Row="4">Data Set setup:</TextBlock>
         <Border BorderBrush="Black" BorderThickness="2" Grid.ColumnSpan="2" Grid.Row="5">
             <local:DataSetSetupControl HorizontalAlignment="Stretch" Padding="10" x:Name="DataSet"></local:DataSetSetupControl>
