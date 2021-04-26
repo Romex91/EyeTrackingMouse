@@ -14,6 +14,8 @@ namespace eye_tracking_mouse
         private const int WH_KEYBOARD_LL = 13;
         private const int WM_KEYDOWN = 0x0100;
         private const int WM_KEYUP = 0x0101;
+        private const int WM_SYSKEYDOWN = 0x104;
+        private const int WM_SYSKEYUP = 0x105;
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
         private LowLevelKeyboardProc win_api_callback;
 
@@ -64,11 +66,11 @@ namespace eye_tracking_mouse
                     key = bindings[key_code];
                 KeyState key_state;
 
-                if (wParam == (IntPtr)WM_KEYDOWN)
+                if (wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN)
                 {
                     key_state = KeyState.Down;
                 }
-                else if (wParam == (IntPtr)WM_KEYUP)
+                else if (wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP)
                 {
                     key_state = KeyState.Up;
                 }

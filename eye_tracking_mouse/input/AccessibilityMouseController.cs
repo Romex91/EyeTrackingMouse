@@ -80,6 +80,11 @@ namespace eye_tracking_mouse
             bool is_modifier,
             InputProvider input_provider)
         {
+            // Cntrl+click, alt+click should work.
+            if (key == Key.Unbound && is_modifier)
+            {
+                return false;
+            }
             if (key == Key.Modifier)
             {
                 if (key_state == KeyState.Down)
@@ -127,7 +132,7 @@ namespace eye_tracking_mouse
 
             if (key == Key.Unbound)
             {
-                // Unbound key in Accessibility mode might mean that User has problems with pressing the right buttons.
+                // Unbound key in Accessibility mode might mean that User has problems with pressing the intended buttons.
                 return true;
             }
 

@@ -179,7 +179,7 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Advancced" >
+            <TabItem Header="Advanced" >
                 <Grid Margin="10,10,10,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
