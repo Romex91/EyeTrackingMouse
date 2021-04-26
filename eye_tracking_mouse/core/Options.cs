@@ -24,6 +24,11 @@ namespace eye_tracking_mouse
         CalibrateRight,
         CalibrateUp,
         CalibrateDown,
+
+        StopCalibration,
+
+        // Works only in Accessibility Mode.
+        Accessibility_SaveCalibration,
     }
 
     // Determines how spatial each new dimension will be.
@@ -184,13 +189,13 @@ namespace eye_tracking_mouse
         public InterceptionMethod interception_method = InterceptionMethod.WinApi;
         public bool is_driver_installed = false;
 
-        public Interceptor.Keys this[Key key]
+        public Interceptor.Keys? this[Key key]
         {
             get => interception_method == InterceptionMethod.OblitaDriver ? bindings[key] : default_bindings[key];
             set => bindings[key] = value;
         }
 
-        public static Dictionary<Key, Interceptor.Keys> default_bindings = new Dictionary<Key, Interceptor.Keys>
+        public static Dictionary<Key, Interceptor.Keys?> default_bindings = new Dictionary<Key, Interceptor.Keys?>
         {
             {Key.Modifier, Interceptor.Keys.WindowsKey},
             {Key.LeftMouseButton, Interceptor.Keys.J },
@@ -199,15 +204,21 @@ namespace eye_tracking_mouse
             {Key.ScrollUp, Interceptor.Keys.H},
             {Key.ScrollLeft, Interceptor.Keys.CommaLeftArrow},
             {Key.ScrollRight, Interceptor.Keys.PeriodRightArrow},
-            {Key.ShowCalibrationView, Interceptor.Keys.Escape}, // Escape means unset.
+            {Key.ShowCalibrationView, null},
             {Key.CalibrateLeft, Interceptor.Keys.A},
             {Key.CalibrateRight, Interceptor.Keys.D},
             {Key.CalibrateUp, Interceptor.Keys.W},
             {Key.CalibrateDown, Interceptor.Keys.S},
+
+            {Key.StopCalibration, Interceptor.Keys.Escape},
+            
+            // It is hard to tell when user adjusts the cursor position in Accessibility Mode.
+            // Making a separate button allows user to take control of when the adjustments are saved.
+            {Key.Accessibility_SaveCalibration, Interceptor.Keys.Space},
         };
 
         [JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public Dictionary<Key, Interceptor.Keys> bindings = new Dictionary<Key, Interceptor.Keys>(default_bindings);
+        public Dictionary<Key, Interceptor.Keys?> bindings = new Dictionary<Key, Interceptor.Keys?>(default_bindings);
     };
 
 
@@ -216,6 +227,8 @@ namespace eye_tracking_mouse
     {
         public static EventHandler Changed;
         public KeyBindings key_bindings = new KeyBindings();
+        public bool accessibility_mode = false;
+
         public class CalibrationMode
         {
             public static EventHandler Changed;

@@ -39,6 +39,7 @@ namespace eye_tracking_mouse
                 UpdateKeyBindingControls();
 
                 CheckboxAutostart.IsChecked = Autostart.IsEnabled;
+                CheckboxAccessibility.IsChecked = Options.Instance.accessibility_mode;
 
                 UpdateSliders();
             }
@@ -276,6 +277,7 @@ namespace eye_tracking_mouse
             public Key key;
             public Button set_new_binding_button;
             public Button set_default_binding_button;
+            public Button unset_binding_button;
         }
 
         private List<KeyBindingControl> key_binding_controls_list;
@@ -329,6 +331,18 @@ namespace eye_tracking_mouse
                     }
                     return;
                 }
+                else if (key_binding_control.unset_binding_button == sender)
+                {
+                    lock (Helpers.locker)
+                    {
+                        Options.Instance.key_bindings[key_binding_control.key] = null;
+                        UpdateKeyBindingControls();
+                        UpdateTexts();
+                        Options.Instance.SaveToFile(Options.Filepath);
+                        KeyBindings.Changed?.Invoke(this, new EventArgs());
+                    }
+                    return;
+                }
             }
 
             throw new Exception("Click event from unassigned button");
@@ -345,18 +359,21 @@ namespace eye_tracking_mouse
             {
                 key_binding_controls_list = new List<KeyBindingControl>
                 {
-                    new KeyBindingControl { key = Key.CalibrateDown, set_new_binding_button = CalibrateDown, set_default_binding_button = CalibrateDownDefault },
-                    new KeyBindingControl { key = Key.CalibrateLeft, set_new_binding_button = CalibrateLeft, set_default_binding_button = CalibrateLeftDefault },
-                    new KeyBindingControl { key = Key.CalibrateRight, set_new_binding_button = CalibrateRigth, set_default_binding_button = CalibrateRigthDefault },
-                    new KeyBindingControl { key = Key.CalibrateUp, set_new_binding_button = CalibrateUp, set_default_binding_button = CalibrateUpDefault },
-                    new KeyBindingControl { key = Key.LeftMouseButton, set_new_binding_button = LeftMouseButton, set_default_binding_button = LeftMouseButtonDefault },
-                    new KeyBindingControl { key = Key.Modifier, set_new_binding_button = EnableMouseControll, set_default_binding_button = EnableMouseControllDefault },
-                    new KeyBindingControl { key = Key.RightMouseButton, set_new_binding_button = RightMouseButton, set_default_binding_button = RightMouseButtonDefault },
-                    new KeyBindingControl { key = Key.ScrollDown, set_new_binding_button = ScrollDown, set_default_binding_button = ScrollDownDefault },
-                    new KeyBindingControl { key = Key.ScrollLeft, set_new_binding_button = ScrollLeft, set_default_binding_button = ScrollLeftDefault },
-                    new KeyBindingControl { key = Key.ScrollRight, set_new_binding_button = ScrollRight, set_default_binding_button = ScrollRightDefault },
-                    new KeyBindingControl { key = Key.ScrollUp, set_new_binding_button = ScrollUp, set_default_binding_button = ScrollUpDefault },
-                    new KeyBindingControl { key = Key.ShowCalibrationView, set_new_binding_button = CalibrationView, set_default_binding_button = CalibrationViewDefault },
+                    new KeyBindingControl { key = Key.CalibrateDown, set_new_binding_button = CalibrateDown, set_default_binding_button = CalibrateDownDefault, unset_binding_button=CalibrateDownUnset  },
+                    new KeyBindingControl { key = Key.CalibrateLeft, set_new_binding_button = CalibrateLeft, set_default_binding_button = CalibrateLeftDefault, unset_binding_button=CalibrateLeftUnset  },
+                    new KeyBindingControl { key = Key.CalibrateRight, set_new_binding_button = CalibrateRigth, set_default_binding_button = CalibrateRigthDefault, unset_binding_button=CalibrateRigthUnset  },
+                    new KeyBindingControl { key = Key.CalibrateUp, set_new_binding_button = CalibrateUp, set_default_binding_button = CalibrateUpDefault, unset_binding_button=CalibrateUpUnset  },
+                    new KeyBindingControl { key = Key.LeftMouseButton, set_new_binding_button = LeftMouseButton, set_default_binding_button = LeftMouseButtonDefault, unset_binding_button=LeftMouseButtonUnset  },
+                    new KeyBindingControl { key = Key.Modifier, set_new_binding_button = EnableMouseControll, set_default_binding_button = EnableMouseControllDefault, unset_binding_button=EnableMouseControllUnset  },
+                    new KeyBindingControl { key = Key.RightMouseButton, set_new_binding_button = RightMouseButton, set_default_binding_button = RightMouseButtonDefault, unset_binding_button=RightMouseButtonUnset  },
+                    new KeyBindingControl { key = Key.ScrollDown, set_new_binding_button = ScrollDown, set_default_binding_button = ScrollDownDefault, unset_binding_button=ScrollDownUnset  },
+                    new KeyBindingControl { key = Key.ScrollLeft, set_new_binding_button = ScrollLeft, set_default_binding_button = ScrollLeftDefault, unset_binding_button=ScrollLeftUnset  },
+                    new KeyBindingControl { key = Key.ScrollRight, set_new_binding_button = ScrollRight, set_default_binding_button = ScrollRightDefault, unset_binding_button=ScrollRightUnset  },
+                    new KeyBindingControl { key = Key.ScrollUp, set_new_binding_button = ScrollUp, set_default_binding_button = ScrollUpDefault, unset_binding_button=ScrollUpUnset  },
+                    new KeyBindingControl { key = Key.ShowCalibrationView, set_new_binding_button = CalibrationView, set_default_binding_button = CalibrationViewDefault, unset_binding_button=CalibrationViewUnset },
+
+                    new KeyBindingControl { key = Key.Accessibility_SaveCalibration, set_new_binding_button = Accessibility_SaveCalibration, set_default_binding_button = Accessibility_SaveCalibrationDefault, unset_binding_button=Accessibility_SaveCalibrationUnset },
+                    new KeyBindingControl { key = Key.StopCalibration, set_new_binding_button = StopCalibration, set_default_binding_button = StopCalibrationDefault, unset_binding_button=StopCalibrationUnset },
                 };
             }
 
@@ -370,7 +387,7 @@ namespace eye_tracking_mouse
 
                 foreach (var key_binding_control in key_binding_controls_list)
                 {
-                    Interceptor.Keys key = Options.Instance.key_bindings[key_binding_control.key];
+                    Interceptor.Keys? key = Options.Instance.key_bindings[key_binding_control.key];
 
                     key_binding_control.set_new_binding_button.Content = Helpers.GetKeyString(key, key_binding_control.key == Key.Modifier ? Options.Instance.key_bindings.is_modifier_e0 : false);
                     key_binding_control.set_new_binding_button.IsEnabled = InterceptionMethod.SelectedIndex == 1 && is_driver_loaded;
@@ -386,6 +403,8 @@ namespace eye_tracking_mouse
 
                 WinApiWarning.Visibility = InterceptionMethod.SelectedIndex == 0 || !is_driver_loaded ? Visibility.Visible : Visibility.Hidden;
                 Button_UninstallOblita.Visibility = Options.Instance.key_bindings.is_driver_installed ? Visibility.Visible : Visibility.Hidden;
+
+                KeyBindings.Changed?.Invoke(this, new EventArgs());
             }
         }
 
@@ -416,7 +435,7 @@ namespace eye_tracking_mouse
             lock (Helpers.locker)
             {
                 Options.Instance.key_bindings.interception_method = InterceptionMethod.SelectedIndex == 0 ? KeyBindings.InterceptionMethod.WinApi : KeyBindings.InterceptionMethod.OblitaDriver;
-                bool success = input_manager.UpdateInterceptionMethod();
+                bool success = input_manager.Reset();
 
                 if (!success)
                 {
@@ -514,6 +533,32 @@ namespace eye_tracking_mouse
         {
             if (is_initialized)
                 Autostart.Disable();
+        }
+
+        private void CheckboxAccessibility_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!is_initialized)
+                return;
+            lock (Helpers.locker)
+            {
+                Options.Instance.accessibility_mode= true;
+                input_manager.Reset();
+                Options.Changed?.Invoke(this, new EventArgs());
+                Options.Instance.SaveToFile(Options.Filepath);
+            }
+        }
+
+        private void CheckboxAccessibility_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (!is_initialized)
+                return;
+            lock (Helpers.locker)
+            {
+                Options.Instance.accessibility_mode = false;
+                input_manager.Reset();
+                Options.Changed?.Invoke(this, new EventArgs());
+                Options.Instance.SaveToFile(Options.Filepath);
+            }
         }
     }
 }

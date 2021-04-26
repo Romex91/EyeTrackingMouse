@@ -83,9 +83,9 @@ namespace eye_tracking_mouse
             Interceptor.Keys.PrintScreen,
         };
 
-        public static string GetKeyString(Interceptor.Keys key, bool is_e0)
+        public static string GetKeyString(Interceptor.Keys? key, bool is_e0)
         {
-            if (key == Interceptor.Keys.Escape)
+            if (key == null)
                 return "Unset";
 
             string retval = "";
@@ -121,7 +121,9 @@ namespace eye_tracking_mouse
         {
             get
             {
-                return Path.Combine(AppFolder, " User Data");
+                // We use a separate User Data folder to avoid settings being discarded on Squirrel.Windows reinstallations.
+                // Squirrel.Windows is not configurable and always removes |AppFolder|.
+                return AppFolder + " User Data";
             }
 
         }

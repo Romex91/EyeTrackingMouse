@@ -137,17 +137,22 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CalibrationManager.cs" />
-    <Compile Include="CalibrationManagerV0.cs" />
-    <Compile Include="CalibrationManagerV1.cs" />
-    <Compile Include="CalibrationManagerV2.cs" />
-    <Compile Include="ShiftStorageCache.cs" />
-    <Compile Include="TobiiCoordinatesProvider.cs" />
+    <Compile Include="calibration\CalibrationManager.cs" />
+    <Compile Include="calibration\CalibrationManagerV0.cs" />
+    <Compile Include="calibration\CalibrationManagerV1.cs" />
+    <Compile Include="calibration\CalibrationManagerV2.cs" />
+    <Compile Include="input\AccessibilityMouseController.cs" />
+    <Compile Include="input\DefaultMouseController.cs" />
+    <Compile Include="input\OblitaInterceptionInputProvider.cs" />
+    <Compile Include="input\WinApiInputProvider.cs" />
+    <Compile Include="calibration\ShiftStorageCache.cs" />
+    <Compile Include="core\TobiiCoordinatesProvider.cs" />
     <Compile Include="ui\Arrowheads\ArrowEnds.cs" />
     <Compile Include="ui\Arrowheads\ArrowLine.cs" />
     <Compile Include="ui\Arrowheads\ArrowLineBase.cs" />
-    <Compile Include="FilesSavingQueue.cs" />
-    <Compile Include="Autostart.cs" />
+    <Compile Include="ui\BooleanConverter.cs" />
+    <Compile Include="utils\FilesSavingQueue.cs" />
+    <Compile Include="utils\Autostart.cs" />
     <Compile Include="ui\CalibrationWindow.xaml.cs">
       <DependentUpon>ui\CalibrationWindow.xaml</DependentUpon>
     </Compile>
@@ -157,14 +162,17 @@
     <Compile Include="ui\IntegerPropertyControl.xaml.cs">
       <DependentUpon>ui\IntegerPropertyControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Statistics.cs" />
+    <Compile Include="utils\Statistics.cs" />
     <Compile Include="ui\DriverInstallationWindow.xaml.cs">
       <DependentUpon>ui\DriverInstallationWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ui\Settings.xaml.cs">
       <DependentUpon>ui\Settings.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ShiftsStorage.cs" />
+    <Compile Include="calibration\ShiftsStorage.cs" />
+    <Compile Include="ui\AccessibilityHelperWindow.xaml.cs">
+      <DependentUpon>AccessibilityHelperWindow.xaml</DependentUpon>
+    </Compile>
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -173,10 +181,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="EyeTrackingMouse.cs" />
-    <Compile Include="CoordinateSmoother.cs" />
-    <Compile Include="Helpers.cs" />
-    <Compile Include="InputManager.cs" />
+    <Compile Include="core\EyeTrackingMouse.cs" />
+    <Compile Include="utils\CoordinateSmoother.cs" />
+    <Compile Include="utils\Helpers.cs" />
+    <Compile Include="input\InputManager.cs" />
     <Page Include="ui\CalibrationWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -197,10 +205,14 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="ui\AccessibilityHelperWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MouseButtons.cs" />
-    <Compile Include="Options.cs" />
+    <Compile Include="utils\MouseButtons.cs" />
+    <Compile Include="core\Options.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

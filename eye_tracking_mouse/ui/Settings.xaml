@@ -6,7 +6,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:eye_tracking_mouse"
         mc:Ignorable="d"
-        Title="Settings" ResizeMode="NoResize" Height="360" Width="570" SizeToContent="WidthAndHeight">
+        Title="Settings" ResizeMode="NoResize" Height="400" Width="570" SizeToContent="WidthAndHeight">
+    <Window.Resources>
+        <local:BooleanToVisibilityConverter 
+        x:Key="BooleanToVisibilityConverter" 
+        False="Collapsed" 
+        True="Visible" />
+
+        <local:BooleanToVisibilityConverter 
+        x:Key="InverseBooleanToVisibilityConverter" 
+        True="Collapsed" 
+        False="Visible" />
+
+    </Window.Resources>
     <Grid>
         <TabControl x:Name="TabControl">
             <TabItem Header="Application">
@@ -19,9 +31,12 @@
                         <RowDefinition Height="auto"></RowDefinition>
                         <RowDefinition Height="auto"></RowDefinition>
                         <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="auto"></RowDefinition>
                     </Grid.RowDefinitions>
                     <CheckBox Grid.Row="0" Grid.Column="0" Name="CheckboxAutostart" Checked="CheckboxAutostart_Checked" Unchecked="CheckboxAutostart_Unchecked">Launch at windows startup</CheckBox>
-                    <TextBlock Grid.Row="1" Grid.Column="0">
+                    <CheckBox Grid.Row="1" Grid.Column="0" Name="CheckboxAccessibility" Checked="CheckboxAccessibility_Checked" Unchecked="CheckboxAccessibility_Unchecked">Accessibility mode</CheckBox>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0">
                         <LineBreak/>
                          <Bold>5-munutes Video Guide</Bold>: <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://youtu.be/aKi3Qr7T764?t=74"> youtube.com </Hyperlink>
                          <LineBreak/>
@@ -31,8 +46,9 @@
                         <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://github.com/Squirrel/Squirrel.Windows"> Squirrel.Windows</Hyperlink><LineBreak/>
                         <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://developer.tobii.com/consumer-eye-trackers/core-sdk/"> Tobii Core SDK</Hyperlink><LineBreak/>
                     </TextBlock>
-                    <TextBlock Grid.Row="2" Grid.Column="0" Name="TextBlockVersion"></TextBlock>
-                    <TextBlock Grid.Row="3" Grid.Column="0">
+                    <TextBlock Grid.Row="3" Grid.Column="0" Name="TextBlockVersion"></TextBlock>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0">
                         <LineBreak/>
                         Support the project: <Hyperlink RequestNavigate="Hyperlink_RequestNavigate"  NavigateUri="https://www.patreon.com/EyeTrackingMouse"> patreon.com </Hyperlink>
                     </TextBlock>
@@ -44,11 +60,12 @@
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
-                        <ColumnDefinition Width="50"></ColumnDefinition>
+                        <ColumnDefinition Width="60"></ColumnDefinition>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
 
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"></RowDefinition>
                         <RowDefinition Height="auto"></RowDefinition>
                         <RowDefinition Height="auto"></RowDefinition>
                         <RowDefinition Height="auto"></RowDefinition>
@@ -67,50 +84,81 @@
                     <TextBlock Grid.Row="0" Grid.Column="0">Enable mouse control</TextBlock>
                     <Button Grid.Row="0" Grid.Column="1" Click="KeyBindingButtonClick" Name="EnableMouseControll">error</Button>
                     <Button Grid.Row="0" Grid.Column="2" Click="KeyBindingButtonClick" Name="EnableMouseControllDefault">Default</Button>
+                    <Button Grid.Row="0" Grid.Column="3" Click="KeyBindingButtonClick" Name="EnableMouseControllUnset" Margin="0 0 20 0">Unset</Button>
+
 
                     <TextBlock Grid.Row="1" Grid.Column="0">Left mouse button</TextBlock>
                     <Button Grid.Row="1" Grid.Column="1" Click="KeyBindingButtonClick" Name="LeftMouseButton">error</Button>
                     <Button Grid.Row="1" Grid.Column="2" Click="KeyBindingButtonClick" Name="LeftMouseButtonDefault">Default</Button>
+                    <Button Grid.Row="1" Grid.Column="3" Click="KeyBindingButtonClick" Name="LeftMouseButtonUnset" Margin="0 0 20 0">Unset</Button>
+
 
                     <TextBlock Grid.Row="2" Grid.Column="0">Right mouse button</TextBlock>
                     <Button Grid.Row="2" Grid.Column="1" Click="KeyBindingButtonClick" Name="RightMouseButton">error</Button>
                     <Button Grid.Row="2" Grid.Column="2" Click="KeyBindingButtonClick" Name="RightMouseButtonDefault">Default</Button>
+                    <Button Grid.Row="2" Grid.Column="3" Click="KeyBindingButtonClick" Name="RightMouseButtonUnset" Margin="0 0 20 0">Unset</Button>
+
 
                     <TextBlock Grid.Row="3" Grid.Column="0">Scroll down</TextBlock>
                     <Button Grid.Row="3" Grid.Column="1" Click="KeyBindingButtonClick" Name="ScrollDown">error</Button>
                     <Button Grid.Row="3" Grid.Column="2" Click="KeyBindingButtonClick" Name="ScrollDownDefault">Default</Button>
+                    <Button Grid.Row="3" Grid.Column="3" Click="KeyBindingButtonClick" Name="ScrollDownUnset" Margin="0 0 20 0">Unset</Button>
+
 
                     <TextBlock Grid.Row="4" Grid.Column="0">Scroll up</TextBlock>
                     <Button Grid.Row="4" Grid.Column="1" Click="KeyBindingButtonClick" Name="ScrollUp">error</Button>
                     <Button Grid.Row="4" Grid.Column="2" Click="KeyBindingButtonClick" Name="ScrollUpDefault">Default</Button>
+                    <Button Grid.Row="4" Grid.Column="3" Click="KeyBindingButtonClick" Name="ScrollUpUnset" Margin="0 0 20 0">Unset</Button>
+
 
                     <TextBlock Grid.Row="5" Grid.Column="0">Scroll left</TextBlock>
                     <Button Grid.Row="5" Grid.Column="1" Click="KeyBindingButtonClick" Name="ScrollLeft">error</Button>
                     <Button Grid.Row="5" Grid.Column="2" Click="KeyBindingButtonClick" Name="ScrollLeftDefault">Default</Button>
+                    <Button Grid.Row="5" Grid.Column="3" Click="KeyBindingButtonClick" Name="ScrollLeftUnset" Margin="0 0 20 0">Unset</Button>
+
 
                     <TextBlock Grid.Row="6" Grid.Column="0">Scroll right</TextBlock>
                     <Button Grid.Row="6" Grid.Column="1" Click="KeyBindingButtonClick" Name="ScrollRight">error</Button>
                     <Button Grid.Row="6" Grid.Column="2" Click="KeyBindingButtonClick" Name="ScrollRightDefault">Default</Button>
+                    <Button Grid.Row="6" Grid.Column="3" Click="KeyBindingButtonClick" Name="ScrollRightUnset" Margin="0 0 20 0">Unset</Button>
+
 
                     <TextBlock Grid.Row="7" Grid.Column="0">Calibrate up</TextBlock>
                     <Button Grid.Row="7" Grid.Column="1" Click="KeyBindingButtonClick" Name="CalibrateUp">error</Button>
                     <Button Grid.Row="7" Grid.Column="2" Click="KeyBindingButtonClick" Name="CalibrateUpDefault">Default</Button>
+                    <Button Grid.Row="7" Grid.Column="3" Click="KeyBindingButtonClick" Name="CalibrateUpUnset" Margin="0 0 20 0">Unset</Button>
+
 
                     <TextBlock Grid.Row="8" Grid.Column="0">Calibrate down</TextBlock>
                     <Button Grid.Row="8" Grid.Column="1" Click="KeyBindingButtonClick" Name="CalibrateDown">error</Button>
                     <Button Grid.Row="8" Grid.Column="2" Click="KeyBindingButtonClick" Name="CalibrateDownDefault">Default</Button>
+                    <Button Grid.Row="8" Grid.Column="3" Click="KeyBindingButtonClick" Name="CalibrateDownUnset" Margin="0 0 20 0">Unset</Button>
+
 
                     <TextBlock Grid.Row="9" Grid.Column="0">Calibrate left</TextBlock>
                     <Button Grid.Row="9" Grid.Column="1" Click="KeyBindingButtonClick" Name="CalibrateLeft">error</Button>
                     <Button Grid.Row="9" Grid.Column="2" Click="KeyBindingButtonClick" Name="CalibrateLeftDefault">Default</Button>
+                    <Button Grid.Row="9" Grid.Column="3" Click="KeyBindingButtonClick" Name="CalibrateLeftUnset" Margin="0 0 20 0">Unset</Button>
 
                     <TextBlock Grid.Row="10" Grid.Column="0">Calibrate right</TextBlock>
                     <Button Grid.Row="10" Grid.Column="1" Click="KeyBindingButtonClick" Name="CalibrateRigth">error</Button>
                     <Button Grid.Row="10" Grid.Column="2" Click="KeyBindingButtonClick" Name="CalibrateRigthDefault">Default</Button>
+                    <Button Grid.Row="10" Grid.Column="3" Click="KeyBindingButtonClick" Name="CalibrateRigthUnset" Margin="0 0 20 0">Unset</Button>
 
-                    <TextBlock Grid.Row="11" Grid.Column="0">Calibration view</TextBlock>
-                    <Button Grid.Row="11" Grid.Column="1" Click="KeyBindingButtonClick" Name="CalibrationView">error</Button>
-                    <Button Grid.Row="11" Grid.Column="2" Click="KeyBindingButtonClick" Name="CalibrationViewDefault">Default</Button>
+                    <TextBlock Grid.Row="11" Grid.Column="0">Stop Controlling</TextBlock>
+                    <Button Grid.Row="11" Grid.Column="1" Click="KeyBindingButtonClick" Name="StopCalibration">error</Button>
+                    <Button Grid.Row="11" Grid.Column="2" Click="KeyBindingButtonClick" Name="StopCalibrationDefault">Default</Button>
+                    <Button Grid.Row="11" Grid.Column="3" Click="KeyBindingButtonClick" Name="StopCalibrationUnset" Margin="0 0 20 0">Unset</Button>
+
+                    <TextBlock Grid.Row="12" Grid.Column="0" Visibility="{Binding IsChecked,ElementName=CheckboxAccessibility,Converter={StaticResource BooleanToVisibilityConverter}}" >Save Calibration</TextBlock>
+                    <Button Grid.Row="12" Grid.Column="1" Click="KeyBindingButtonClick" Name="Accessibility_SaveCalibration" Visibility="{Binding IsChecked,ElementName=CheckboxAccessibility,Converter={StaticResource BooleanToVisibilityConverter}}">error</Button>
+                    <Button Grid.Row="12" Grid.Column="2" Click="KeyBindingButtonClick" Name="Accessibility_SaveCalibrationDefault" Visibility="{Binding IsChecked,ElementName=CheckboxAccessibility,Converter={StaticResource BooleanToVisibilityConverter}}">Default</Button>
+                    <Button Grid.Row="12" Grid.Column="3" Click="KeyBindingButtonClick" Name="Accessibility_SaveCalibrationUnset" Visibility="{Binding IsChecked,ElementName=CheckboxAccessibility,Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0 0 20 0">Unset</Button>
+
+                    <TextBlock Grid.Row="13" Grid.Column="0">Calibration view</TextBlock>
+                    <Button Grid.Row="13" Grid.Column="1" Click="KeyBindingButtonClick" Name="CalibrationView">error</Button>
+                    <Button Grid.Row="13" Grid.Column="2" Click="KeyBindingButtonClick" Name="CalibrationViewDefault">Default</Button>
+                    <Button Grid.Row="13" Grid.Column="3" Click="KeyBindingButtonClick" Name="CalibrationViewUnset" Margin="0 0 20 0">Unset</Button>
 
                     <Button Grid.Row="0" Grid.Column="4" Click="ResetEverything_Click" Name="ResetEverything" >Reset all bindings to defaults</Button>
                     <TextBlock Grid.Row="2" Grid.Column="4">Key interception backend:</TextBlock>
@@ -131,7 +179,7 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Advancced" >
+            <TabItem Header="Advanced" >
                 <Grid Margin="10,10,10,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto"></ColumnDefinition>
@@ -140,19 +188,20 @@
                         <ColumnDefinition Width="auto"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
-                        <RowDefinition Height="20"></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
+                        <RowDefinition Height="auto" ></RowDefinition>
                     </Grid.RowDefinitions>
 
                     <local:IntegerPropertyControl 
@@ -180,28 +229,34 @@
                         Grid.Row="3" Grid.ColumnSpan="4" 
                         x:Name="ClickFreezeTimeMs" 
                         Label="Click freeze time (ms)"
-                        Maximum="1000" Minimum="0"
+                        Maximum="4000" Minimum="0"
+                        
+                        Visibility="{Binding IsChecked,ElementName=CheckboxAccessibility,Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+                        
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
                         Grid.Row="4" Grid.ColumnSpan="4" 
                         x:Name="CalibrationFreezeTimeMs" 
                         Label="Calibration freeze time (ms)"
-                        Maximum="2000" Minimum="0"
+                        Maximum="4000" Minimum="0"
+                        
+                        Visibility="{Binding IsChecked,ElementName=CheckboxAccessibility,Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+                        
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
                         Grid.Row="5" Grid.ColumnSpan="4" 
                         x:Name="DoubleSpeedUpTimeMs" 
                         Label="Double speed-up time (ms)"
-                        Maximum="500" Minimum="0"
+                        Maximum="4000" Minimum="0"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                 
                     <local:IntegerPropertyControl 
                         Grid.Row="6" Grid.ColumnSpan="4" 
                         x:Name="QuadrupleSpeedUpTimeMs" 
                         Label="Quadruple speed-up time (ms)"
-                        Maximum="500" Minimum="0"
+                        Maximum="4000" Minimum="0"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
@@ -209,6 +264,9 @@
                         x:Name="ModifierShortPressTimeMs" 
                         Label="Modifier short press time (ms)"
                         Maximum="1000" Minimum="0"
+                        
+                        Visibility="{Binding IsChecked,ElementName=CheckboxAccessibility,Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+                        
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
                     
                     <local:IntegerPropertyControl 
@@ -224,15 +282,15 @@
                         Label="Instant jump distance (pixels)"
                         Maximum="1000" Minimum="1"
                         ValueChanged="Slider_ValueChanged"></local:IntegerPropertyControl>
-                    
-                    <TextBlock Grid.Row="10" Grid.Column="0" Name="CalibrationModeLabel">Calibration mode</TextBlock>
-                    <ComboBox Grid.Row="10" Grid.Column="2" x:Name="CalibrationModeCombo" SelectionChanged="CalibrationModeCombo_SelectionChanged">
+
+                    <TextBlock Margin="0 20 0 0" Grid.Row="10" Grid.Column="0" Name="CalibrationModeLabel">Calibration mode</TextBlock>
+                    <ComboBox Margin="0 20 0 0" Grid.Row="10" Grid.Column="2" x:Name="CalibrationModeCombo" SelectionChanged="CalibrationModeCombo_SelectionChanged">
                         <ComboBoxItem Name="CalibrationMode_Default">Default</ComboBoxItem>
                         <ComboBoxItem Name="CalibrationMode_RightEye">Right eye</ComboBoxItem>
                         <ComboBoxItem Name="CalibrationMode_PoorFixation">Poor tracker fixation</ComboBoxItem>
                         <ComboBoxItem Name="CalibrationMode_Custom">Custom</ComboBoxItem>
                     </ComboBox>
-                    <Button Grid.Row="12" Grid.Column="2" Grid.ColumnSpan="1" Name="ResetDefaults" Click="ResetDefaults_Click">Reset to defaults</Button>
+                    <Button Margin="0 20 0 0" Grid.Row="12" Grid.Column="2" Grid.ColumnSpan="1" Name="ResetDefaults" Click="ResetDefaults_Click">Reset to defaults</Button>
                 </Grid>
             </TabItem>
         </TabControl>
